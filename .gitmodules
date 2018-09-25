@@ -1,0 +1,3 @@
+[submodule "skiprnn_pytorch"]
+	path = skiprnn_pytorch
+	url = https://github.com/gitabcworld/skiprnn_pytorch.git
