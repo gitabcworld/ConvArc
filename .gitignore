@@ -99,3 +99,18 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# datasets
+dataset/images_evaluation/
+dataset/images_background/
+data/
+models/wrn/cifar-10-batches-py/
+
+# saved models
+models/wrn/saved_models/
+saved_models/
+
+# logs
+models/wrn/logs/
+tests/
+

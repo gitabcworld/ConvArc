@@ -10,7 +10,7 @@ from numpy.random import choice
 from scipy.misc import imresize as resize
 from torch.autograd import Variable
 
-from dataset.image_augmenter import ImageAugmenter
+from util.imageAugmenter import ImageAugmenter
 
 use_cuda = False
 
@@ -194,8 +194,14 @@ class OmniglotVerif(Omniglot):
 
 
 class OmniglotOS(Omniglot):
-    def __init__(self, path='data/omniglot.npy', batch_size=128, image_size=32):
+    def __init__(self, path='data/omniglot.npy', batch_size=128, image_size=32,
+                 isWithinAlphabets = True):
         Omniglot.__init__(self, path, batch_size, image_size)
+
+        # Across alphabet task is much simpler as it is easy to distinguish characters
+        # belonging to different languages, compared to distinguishing characters belonging
+        # to the same language (within alphabets).
+        self.isWithinAlphabets = isWithinAlphabets
 
         a_start = self.a_start
         a_size = self.a_size
@@ -266,17 +272,55 @@ class OmniglotOS(Omniglot):
         num_alphbts = len(starts)
 
         X = np.zeros((2 * batch_size, image_size, image_size), dtype='uint8')
-        for i in xrange(batch_size / 2):
-            # choose similar chars
-            same_idx = choice(range(data.shape[0]))
 
-            # choose dissimilar chars within alphabet
-            alphbt_idx = choice(num_alphbts, p=p)
-            char_offset = choice(sizes[alphbt_idx], 2, replace=False)
-            diff_idx = starts[alphbt_idx] + char_offset - starts[0]
+        if self.isWithinAlphabets:
+            for i in xrange(batch_size / 2):
+                # choose similar chars
+                same_idx = choice(range(data.shape[0]))
 
-            X[i], X[i + batch_size] = data[diff_idx, choice(num_drawers, 2)]
-            X[i + batch_size / 2], X[i + 3 * batch_size / 2] = data[same_idx, choice(num_drawers, 2, replace=False)]
+                # choose dissimilar chars within alphabet
+                alphbt_idx = choice(num_alphbts, p=p)
+                char_offset = choice(sizes[alphbt_idx], 2, replace=False)
+                diff_idx = starts[alphbt_idx] + char_offset - starts[0]
+
+                X[i], X[i + batch_size] = data[diff_idx, choice(num_drawers, 2)]
+                X[i + batch_size / 2], X[i + 3 * batch_size / 2] = data[same_idx, choice(num_drawers, 2, replace=False)]
+        else:
+            # Across alphabet task is much simpler as it is easy to distinguish characters
+            # belonging to different languages, compared to distinguishing characters belonging
+            # to the same language.
+            for i in xrange(batch_size / 2):
+
+                # characters from different alphabets
+                alphbt_idx = choice(num_alphbts, size=2, replace=False, p=p)
+                char_offset1 = choice(sizes[alphbt_idx[0]], 1, replace=False)
+                diff_idx1 = starts[alphbt_idx[0]] + char_offset1 - starts[0]
+                char_offset2 = choice(sizes[alphbt_idx[1]], 1, replace=False)
+                diff_idx2 = starts[alphbt_idx[1]] + char_offset2 - starts[0]
+                X[i] = data[diff_idx1, choice(num_drawers, 1)]
+                X[i + batch_size] = data[diff_idx2, choice(num_drawers, 1)]
+
+                # characters from the same alphabet
+                same_idx = choice(range(data.shape[0]))
+                X[i + batch_size / 2], X[i + 3 * batch_size / 2] = data[same_idx, choice(num_drawers, 2, replace=False)]
+                #alphbt_idx = choice(num_alphbts, replace=False, p=p)
+                #char_offset = choice(sizes[alphbt_idx], 2, replace=False)
+                #diff_idx = starts[alphbt_idx] + char_offset - starts[0]
+                #X[i + batch_size / 2], X[i + 3 * batch_size / 2] = data[diff_idx, choice(num_drawers, 2)]
+
+        # Print dataset
+        '''
+        import cv2
+        for i in xrange(batch_size/2):
+            X_draw_different = np.zeros((image_size, image_size * 2), dtype='uint8')
+            X_draw_different[:,:image_size] = X[i]
+            X_draw_different[:, image_size:] = X[i+batch_size]
+            X_draw_similar = np.zeros((image_size, image_size*2), dtype='uint8')
+            X_draw_similar[:, :image_size] = X[i + batch_size / 2]
+            X_draw_similar[:, image_size:] = X[i + 3 * batch_size / 2]
+            cv2.imwrite('/home/aberenguel/tmp/arc_img/im_equal_%d.png' % (i), X_draw_similar)
+            cv2.imwrite('/home/aberenguel/tmp/arc_img/im_diff_%d.png' % (i), X_draw_different)
+        '''
 
         y = np.zeros((batch_size, 1), dtype='int32')
         y[:batch_size / 2] = 0
