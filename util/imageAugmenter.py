@@ -391,7 +391,7 @@ class ImageAugmenter(object):
                             translation_x_px=5)
         augmented_images = ia.augment_batch(images)
     """
-    def __init__(self, img_width_px, img_height_px, channel_is_first_axis=False,
+    def __init__(self, img_width_px = None, img_height_px = None, channel_is_first_axis=False,
                  hflip=False, vflip=False,
                  scale_to_percent=1.0, scale_axis_equally=False,
                  rotation_deg=0, shear_deg=0,
@@ -535,6 +535,33 @@ class ImageAugmenter(object):
                                            translation_y_px=self.translation_y_px,
                                            seed=seed)
             self.pregenerated_matrices = matrices
+
+    def augment_image(self, images, seed=None):
+        """Augments a batch of images.
+            The width and the height of the augmentation is taken from the
+            input images batch.
+        """
+        # Add one dimensional channel as batch dimension
+        images = images[np.newaxis, ...]
+        shape = images.shape
+        if len(shape) == 3:
+            self.img_height_px = shape[1]
+            self.img_width_px = shape[2]
+        elif len(shape) == 4:
+            if not self.channel_is_first_axis:
+                # shape like (image-index, y-axis, x-axis, channel-index)
+                self.img_height_px = shape[1]
+                self.img_width_px = shape[2]
+            else:
+                # shape like (image-index, channel-index, y-axis, x-axis)
+                self.img_height_px = shape[2]
+                self.img_width_px = shape[3]
+        else:
+            msg = "Image_augmenter.py. Not defined for this image input dimension."
+            raise Exception(msg)
+        images = self.augment_batch(images, seed=seed)
+        # Remove the batch dimension channel
+        return images[0, ...]
 
     def augment_batch(self, images, seed=None):
         """Augments a batch of images.

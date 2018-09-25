@@ -3,47 +3,28 @@ import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
 import numpy as np
+from logger import Logger
 import torch
-
-from dataset.omniglot import OmniglotOS
-from dataset.omniglot import OmniglotVerif
-from dataset.banknote import BanknoteVerif
-from models.models import ArcBinaryClassifier
 from torch.autograd import Variable
+import torch.backends.cudnn as cudnn
+import shutil
+from models import models
+from models.models import ArcBinaryClassifier
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
-parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to ARC')
-parser.add_argument('--glimpseSize', type=int, default=4, help='the height / width of glimpse seen by ARC')
-parser.add_argument('--numStates', type=int, default=512, help='number of hidden states in ARC controller')
-parser.add_argument('--numGlimpses', type=int, default=4, help='the number glimpses of each image in pair seen by ARC')
-parser.add_argument('--lr', type=float, default=1e-4, help='learning rate, default=0.0002')
-parser.add_argument('--cuda', action='store_true', help='enables cuda')
-parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for loading model'
-                                                 'and saving images')
-parser.add_argument('--load', required=True, help='the model to load from.')
-parser.add_argument('--same', action='store_true', help='whether to generate same character pairs or not')
+from omniglotBenchmarks import omniglotBenchMark
+
+from option import Options, tranform_options
+from dataset.omniglot_pytorch import OmniglotOSPairs
+from dataset.omniglot_pytorch import OmniglotOneShot
+from models.conv_cnn import ConvCNNFactory
+from do_epoch_fns import do_epoch_ARC, do_epoch_ARC_unroll
+import arc_train
+import arc_val
+import arc_test
 
 opt = parser.parse_args()
-
-if opt.name is None:
-    # if no name is given, we generate a name from the parameters.
-    # only those parameters are taken, which if changed break torch.load compatibility.
-    opt.name = "{}_{}_{}_{}".format(opt.numGlimpses, opt.glimpseSize, opt.numStates,
-                                    "cuda" if opt.cuda else "cpu")
-
-# make directory for storing images.
-images_path = os.path.join("visualization", opt.name)
-if not os.path.isdir(images_path):
-	os.makedirs(images_path)
-
-
-# initialise the batcher
-#batcher = BanknoteVerif(batch_size=opt.batchSize)
-#batcher = OmniglotVerif(batch_size=opt.batchSize)
-batcher = OmniglotOS(batch_size=opt.batchSize)
-
 
 def display(image1, mask1, image2, mask2, name="hola.png"):
     _, ax = plt.subplots(1, 2)
@@ -124,3 +105,96 @@ def visualize():
 
 if __name__ == "__main__":
     visualize()
+
+
+
+def train(index = 0):
+
+    # change parameters
+    options = Options().parse()
+    options = tranform_options(index, options)
+    cudnn.benchmark = True # set True to speedup
+
+    train_mean = None
+    train_std = None
+    if os.path.exists(os.path.join(options.save, 'mean.npy')):
+        train_mean = np.load(os.path.join(options.save, 'mean.npy'))
+        train_std = np.load(os.path.join(options.save, 'std.npy'))
+    bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options, train_mean=train_mean,
+                                      train_std=train_std)
+    opt = bnktBenchmark.opt
+    train_loader, val_loader, test_loader = bnktBenchmark.get()
+
+    train_mean = bnktBenchmark.train_mean
+    train_std = bnktBenchmark.train_std
+    if not os.path.exists(os.path.join(options.save, 'mean.npy')):
+        np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
+        np.save(os.path.join(opt.save, 'std.npy'), train_std)
+
+    if opt.cuda:
+        models.use_cuda = True
+
+    if opt.name is None:
+        # if no name is given, we generate a name from the parameters.
+        # only those parameters are taken, which if changed break torch.load compatibility.
+        #opt.name = "train_{}_{}_{}_{}_{}_wrn".format(str_model_fn, opt.numGlimpses, opt.glimpseSize, opt.numStates,
+        opt.name = "{}_{}_{}_{}_{}_{}_wrn".format(opt.naive_full_type,
+                                        "fcn" if opt.apply_wrn else "no_fcn",
+                                        opt.arc_numGlimpses,
+                                        opt.arc_glimpseSize, opt.arc_numStates,
+                                        "cuda" if opt.cuda else "cpu")
+
+    # make directory for storing images.
+    images_path = os.path.join(opt.name, "visualization")
+    if not os.path.isdir(images_path):
+        os.makedirs(images_path)
+
+    fcn = None
+    convCNN = None
+    if opt.apply_wrn:
+        # Convert the opt params to dict.
+        optDict = dict([(key, value) for key, value in opt._get_kwargs()])
+        convCNN = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
+        if opt.wrn_load:
+            # Load the model in fully convolutional mode
+            fcn, params, stats = convCNN.load(opt.wrn_load, fully_convolutional = True)
+        else:
+            fcn = convCNN.create(fully_convolutional = True)
+
+    # initialise the model
+    discriminator = ArcBinaryClassifier(num_glimpses=opt.arc_numGlimpses,
+                                        glimpse_h=opt.arc_glimpseSize,
+                                        glimpse_w=opt.arc_glimpseSize,
+                                        channels=opt.arc_nchannels,
+                                        controller_out=opt.arc_numStates,
+                                        attn_type = opt.arc_attn_type,
+                                        attn_unroll = opt.arc_attn_unroll,
+                                        attn_dense=opt.arc_attn_dense)
+
+    # load from a previous checkpoint, if specified.
+    if opt.arc_load is not None:
+        discriminator.load_state_dict(torch.load(opt.arc_load))
+
+    if opt.cuda:
+        discriminator.cuda()
+
+    # Select the epoch functions
+    do_epoch_fn = None
+    if opt.arc_attn_unroll == True:
+        do_epoch_fn = do_epoch_ARC_unroll
+    else:
+        do_epoch_fn = do_epoch_ARC
+
+    ###################################
+    ## TRAINING ARC/CONVARC
+    ###################################
+    epoch = 0
+    logger = None
+    optimizer = None
+    loss_fn = None
+    val_acc_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
+                                                                    discriminator, logger,
+                                                                    convCNN=convCNN,
+                                                                    optimizer=optimizer,
+                                                                    loss_fn=loss_fn, fcn=fcn)
+

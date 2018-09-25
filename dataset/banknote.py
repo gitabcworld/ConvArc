@@ -1,20 +1,17 @@
-import os
-import csv
-import cv2
-import sys
-import pickle
 import math
+import os
+import pickle
 import random
+import sys
 
+import cv2
 import numpy as np
 import torch
 from numpy.random import choice
-from scipy.misc import imresize as resize
 from torch.autograd import Variable
-from tqdm import tqdm
 
-from dataset.image_augmenter import ImageAugmenter
 from dataset.dataModel import DataModel
+from util.imageAugmenter import ImageAugmenter
 
 use_cuda = False
 
