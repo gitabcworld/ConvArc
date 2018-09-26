@@ -116,3 +116,7 @@ tests/
 
 # pycharm
 .idea/
+
+# results
+results/
+result/
