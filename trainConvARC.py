@@ -85,7 +85,7 @@ def train():
         print ('Loading Wide Residual Network...')
         state_dict = torch.load(opt.load_wrn)
         params_tensors, stats = state_dict['params'], state_dict['stats']
-        for k, v in params.iteritems():
+        for k, v in params.items():
             v.data.copy_(params_tensors[k])
 
     print ('Wide Residual Network parameters...')

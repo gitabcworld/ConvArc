@@ -25,10 +25,10 @@ from torch.autograd import Variable
 from torchnet.engine import Engine
 from tqdm import tqdm
 
-from resnet import resnet
-from utils import cast, data_parallel
+from .resnet import resnet
+from .utils import cast, data_parallel
 #from util import cvtransforms as T
-import cvtransforms as T
+import models.wrn.cvtransforms as T
 import pdb
 
 cudnn.benchmark = True
@@ -94,7 +94,7 @@ def create_dataset(opt, mode):
 
 def main():
     opt = parser.parse_args()
-    print 'parsed options:', vars(opt)
+    print('parsed options:', vars(opt))
     epoch_step = json.loads(opt.epoch_step)
     num_classes = 10 if opt.dataset == 'CIFAR10' else 100
 
@@ -114,7 +114,7 @@ def main():
     f, params, stats = resnet(opt.depth, opt.width, num_classes, is_full_wrn=False)
 
     def create_optimizer(opt, lr):
-        print 'creating optimizer with lr = ', lr
+        print('creating optimizer with lr = %f' % lr)
         if opt.optim_method == 'SGD':
             return torch.optim.SGD(params.values(), lr, 0.9, weight_decay=opt.weightDecay)
         elif opt.optim_method == 'Adam':
@@ -127,21 +127,21 @@ def main():
         state_dict = torch.load(opt.resume)
         epoch = state_dict['epoch']
         params_tensors, stats = state_dict['params'], state_dict['stats']
-        for k, v in params.iteritems():
+        for k, v in params.items():
             v.data.copy_(params_tensors[k])
         optimizer.load_state_dict(state_dict['optimizer'])
 
-    print '\nParameters:'
+    print('\nParameters:')
     kmax = max(len(key) for key in params.keys())
     for i, (key, v) in enumerate(params.items()):
-        print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v.data)
-    print '\nAdditional buffers:'
+        print(str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v.data))
+    print('\nAdditional buffers:')
     kmax = max(len(key) for key in stats.keys())
     for i, (key, v) in enumerate(stats.items()):
-        print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v)
+        print(str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v))
 
     n_parameters = sum(p.numel() for p in params.values() + stats.values())
-    print '\nTotal number of parameters:', n_parameters
+    print('\nTotal number of parameters: %d' % n_parameters)
 
     meter_loss = tnt.meter.AverageValueMeter()
     classacc = tnt.meter.ClassErrorMeter(accuracy=True)
@@ -159,7 +159,7 @@ def main():
         return F.cross_entropy(y, targets), y
 
     def log(t, state):
-        torch.save(dict(params={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(params={k: v.data for k, v in params.items()},
                         stats=stats,
                         optimizer=state['optimizer'].state_dict(),
                         epoch=t['epoch']),
@@ -168,7 +168,7 @@ def main():
         logname = os.path.join(opt.save, 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print(z)
 
     def on_sample(state):
         state['sample'].append(state['train'])
@@ -202,7 +202,7 @@ def main():
         engine.test(h, test_loader)
 
         test_acc = classacc.value()[0]
-        print log({
+        print(log({
             "train_loss": train_loss[0],
             "train_acc": train_acc[0],
             "test_loss": meter_loss.value()[0],
@@ -212,9 +212,9 @@ def main():
             "n_parameters": n_parameters,
             "train_time": train_time,
             "test_time": timer_test.value(),
-        }, state)
-        print '==> id: %s (%d/%d), test_acc: \33[91m%.2f\033[0m' % \
-                (opt.save, state['epoch'], opt.epochs, test_acc)
+        }, state))
+        print('==> id: %s (%d/%d), test_acc: \33[91m%.2f\033[0m' % \
+                (opt.save, state['epoch'], opt.epochs, test_acc))
 
     engine = Engine()
     engine.hooks['on_sample'] = on_sample

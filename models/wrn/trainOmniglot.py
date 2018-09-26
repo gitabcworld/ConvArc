@@ -23,11 +23,11 @@ from torchnet.engine import Engine
 from tqdm import tqdm
 
 from dataset.omniglot_pytorch import OmniglotOS
-from resnet import resnet
-from utils import cast, data_parallel
+from .resnet import resnet
+from .utils import cast, data_parallel
 from util import cvtransforms as T
 import torchvision.transforms as transforms
-from optionOmniglot import Options
+from .optionOmniglot import Options
 
 from sklearn.metrics import accuracy_score
 import time
@@ -123,14 +123,14 @@ def main():
     f, params, stats = resnet(opt.depth, opt.width, num_classes, False)
 
     def create_optimizer(opt, lr):
-        print 'creating optimizer with lr = ', lr
+        print ('creating optimizer with lr = %f' % lr)
         if opt.optim_method == 'SGD':
             return torch.optim.SGD(params.values(), lr, 0.9, weight_decay=opt.weightDecay)
         elif opt.optim_method == 'Adam':
             return torch.optim.Adam(params.values(), lr)
 
     def log(t, optimizer, params, stats, opt):
-        torch.save(dict(params={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(params={k: v.data for k, v in params.items()},
                         stats=stats,
                         optimizer=optimizer.state_dict(),
                         epoch=t['epoch']),
@@ -139,7 +139,7 @@ def main():
         logname = os.path.join(opt.save, 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print(z)
 
 
     optimizer = create_optimizer(opt, opt.lr)
@@ -149,21 +149,21 @@ def main():
         state_dict = torch.load(opt.resume)
         epoch = state_dict['epoch']
         params_tensors, stats = state_dict['params'], state_dict['stats']
-        for k, v in params.iteritems():
+        for k, v in params.items():
             v.data.copy_(params_tensors[k])
         optimizer.load_state_dict(state_dict['optimizer'])
 
-    print '\nParameters:'
+    print('\nParameters:')
     kmax = max(len(key) for key in params.keys())
     for i, (key, v) in enumerate(params.items()):
-        print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v.data)
-    print '\nAdditional buffers:'
+        print(str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v.data))
+    print('\nAdditional buffers:')
     kmax = max(len(key) for key in stats.keys())
     for i, (key, v) in enumerate(stats.items()):
-        print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v)
+        print(str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v))
 
     n_parameters = sum(p.numel() for p in params.values() + stats.values())
-    print '\nTotal number of parameters:', n_parameters
+    print('\nTotal number of parameters:', n_parameters)
 
     # Save folder
     best_val_acc = 0

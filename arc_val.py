@@ -57,7 +57,7 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
         if opt.apply_wrn:
             # Save the fully convolutional network
-            n_parameters = sum(p.numel() for p in fcn.params.values() + fcn.stats.values())
+            n_parameters = sum(p.numel() for p in list(fcn.params.values()) + list(fcn.stats.values()))
             convCNN.log({
                 "val_acc": float(val_acc_epoch),
                 "epoch": epoch,

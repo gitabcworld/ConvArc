@@ -132,7 +132,7 @@ class WideResidualNetwork(ConvCNN_Base):
             state_dict = torch.load(os.path.join(resume, 'model.pt7'))
             epoch = state_dict['epoch']
             params_tensors, stats = state_dict['params'], state_dict['stats']
-            for k, v in wrn.params.iteritems():
+            for k, v in wrn.params.items():
                 v.data.copy_(params_tensors[k])
             optimizer.load_state_dict(state_dict['optimizer'])
 
@@ -215,17 +215,17 @@ class WideResidualNetwork(ConvCNN_Base):
         return wrn, None, None
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(params={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(params={k: v.data for k, v in params.items()},
                         stats=stats,
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'wb'))
         z = self.opt.copy()
         z.update(dictParams)
         logname = os.path.join(self.opt['wrn_save'], 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print (z)
+        print(z)
 
     def forward(self, data_loader, f, params, stats):
         params, stats, mean_acc, mean_losses = \
@@ -299,7 +299,7 @@ class WideResidualNetwork(ConvCNN_Base):
             state_dict = torch.load(resume)
             epoch = state_dict['epoch']
             params_tensors, stats = state_dict['params'], state_dict['stats']
-            for k, v in params.iteritems():
+            for k, v in params.items():
                 v.data.copy_(params_tensors[k])
             optimizer.load_state_dict(state_dict['optimizer'])
 
@@ -360,7 +360,7 @@ class WideResidualNetwork(ConvCNN_Base):
         print ('Loading Wide Residual Network...')
         state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
         params_tensors, stats = state_dict['params'], state_dict['stats']
-        for k, v in params.iteritems():
+        for k, v in params.items():
             v.data.copy_(params_tensors[k])
 
         print ('Wide Residual Network parameters...')
@@ -379,11 +379,11 @@ class WideResidualNetwork(ConvCNN_Base):
         return f, params, stats
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(params={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(params={k: v.data for k, v in params.items()},
                         stats=stats,
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'wb'))
         z = self.opt.copy()
         z.update(dictParams)
         logname = os.path.join(self.opt['wrn_save'], 'log.txt')
@@ -543,10 +543,10 @@ class InceptionNetwork(ConvCNN_Base):
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(state_dict={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(state_dict={k: v.data for k, v in params.items()},
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['save'], 'model.pt7'), 'wb'))
         z = vars(self.opt).copy(); z.update(dictParams)
         logname = os.path.join(self.opt['save'], 'log.txt')
         with open(logname, 'a') as f:
@@ -696,10 +696,10 @@ class VGGNetwork(ConvCNN_Base):
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(state_dict={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(state_dict={k: v.data for k, v in params.items()},
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['save'], 'model.pt7'), 'wb'))
         z = vars(self.opt).copy(); z.update(dictParams)
         logname = os.path.join(self.opt['save'], 'log.txt')
         with open(logname, 'a') as f:
@@ -854,10 +854,10 @@ class SqueezeNetNetwork(ConvCNN_Base):
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(state_dict={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(state_dict={k: v.data for k, v in params.items()},
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['save'], 'model.pt7'), 'wb'))
         z = vars(self.opt).copy(); z.update(dictParams)
         logname = os.path.join(self.opt['save'], 'log.txt')
         with open(logname, 'a') as f:
@@ -1004,7 +1004,7 @@ class WideResidualNetworkv2(ConvCNN_Base):
         torch.save(dict(state_dict=params,
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'wb'))
         z = self.opt.copy()
         z.update(dictParams)
         logname = os.path.join(self.opt['wrn_save'], 'log.txt')
