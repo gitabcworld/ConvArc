@@ -109,9 +109,9 @@ def train(index = 0):
         convCNN = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
         if opt.wrn_load:
             # Load the model in fully convolutional mode
-            fcn, params, stats = convCNN.load(opt.wrn_load, fully_convolutional = True)
+            fcn, params, stats = convCNN.load(opt.wrn_load, fully_convolutional=True)
         else:
-            fcn = convCNN.create(fully_convolutional = True)
+            fcn = convCNN.create(fully_convolutional=True)
 
     # initialise the model
     discriminator = ArcBinaryClassifier(num_glimpses=opt.arc_numGlimpses,
@@ -176,7 +176,7 @@ def train(index = 0):
             print ("[%s] ... training done" % multiprocessing.current_process().name)
             print ("[%s], best validation accuracy: %.2f, best validation loss: %.5f" % (
                 multiprocessing.current_process().name, arc_val.best_accuracy, arc_val.best_validation_loss))
-            print "[%s] ... exiting training regime " % multiprocessing.current_process().name
+            print ("[%s] ... exiting training regime " % multiprocessing.current_process().name)
 
         except KeyboardInterrupt:
             pass
@@ -261,7 +261,7 @@ def train(index = 0):
             print ("[%s] ... training done" % multiprocessing.current_process().name)
             print ("[%s] best validation accuracy: %.2f, best validation loss: %.5f" % (
                 multiprocessing.current_process().name, context_val.best_accuracy, context_val.best_validation_loss))
-            print "[%s] ... exiting training regime" % multiprocessing.current_process().name
+            print ("[%s] ... exiting training regime" % multiprocessing.current_process().name)
 
         except KeyboardInterrupt:
             pass

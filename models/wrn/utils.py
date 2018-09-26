@@ -18,7 +18,7 @@ def cast(params, dtype='float'):
 
 def conv_params(ni, no, k=1, g=1):
     assert ni % g == 0
-    return cast(torch.Tensor(no, ni / g, k, k).normal_(0, 2 / math.sqrt(ni * k * k)))
+    return cast(torch.Tensor(no, int(ni / g), k, k).normal_(0, 2 / math.sqrt(ni * k * k)))
 
 
 def linear_params(ni, no):

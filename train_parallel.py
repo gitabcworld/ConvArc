@@ -193,11 +193,11 @@ def train():
             print ("epoch: %d, train loss: %f, train acc: %.2f, time: %.2f s" %
                    (epoch,np.round(train_loss_epoch,6),np.round(train_acc_epoch,6),
                     np.round(tock - tick,4)))
-            logger.log_value('train_loss', train_loss_epoch)
-            logger.log_value('train_acc', train_acc_epoch)
+            logger.add_scalar('train_loss', train_loss_epoch)
+            logger.add_scalar('train_acc', train_acc_epoch)
 
             if np.isnan(train_loss_epoch):
-                print "... NaN Detected, terminating"
+                print ("... NaN Detected, terminating")
                 break
 
             if epoch % opt.val_freq == 0:
@@ -226,11 +226,11 @@ def train():
                 val_loss_epoch = np.mean(val_loss_epoch)
                 meta_data["val_loss"].append((epoch, val_loss_epoch))
                 meta_data["val_acc"].append((epoch, val_acc_epoch))
-                print "====" * 20, "\n", "validation loss: ", val_loss_epoch\
+                print ("====" * 20, "\n", "validation loss: ", val_loss_epoch\
                     , ", validation accuracy: ", val_acc_epoch, ", time: ",\
-                    np.round((tock - tick)/opt.val_num_batches,4), "\n", "====" * 20
-                logger.log_value('val_loss', val_loss_epoch)
-                logger.log_value('val_acc', val_acc_epoch)
+                    np.round((tock - tick)/opt.val_num_batches,4), "\n", "====" * 20)
+                logger.add_scalar('val_loss', val_loss_epoch)
+                logger.add_scalar('val_acc', val_acc_epoch)
 
                 if best_validation_loss > (saving_threshold * val_loss_epoch):
                     print("Significantly improved validation loss from {} --> {}. Saving...".format(
@@ -256,7 +256,7 @@ def train():
 
     print ("... training done")
     print ("best validation accuracy: %.2f, best validation loss: %f" % (best_accuracy, best_validation_loss))
-    print "... exiting training regime"
+    print ("... exiting training regime")
 
     meta_data["train_loss"] = []
     meta_data["train_acc"] = []
@@ -289,11 +289,11 @@ def train():
     test_loss_epoch = np.mean(test_loss_epoch)
     meta_data["test_loss"].append((epoch, test_loss_epoch))
     meta_data["test_acc"].append((epoch, test_acc_epoch))
-    print "====" * 20, "\n", "test loss: ", test_loss_epoch \
+    print ("====" * 20, "\n", "test loss: ", test_loss_epoch \
         , ", test accuracy: ", test_acc_epoch, ", time: ", np.round((tock - tick)/opt.test_num_batches,4), \
-        "\n", "====" * 20
-    logger.log_value('test_loss', test_loss_epoch)
-    logger.log_value('test_acc', test_acc_epoch)
+        "\n", "====" * 20)
+    logger.add_scalar('test_loss', test_loss_epoch)
+    logger.add_scalar('test_acc', test_acc_epoch)
 
 def main():
     train()

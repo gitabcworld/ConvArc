@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from glimpse import GlimpseWindow
+from models.arc.glimpse import GlimpseWindow
 from skiprnn_pytorch.rnn_cells.custom_cells import CMultiSkipLSTMCell,CSkipLSTMCell, \
                                                     CMultiSkipGRUCell, CSkipGRUCell, \
                                                     CBasicLSTMCell

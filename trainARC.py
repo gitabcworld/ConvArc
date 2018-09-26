@@ -106,7 +106,7 @@ def train():
     meta_data["validation_loss"] = []
     meta_data["validation_accuracy"] = []
 
-    print "... training"
+    print ("... training")
     try:
         iter_n = 0
         smooth_loss = np.log(meta_data["num_output"])
@@ -126,20 +126,20 @@ def train():
             meta_data["training_loss"].append((iter_n, training_loss))
             print ("iteration: %d, train loss: %f, train acc: %.2f, time: %.2f s" %
                    (iter_n,np.round(training_loss, 6),train_acc, np.round((tock - tick),4)))
-            logger.log_value('train_loss', training_loss)
-            logger.log_value('train_acc', train_acc)
+            logger.add_scalar('train_loss', training_loss)
+            logger.add_scalar('train_acc', train_acc)
             #smooth_loss = 0.99 * smooth_loss + 0.01 * training_loss
             #print ("iteration: %d, train loss: %f, train acc: %f, time: %f ms" %
             #       (iter_n,np.round(smooth_loss, 4),train_acc, np.round((tock - tick))))
 
             if np.isnan(training_loss):
-                print "... NaN Detected, terminating"
+                print ("... NaN Detected, terminating")
                 break
 
             if iter_n % opt.val_freq == 0:
 
                 net_val_loss, net_val_acc = 0.0, 0.0
-                for i in xrange(opt.val_num_batches):
+                for i in range(opt.val_num_batches):
                     X_val, Y_val = loader.fetch_batch("val")
                     pred_val = discriminator(X_val)
                     loss_val = bce(pred_val, Y_val.float())
@@ -153,10 +153,10 @@ def train():
                 meta_data["validation_loss"].append((iter_n, val_loss))
                 meta_data["validation_accuracy"].append((iter_n, val_acc))
 
-                print "====" * 20, "\n", "validation loss: ", val_loss\
-                    , ", validation accuracy: ", val_acc, "\n", "====" * 20
-                logger.log_value('val_loss', val_loss)
-                logger.log_value('val_acc', val_acc)
+                print ("====" * 20, "\n", "validation loss: ", val_loss\
+                    , ", validation accuracy: ", val_acc, "\n", "====" * 20)
+                logger.add_scalar('val_loss', val_loss)
+                logger.add_scalar('val_acc', val_acc)
 
                 if best_validation_loss > (saving_threshold * val_loss):
                     print("Significantly improved validation loss from {} --> {}. Saving...".format(
@@ -179,7 +179,7 @@ def train():
 
     print ("... training done")
     print ("best validation accuracy: %.2f, best validation loss: %f" % (best_accuracy, best_validation_loss))
-    print "... exiting training regime"
+    print ("... exiting training regime")
 
     print ("... loading best validation model")
     opt.load = str(best_validation_loss)
@@ -198,7 +198,7 @@ def train():
         net_test_acc += acc_test
     test_loss = net_test_loss / opt.test_num_batches
     test_acc = net_test_acc / opt.test_num_batches
-    print "====" * 20, "\n", "test loss: ", test_loss, ", test accuracy: ", test_acc, "\n", "====" * 20
+    print ("====" * 20, "\n", "test loss: ", test_loss, ", test accuracy: ", test_acc, "\n", "====" * 20)
 
 
 def main():

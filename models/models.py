@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from arc.arc import ARC
-from arc.arc_unroll import ARC_unroll
-from arc.arc_skip import SkipARC
-from arc.arc_skip_dense import SkipARC_dense
+from models.arc.arc import ARC
+from models.arc.arc_unroll import ARC_unroll
+from models.arc.arc_skip import SkipARC
+from models.arc.arc_skip_dense import SkipARC_dense
 
 use_cuda = False
 

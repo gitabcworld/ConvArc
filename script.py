@@ -1,51 +1,9 @@
 from main import train
-import torch
-import subprocess
-import gc
-import sys
-import psutil
-from util.memory_gpu_usage import get_gpu_memory_usage
-
-#import multiprocessing
-#from multiprocessing import Pool
-#from multiprocessing import Pool, TimeoutError
-#import contextlib
-
-#import multiprocessing
-# We must import this explicitly, it is not imported by the top-level
 # multiprocessing module.
 import multiprocessing.pool
 import numpy as np
-import time
-import os
 
 from option import lst_parameters_change
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
-
-'''
-def daemon(index):
-    print 'Starting:', multiprocessing.current_process().name
-    #time.sleep(2)
-    print('Index %d' % index)
-    #train(index)
-    print 'Exiting :', multiprocessing.current_process().name
-
-def non_daemon(index):
-    print 'Starting:', multiprocessing.current_process().name
-    print('Index %d' % index)
-    train(index)
-    print 'Exiting :', multiprocessing.current_process().name
-
-if __name__ == '__main__':
-    n = multiprocessing.Process(name='non-daemon', target=non_daemon, args=(2,))
-    n.daemon = False
-
-    n.start()
-    n.join()
-    print('... Finished')
-'''
 
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
@@ -65,7 +23,7 @@ def work(num_proc):
     try:
         train(index=num_proc)
     except:
-        print('Exception in worker: %d',num_proc)
+        print('Exception in worker: %d' % num_proc)
         return False
     return True
 

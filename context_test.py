@@ -51,8 +51,8 @@ def context_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
 
     time_elapsed = datetime.now() - start_time
     test_acc_epoch = np.mean(test_acc_epoch)
-    print "====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
+    print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
                             "epoch: ", epoch, ", test ARC accuracy: ", test_acc_epoch, ", time: ", \
-        time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20
-    logger.log_value('context_test_acc', test_acc_epoch)
+        time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
+    logger.add_scalar('context_test_acc', test_acc_epoch)
     return test_acc_epoch

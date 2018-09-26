@@ -26,7 +26,11 @@ class OmniglotBase(data.Dataset):
         self.target_transform = target_transform
         self.train = train  # training, validation or test set
 
-        self.chars = np.load(self.root)
+        try:
+            self.chars = np.load(self.root)
+        except:
+            print('Not Found Omniglot datset in : %s' % self.root)
+            raise
 
         # SPEED UP: CASE image_size == 32. DELETE!!!
         from scipy.misc import imresize as resize

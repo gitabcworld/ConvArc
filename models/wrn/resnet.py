@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from utils import conv_params, linear_params, bnparams, bnstats, \
+from .utils import conv_params, linear_params, bnparams, bnstats, \
         flatten_params, flatten_stats
 import numpy as np
 
@@ -97,7 +97,7 @@ class WideResNet(nn.Module):
             return o
 
         assert input.get_device() == self.params['conv0'].get_device()
-        x = F.conv2d(input, self.params['conv0'], padding=1)
+        x = F.conv2d(input.float(), self.params['conv0'], padding=1)
         # Uncomment for Raghav pc
         # x = F.conv2d(input.float(), self.params['conv0'], padding=1)
         o = group(x, self.params, self.stats, 'group0', self.mode, stride=1)

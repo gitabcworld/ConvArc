@@ -25,6 +25,23 @@ https://github.com/sanyam5/arc-pytorch
 }
 ```
 
+## Install
+```
+conda create --name py3pytorch4 python=3.6
+source activate py3pytorch4
+conda install -c conda-forge opencv
+pip install tensorboardX
+conda install pytorch torchvision cuda80 -c pytorch
+conda install scikit-learn
+pip install torchnet
+conda install -c conda-forge tqdm
+conda install -c anaconda psutil 
+conda install -c anaconda scikit-image
+pip install nested_dict
+pip install hickle
+conda install -c anaconda graphviz
+```
+
 
 ## Authors
 
