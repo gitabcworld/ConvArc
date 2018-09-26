@@ -58,6 +58,9 @@ def train(index = 0):
     cudnn.benchmark = True # set True to speedup
     #bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options)
 
+    if not os.path.exists(options.save):
+        os.makedirs(options.save)
+
     train_mean = None
     train_std = None
     if os.path.exists(os.path.join(options.save, 'mean.npy')):
@@ -99,7 +102,7 @@ def train(index = 0):
         shutil.rmtree(models_path)
 
     # create logger
-    logger = Logger(models_path)
+    logger = Logger(models_path,force=True)
 
     fcn = None
     convCNN = None
