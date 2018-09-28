@@ -29,18 +29,55 @@ https://github.com/sanyam5/arc-pytorch
 
 | Channels | Dataset        | Within/Across | ARC/CONVARC   | LSTM  | Naive/Full    | Ref. Command | 
 | -------- | -------------- | ------------- | ------------- | ----- | ------------- | ------------ |
-| 1        | omniglot       | within        | convarc       | lstm  | naive         | 1            |
-| 1        | omniglot       | across        | convarc       | lstm  | naive         | 2            |
-| 1        | omniglot       | within        | convarc       | lstm  | fullcontext   | 3            |
-| 1        | omniglot       | across        | convarc       | lstm  | fullcontext   | 4            |
+| 1        | omniglot       | within        | arc           | lstm  | naive         | 1            |
+| 1        | omniglot       | across        | arc           | lstm  | naive         | 2            |
+| 1        | omniglot       | within        | arc           | lstm  | fullcontext   | 3            |
+| 1        | omniglot       | across        | arc           | lstm  | fullcontext   | 4            |
+| 3        | omniglot       | within        | arc           | lstm  | naive         | 5            |
+| 3        | omniglot       | across        | arc           | lstm  | naive         | 6            |
+| 3        | omniglot       | within        | arc           | lstm  | fullcontext   | 7            |
+| 3        | omniglot       | across        | arc           | lstm  | fullcontext   | 8            |
+| 1        | omniglot       | within        | convarc       | lstm  | naive         | 9            |
+| 1        | omniglot       | across        | convarc       | lstm  | naive         | 10           |
+| 1        | omniglot       | within        | convarc       | lstm  | fullcontext   | 11           |
+| 1        | omniglot       | across        | convarc       | lstm  | fullcontext   | 12           |
+| 3        | omniglot       | within        | convarc       | lstm  | naive         | 13           |
+| 3        | omniglot       | across        | convarc       | lstm  | naive         | 14           |
+| 3        | omniglot       | within        | convarc       | lstm  | fullcontext   | 15           |
+| 3        | omniglot       | across        | convarc       | lstm  | fullcontext   | 16           |
 
-Ref command 1: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets True --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'Naive' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+Ref command 1: ```python main.py --nchannels 1 --save results/os_w/lstm_channel_1_arc_naive/ --isWithinAlphabets True --apply_wrn False --wrn_save results/os_w/lstm_channel_1_arc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_arc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_w/lstm_channel_1_arc_naive/context.pt7```
 
-Ref command 2: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets False --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'Naive' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+Ref command 2: ```python main.py --nchannels 1 --save results/os_a/lstm_channel_1_arc_naive/ --isWithinAlphabets False --apply_wrn False --wrn_save results/os_a/lstm_channel_1_arc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_arc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_a/lstm_channel_1_arc_naive/context.pt7```
 
-Ref command 3: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets True --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'FullContext' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+Ref command 3: ```python main.py --nchannels 1 --save results/os_w/lstm_channel_1_arc_fullc/ --isWithinAlphabets True --apply_wrn False --wrn_save results/os_w/lstm_channel_1_arc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_arc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_w/lstm_channel_1_arc_fullc/context.pt7```
 
-Ref command 4: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets False --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'FullContext' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+Ref command 4: ```python main.py --nchannels 1 --save results/os_a/lstm_channel_1_arc_fullc/ --isWithinAlphabets False --apply_wrn False --wrn_save results/os_a/lstm_channel_1_arc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_arc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_a/lstm_channel_1_arc_fullc/context.pt7```
+
+Ref command 5: ```python main.py --nchannels 3 --save results/os_w/lstm_channel_3_arc_naive/ --isWithinAlphabets True --apply_wrn False --wrn_save results/os_w/lstm_channel_3_arc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_arc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_w/lstm_channel_3_arc_naive/context.pt7```
+
+Ref command 6: ```python main.py --nchannels 3 --save results/os_a/lstm_channel_3_arc_naive/ --isWithinAlphabets False --apply_wrn False --wrn_save results/os_a/lstm_channel_3_arc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_arc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_a/lstm_channel_3_arc_naive/context.pt7```
+
+Ref command 7: ```python main.py --nchannels 3 --save results/os_w/lstm_channel_3_arc_fullc/ --isWithinAlphabets True --apply_wrn False --wrn_save results/os_w/lstm_channel_3_arc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_arc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_w/lstm_channel_3_arc_fullc/context.pt7```
+
+Ref command 8: ```python main.py --nchannels 3 --save results/os_a/lstm_channel_3_arc_fullc/ --isWithinAlphabets False --apply_wrn False --wrn_save results/os_a/lstm_channel_3_arc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_arc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_a/lstm_channel_3_arc_fullc/context.pt7```
+
+Ref command 9: ```python main.py --nchannels 1 --save results/os_w/lstm_channel_1_carc_naive/ --isWithinAlphabets True --apply_wrn True --wrn_save results/os_w/lstm_channel_1_carc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_carc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_w/lstm_channel_1_carc_naive/context.pt7```
+
+Ref command 10: ```python main.py --nchannels 1 --save results/os_a/lstm_channel_1_carc_naive/ --isWithinAlphabets False --apply_wrn True --wrn_save results/os_a/lstm_channel_1_carc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_carc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_a/lstm_channel_1_carc_naive/context.pt7```
+
+Ref command 11: ```python main.py --nchannels 1 --save results/os_w/lstm_channel_1_carc_fullc/ --isWithinAlphabets True --apply_wrn True --wrn_save results/os_w/lstm_channel_1_carc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_carc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_w/lstm_channel_1_carc_fullc/context.pt7```
+
+Ref command 12: ```python main.py --nchannels 1 --save results/os_a/lstm_channel_1_carc_fullc/ --isWithinAlphabets False --apply_wrn True --wrn_save results/os_a/lstm_channel_1_carc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_carc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_a/lstm_channel_1_carc_fullc/context.pt7```
+
+Ref command 13: ```python main.py --nchannels 3 --save results/os_w/lstm_channel_3_carc_naive/ --isWithinAlphabets True --apply_wrn True --wrn_save results/os_w/lstm_channel_3_carc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_carc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_w/lstm_channel_3_carc_naive/context.pt7```
+
+Ref command 14: ```python main.py --nchannels 3 --save results/os_a/lstm_channel_3_carc_naive/ --isWithinAlphabets False --apply_wrn True --wrn_save results/os_a/lstm_channel_3_carc_naive/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_carc_naive/ARCmodel.pt7 --naive_full_type Naive --naive_full_save_path results/os_a/lstm_channel_3_carc_naive/context.pt7```
+
+Ref command 15: ```python main.py --nchannels 3 --save results/os_w/lstm_channel_3_carc_fullc/ --isWithinAlphabets True --apply_wrn True --wrn_save results/os_w/lstm_channel_3_carc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_w/lstm_channel_1_carc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_w/lstm_channel_3_carc_fullc/context.pt7```
+
+Ref command 16: ```python main.py --nchannels 3 --save results/os_a/lstm_channel_3_carc_fullc/ --isWithinAlphabets False --apply_wrn True --wrn_save results/os_a/lstm_channel_3_carc_fullc/ --arc_nchannels 64 --arc_attn_type LSTM --arc_save results/os_a/lstm_channel_1_carc_fullc/ARCmodel.pt7 --naive_full_type FullContext --naive_full_save_path results/os_a/lstm_channel_3_carc_fullc/context.pt7```
+
 
 ## Install
 ```
