@@ -25,6 +25,23 @@ https://github.com/sanyam5/arc-pytorch
 }
 ```
 
+## Execute
+
+| Channels | Dataset        | Within/Across | ARC/CONVARC   | LSTM  | Naive/Full    | Ref. Command | 
+| -------- | -------------- | ------------- | ------------- | ----- | ------------- | ------------ |
+| 1        | omniglot       | within        | convarc       | lstm  | naive         | 1            |
+| 1        | omniglot       | across        | convarc       | lstm  | naive         | 2            |
+| 1        | omniglot       | within        | convarc       | lstm  | fullcontext   | 3            |
+| 1        | omniglot       | across        | convarc       | lstm  | fullcontext   | 4            |
+
+Ref command 1: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets True --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'Naive' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+
+Ref command 2: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets False --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'Naive' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+
+Ref command 3: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets True --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'FullContext' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+
+Ref command 4: ```python main.py --nchannels 1 --save 'results/os/lstm_channel_1_carc_naive/' --isWithinAlphabets False --apply_wrn True --wrn_save 'results/os/lstm_channel_1_carc_naive/' --arc_nchannels 64 --arc_nchannels 'LSTM' --arc_save 'results/os/lstm_channel_1_carc_naive/ARCmodel.pt7' --naive_full_type 'FullContext' --naive_full_save_path 'results/os/lstm_channel_1_carc_naive/context.pt7'```
+
 ## Install
 ```
 conda create --name py3pytorch4 python=3.6
