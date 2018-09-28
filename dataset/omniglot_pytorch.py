@@ -177,7 +177,7 @@ class Omniglot_30_10_10_Pairs(Omniglot_30_10_10):
         char_offset2 = choice(self.sizes[alphbt_idx[1]], 1, replace=False)
         diff_idx2 = self.starts[alphbt_idx[1]] + char_offset2 - self.starts[0]
         # characters from the same alphabet
-        same_idx = choice(range(self.data.shape[0]))
+        same_idx = choice(np.arange(self.data.shape[0]))
 
         if similar_characters:
             img = self.data[same_idx, choice(self.data[same_idx].shape[0], 2, replace=False)]
@@ -319,7 +319,7 @@ class OmniglotOSPairs(OmniglotOS):
 
         if self.isWithinAlphabets:
             # choose similar chars
-            same_idx = choice(range(self.data.shape[0]))
+            same_idx = choice(np.arange(self.data.shape[0]))
 
             # choose dissimilar chars within alphabet
             alphbt_idx = choice(num_alphbts, p=self.p)
@@ -347,7 +347,7 @@ class OmniglotOSPairs(OmniglotOS):
             char_offset2 = choice(self.sizes[alphbt_idx[1]], 1, replace=False)
             diff_idx2 = self.starts[alphbt_idx[1]] + char_offset2 - self.starts[0]
             # characters from the same alphabet
-            same_idx = choice(range(self.data.shape[0]))
+            same_idx = choice(np.arange(self.data.shape[0]))
 
             if similar_characters:
                 img = self.data[same_idx, choice(self.num_drawers, 2, replace=False)]
@@ -405,7 +405,7 @@ class OmniglotOneShot(OmniglotOS):
         if self.isWithinAlphabets:
             trial = np.zeros((20+1, self.data.shape[2], self.data.shape[3]), dtype='uint8')
             alphbt_idx = choice(num_alphbts)  # choose an alphabet
-            char_choices = range(self.sizes[alphbt_idx])  # set of all possible chars
+            char_choices = list(range(self.sizes[alphbt_idx]))  # set of all possible chars
             key_char_idx = choice(char_choices)  # this will be the char to be matched
 
             # sample 19 other chars excluding key
@@ -415,7 +415,7 @@ class OmniglotOneShot(OmniglotOS):
             key_char_idx = self.starts[alphbt_idx] + key_char_idx - self.starts[0]
             other_char_idxs = self.starts[alphbt_idx] + other_char_idxs - self.starts[0]
 
-            pos = range(20)
+            pos = list(range(20))
             key_char_pos = choice(pos)  # position of the key char out of 20 pairs
             target = key_char_pos
             pos.pop(key_char_pos)
@@ -432,14 +432,14 @@ class OmniglotOneShot(OmniglotOS):
 
             trial = np.zeros((20+1, self.data.shape[2], self.data.shape[3]), dtype='uint8')
             alphbt_idx = choice(num_alphbts)  # choose an alphabet
-            char_choices = range(self.sizes[alphbt_idx])  # set of all possible chars
+            char_choices = list(range(self.sizes[alphbt_idx]))  # set of all possible chars
             key_char_idx_n = choice(char_choices)  # this will be the char to be matched
             key_char_idx = self.starts[alphbt_idx] + key_char_idx_n - self.starts[0]
             # Set in the last position the key_char_idx
             trial[-1] = self.data[key_char_idx, choice(self.num_drawers)]
 
             # Select the position of the equal character
-            pos = range(20)
+            pos = list(range(20))
             key_char_pos = choice(pos)  # position of the key char out of 20 pairs
             target = key_char_pos
             # Set the character with the same alphabet and char type.
@@ -451,7 +451,7 @@ class OmniglotOneShot(OmniglotOS):
             # Now sample from all the alphabets any char which is not the selected target alphabet-char.
             for i in range(19):
                 alphbt_idx_other = choice(num_alphbts)  # choose an alphabet
-                char_choices = range(self.sizes[alphbt_idx_other])  # set of all possible chars
+                char_choices = list(range(self.sizes[alphbt_idx_other]))  # set of all possible chars
                 if alphbt_idx == alphbt_idx_other: # exclude the key
                     char_choices.pop(key_char_idx_n)
                 # sample one chars excluded key if same alphabet
@@ -495,8 +495,8 @@ class OmniglotOSLake(data.Dataset):
         # resize the images
         if image_size is not None:
             resized_X = np.zeros((20, 800, image_size, image_size), dtype='uint8')
-            for i in xrange(20):
-                for j in xrange(800):
+            for i in range(20):
+                for j in range(800):
                     resized_X[i, j] = resize(self.X[i, j], (image_size, image_size))
             self.X = resized_X
 
@@ -529,14 +529,14 @@ class OmniglotVinyals(OmniglotBase):
 
         X = np.zeros((2 * 20, self.chars.shape[2], self.chars.shape[2]), dtype='uint8')
 
-        char_choices = range(1200, 1623)  # set of all possible chars
+        char_choices = np.arange(1200, 1623)  # set of all possible chars
         key_char_idx = choice(char_choices)  # this will be the char to be matched
 
         # sample 19 other chars excluding key
         char_choices.remove(key_char_idx)
         other_char_idxs = choice(char_choices, 19, replace=False)
 
-        pos = range(20)
+        pos = np.arange(20)
         key_char_pos = choice(pos)  # position of the key char out of 20 pairs
         pos.remove(key_char_pos)
         other_char_pos = np.array(pos, dtype='int32')
