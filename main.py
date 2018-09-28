@@ -48,12 +48,13 @@ import os
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 
-def train(index = 0):
+def train(index = 0, use_transform_options = False):
 
     # change parameters
     options = Options().parse()
     #options = Options().parse() if options is None else options
-    options = tranform_options(index, options)
+    if use_transform_options:
+        options = tranform_options(index, options)
 
     cudnn.benchmark = True # set True to speedup
     #bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options)

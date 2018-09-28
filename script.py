@@ -21,7 +21,7 @@ class NoDaemonPool(multiprocessing.pool.Pool):
 def work(num_proc):
     print("Creating %i (daemon) worker." % num_proc)
     try:
-        train(index=num_proc)
+        train(index=num_proc, use_transform_options = True)
     except:
         print('Exception in worker: %d' % num_proc)
         return False
