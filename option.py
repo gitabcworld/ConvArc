@@ -118,6 +118,18 @@ def tranform_options(index, options):
         options.__setattr__(name_params, val_params)
     return options
 
+def convert_args_paths_to_absolute(options):
+    options.save = os.path.abspath(options.save)
+    options.wrn_save = os.path.abspath(options.wrn_save)
+    if not options.wrn_load is None:
+        options.wrn_load = os.path.abspath(options.wrn_load)
+    options.arc_save = os.path.abspath(options.arc_save)
+    if not options.arc_load is None:
+        options.arc_load = os.path.abspath(options.arc_load)
+    options.naive_full_save_path = os.path.abspath(options.naive_full_save_path)
+    if not options.naive_full_load_path is None:
+        options.naive_full_load_path = os.path.abspath(options.naive_full_load_path)
+    return options
 
 class Options():
     def __init__(self):
@@ -141,7 +153,7 @@ class Options():
 
         # Dataset
         parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to ARC')
-        parser.add_argument('--nchannels', default=3, help='num channels input images.')
+        parser.add_argument('--nchannels', default=3, type=int, help='num channels input images.')
         parser.add_argument('--dataroot', default=os.path.join('./data', 'omniglot.npy'), type=str)
         parser.add_argument('--isWithinAlphabets', default=False, type=bool,
                             help='default: False')
@@ -220,7 +232,7 @@ class Options():
         parser.add_argument('--naive_full_num_layers', default=1, type=int,
                             help='Num of LSTM layers from the full context model.')
         parser.add_argument('--naive_full_lr', default=3e-4, type=float, help='learning rate, default=0.0001')
-        parser.add_argument('--naive_full_lr_patience', default=50000, type=int, help='num epochs to check lr stagnation.')
+        parser.add_argument('--naive_full_lr_patience', default=10000, type=int, help='num epochs to check lr stagnation.')
         parser.add_argument('--naive_full_epochs', default=50000, type=int, help='num epochs training naive/full context')
         parser.add_argument('--naive_full_val_freq', default=1000, type=int, help='n epochs for evaluation dataset '
                                                                          'during training')

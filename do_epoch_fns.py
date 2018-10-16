@@ -172,10 +172,12 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
             data = data.cuda()
             label = label.cuda()
 
+        '''
         for index_batch in range(data.shape[0]):
             for index_oneshot in range(data.shape[1]):
                 cv2.imwrite('/home/aberenguel/tmp/cedar/batch_' + str(index_batch) +'_index_' + str(index_oneshot) + 'img_target_' + str(
                     int(label[index_batch].data.cpu().numpy())) + '.png', data[index_batch, index_oneshot, 0, :, :].data.cpu().numpy() * 255)
+        '''
 
         # not needed gradient graph for the FCN and ARC
         inputs = Variable(data, requires_grad = False)

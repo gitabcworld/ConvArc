@@ -16,7 +16,7 @@ from torch.autograd import Variable
 from omniglotBenchmarks import omniglotBenchMark
 import torch.backends.cudnn as cudnn
 
-from option import Options, tranform_options
+from option import Options, tranform_options, convert_args_paths_to_absolute
 from dataset.omniglot_pytorch import OmniglotOS
 from dataset.omniglot_pytorch import OmniglotOSPairs
 from dataset.omniglot_pytorch import Omniglot_30_10_10
@@ -47,7 +47,6 @@ import os
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-
 def train(index = 0, use_transform_options = False):
 
     # change parameters
@@ -55,6 +54,9 @@ def train(index = 0, use_transform_options = False):
     #options = Options().parse() if options is None else options
     if use_transform_options:
         options = tranform_options(index, options)
+
+    # check if the paths are relative? If they are convert them to absolute
+    options = convert_args_paths_to_absolute(options)
 
     cudnn.benchmark = True # set True to speedup
     #bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options)

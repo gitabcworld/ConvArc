@@ -377,6 +377,7 @@ class OmniglotOSPairs(OmniglotOS):
                             img2.transpose(0, 1).transpose(1, 2).cpu().numpy() * 255)
         '''
 
+
         return torch.stack((img1,img2)), target
 
     def __len__(self):
@@ -449,11 +450,11 @@ class OmniglotOneShot(OmniglotOS):
             pos.pop(key_char_pos)
             other_char_pos = np.array(pos, dtype='int32')
             # Now sample from all the alphabets any char which is not the selected target alphabet-char.
+            lst_posible_alphbts = list(range(num_alphbts))
+            del lst_posible_alphbts[alphbt_idx]
             for i in range(19):
-                alphbt_idx_other = choice(num_alphbts)  # choose an alphabet
+                alphbt_idx_other = choice(lst_posible_alphbts)  # choose an alphabet
                 char_choices = list(range(self.sizes[alphbt_idx_other]))  # set of all possible chars
-                if alphbt_idx == alphbt_idx_other: # exclude the key
-                    char_choices.pop(key_char_idx_n)
                 # sample one chars excluded key if same alphabet
                 other_char_idx = choice(char_choices)
                 other_char_idx = self.starts[alphbt_idx_other] + other_char_idx - self.starts[0]
@@ -473,6 +474,7 @@ class OmniglotOneShot(OmniglotOS):
         [cv2.imwrite('/home/aberenguel/tmp/cedar/im_' + str(i) + '.png',
                      trial[i].transpose(0, 1).transpose(1, 2).cpu().numpy() * 255) for i in range(trial.shape[0])]
         '''
+
 
         return trial, target
 
