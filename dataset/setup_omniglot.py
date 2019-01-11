@@ -100,4 +100,4 @@ os.system('rm -rf ../data/omniglot-master/')
 os.system('rm -rf ../data/images_background/')
 os.system('rm -rf ../data/images_evaluation/')
 
-print 'omniglot data preperation done, exiting ...'
+print ('omniglot data preperation done, exiting ...')
