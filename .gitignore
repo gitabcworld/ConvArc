@@ -117,3 +117,5 @@ tests/
 # results
 results/
 
+# ignore visual studio code
+.vscode/

@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from visualization.visualize import make_dot
 import os.path
-import urllib2
+import urllib3
 
 
 __all__ = ['WideResNet', 'wrn']
@@ -50,7 +50,7 @@ class WideResNetImageNet(nn.Module):
         if not os.path.isfile(pathWeigths):
             print('Downloading pretrained WideResNet to %s' % pathWeigths)
             urlModel = 'https://s3.amazonaws.com/pytorch/h5models/wide-resnet-50-2-export.hkl'
-            wrnWeights = urllib2.urlopen(urlModel)
+            wrnWeights = urllib3.urlopen(urlModel)
             with open(pathWeigths, 'wb') as output:
                 output.write(wrnWeights.read())
 
@@ -58,7 +58,7 @@ class WideResNetImageNet(nn.Module):
         # convert numpy arrays to torch Variables
         print('Printing loaded weigths shape...')
         for k, v in sorted(self.params.items()):
-            print k, v.shape
+            print (k, v.shape)
             if useCuda:
                 self.params[k] = Variable(torch.from_numpy(v).cuda(), requires_grad=True)
             else:
@@ -72,7 +72,7 @@ class WideResNetImageNet(nn.Module):
             self.params['fc.weight'] = tmp.weight
             self.params['fc.bias'] = tmp.bias
 
-        print '\nTotal parameters:', sum(v.numel() for v in self.params.values())
+        print ('\nTotal parameters:' + sum(v.numel() for v in self.params.values()))
 
 
     def forward(self, input):

@@ -44,7 +44,7 @@ class ConvCNN_Base(nn.Module):
 
     def create_optimizer(self, params, method = 'SGD', lr = 1e04,
                          momentum = 0.9, weight_decay = 0.0005 ):
-        print 'creating optimizer with lr = ', lr
+        print ('creating optimizer with lr = %f' % (lr))
         if method == 'SGD':
             return torch.optim.SGD(params, lr=lr, momentum=momentum,
                                    weight_decay=weight_decay)
@@ -200,17 +200,17 @@ class WideResidualNetwork(ConvCNN_Base):
         #    v = stats[k]
 
         print ('Wide Residual Network parameters...')
-        print '\nParameters:'
+        print ('\nParameters:')
         kmax = max(len(key) for key in wrn.params.keys())
         for i, (key, v) in enumerate(wrn.params.items()):
-            print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v.data)
-        print '\nAdditional buffers:'
+            print (str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v.data))
+        print ('\nAdditional buffers:')
         kmax = max(len(key) for key in wrn.stats.keys())
         for i, (key, v) in enumerate(wrn.stats.items()):
-            print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v)
+            print (str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v))
 
         n_parameters = sum(p.numel() for p in wrn.params.values() + wrn.stats.values())
-        print '\nTotal number of parameters:', n_parameters
+        print ('\nTotal number of parameters:' + n_parameters)
 
         return wrn, None, None
 
@@ -225,7 +225,7 @@ class WideResidualNetwork(ConvCNN_Base):
         logname = os.path.join(self.opt['wrn_save'], 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print (z)
 
     def forward(self, data_loader, f, params, stats):
         params, stats, mean_acc, mean_losses = \
@@ -539,7 +539,7 @@ class InceptionNetwork(ConvCNN_Base):
         state_dict = torch.load(modelPath)
         inception.load_state_dict(state_dict['state_dict'])
         n_parameters = sum(p.numel() for p in inception.parameters())
-        print '\nTotal number of parameters:', n_parameters
+        print ('\nTotal number of parameters:'+ n_parameters)
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
@@ -551,7 +551,7 @@ class InceptionNetwork(ConvCNN_Base):
         logname = os.path.join(self.opt['save'], 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print (z)
 
     def forward(self, data_loader, inception):
         model, data_all_acc, data_all_losses = \
@@ -692,7 +692,7 @@ class VGGNetwork(ConvCNN_Base):
         state_dict = torch.load(modelPath)
         inception.load_state_dict(state_dict['state_dict'])
         n_parameters = sum(p.numel() for p in inception.parameters())
-        print '\nTotal number of parameters:', n_parameters
+        print ('\nTotal number of parameters:'+ n_parameters)
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
@@ -704,7 +704,7 @@ class VGGNetwork(ConvCNN_Base):
         logname = os.path.join(self.opt['save'], 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print (z)
 
     def forward(self, data_loader, inception):
         model, data_all_acc, data_all_losses = \
@@ -850,7 +850,7 @@ class SqueezeNetNetwork(ConvCNN_Base):
         state_dict = torch.load(modelPath)
         inception.load_state_dict(state_dict['state_dict'])
         n_parameters = sum(p.numel() for p in inception.parameters())
-        print '\nTotal number of parameters:', n_parameters
+        print ('\nTotal number of parameters:'+ n_parameters)
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
@@ -862,7 +862,7 @@ class SqueezeNetNetwork(ConvCNN_Base):
         logname = os.path.join(self.opt['save'], 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print (z)
 
     def forward(self, data_loader, inception):
         model, data_all_acc, data_all_losses = \
@@ -997,7 +997,7 @@ class WideResidualNetworkv2(ConvCNN_Base):
         state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
         wrn.params = state_dict['state_dict']
         n_parameters = sum(p.numel() for p in wrn.parameters())
-        print '\nTotal number of parameters:', n_parameters
+        print ('\nTotal number of parameters:'+ n_parameters)
         return wrn, None, None
 
     def log(self,dictParams, optimizer, params):
@@ -1010,7 +1010,7 @@ class WideResidualNetworkv2(ConvCNN_Base):
         logname = os.path.join(self.opt['wrn_save'], 'log.txt')
         with open(logname, 'a') as f:
             f.write('json_stats: ' + json.dumps(z) + '\n')
-        print z
+        print (z)
 
     def forward(self, data_loader, f, params, stats):
         params, stats, data_all_acc, data_all_losses = \
