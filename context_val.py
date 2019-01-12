@@ -63,7 +63,7 @@ def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, log
         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
         # Save the context model
-        torch.save(context_fn, opt.naive_full_save_path)
+        torch.save(context_fn.state_dict(), opt.naive_full_save_path)
         # Acc - loss values
         best_validation_loss = val_loss_epoch
         best_accuracy = val_acc_epoch
