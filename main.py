@@ -53,6 +53,8 @@ def train(index = 0):
     options = Options().parse()
     #options = Options().parse() if options is None else options
     options = tranform_options(index, options)
+    # use cuda?
+    options.cuda = torch.cuda.is_available()
 
     cudnn.benchmark = True # set True to speedup
     #bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options)
@@ -123,7 +125,7 @@ def train(index = 0):
                                         attn_dense=opt.arc_attn_dense)
 
     # load from a previous checkpoint, if specified.
-    if opt.arc_load is not None:
+    if opt.arc_load is not None and os.path.exists(opt.arc_load):
         discriminator.load_state_dict(torch.load(opt.arc_load))
 
     if opt.cuda:
@@ -138,6 +140,10 @@ def train(index = 0):
     else:
         optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=opt.arc_lr)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=opt.arc_lr_patience, verbose=True)
+
+    # load preexisting optimizer values if exists
+    if os.path.exists(opt.arc_optimizer_path):
+        optimizer.load_state_dict(torch.load(opt.arc_optimizer_path))
 
     # Select the epoch functions
     do_epoch_fn = None
@@ -208,7 +214,7 @@ def train(index = 0):
         num_layers = opt.naive_full_num_layers
         context_fn = FullContextARC(hidden_size=layer_sizes, num_layers=num_layers, vector_dim=vector_dim)
 
-    if opt.naive_full_load_path is not None:
+    if opt.naive_full_load_path is not None and os.path.exists(opt.naive_full_load_path):
         discriminator.load_state_dict(torch.load(opt.naive_full_load_path))
 
     if opt.cuda and context_fn is not None:
@@ -230,6 +236,10 @@ def train(index = 0):
     scheduler = ReduceLROnPlateau(optimizer, mode='min',
                                   patience=opt.arc_lr_patience, verbose=True,
                                   cooldown=opt.arc_lr_patience)
+
+    # load preexisting optimizer values if exists
+    if os.path.exists(opt.naive_full_optimizer_path):
+        optimizer.load_state_dict(torch.load(opt.naive_full_optimizer_path))
 
     ###################################
     ## TRAINING NAIVE/FULLCONTEXT
@@ -253,6 +263,9 @@ def train(index = 0):
                                                                                             discriminator, context_fn,
                                                                                             logger, loss_fn, fcn)
                     if is_model_saved:
+                        # Save the optimizer
+                        torch.save(optimizer.state_dict(), opt.naive_full_optimizer_path)
+                        # Test the model
                         test_acc_epoch = context_test.context_test(epoch, do_epoch_naive_full, opt, test_loader,
                                                                discriminator, logger)
                 logger.step()

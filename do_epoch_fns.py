@@ -205,7 +205,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         #features = torch.cat(hidden_features, dim=1)
         features = model_fn(features)
         if loss_fn:
-            loss = loss_fn(features, targets)
+            loss = loss_fn(features, targets.long())
             loss_epoch.append(loss.item())
 
         # Training...

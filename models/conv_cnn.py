@@ -30,7 +30,7 @@ class ConvCNNFactory:
     # A Template Method:
     @staticmethod
     def createCNN(id, opt):
-        if not ConvCNNFactory.factories.has_key(id):
+        if id not in ConvCNNFactory.factories:
             ConvCNNFactory.factories[id] = \
                 eval(id + '.Factory()')
         return ConvCNNFactory.factories[id].create(opt)
@@ -132,7 +132,7 @@ class WideResidualNetwork(ConvCNN_Base):
             state_dict = torch.load(os.path.join(resume, 'model.pt7'))
             epoch = state_dict['epoch']
             params_tensors, stats = state_dict['params'], state_dict['stats']
-            for k, v in wrn.params.iteritems():
+            for k, v in wrn.params.items():
                 v.data.copy_(params_tensors[k])
             optimizer.load_state_dict(state_dict['optimizer'])
 
@@ -188,16 +188,17 @@ class WideResidualNetwork(ConvCNN_Base):
                          num_classes= None if fully_convolutional else self.opt['wrn_num_classes'],
                          dropout=self.opt['dropout'])
 
-        print ('Loading Wide Residual Network...')
-        state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
-        params_tensors, stats = state_dict['params'], state_dict['stats']
-        # copy the params tensors
-        for k, v in wrn.params.iteritems():
-            v.data.copy_(params_tensors[k])
-        # copy the stats tensors
-        wrn.stats = stats
-        #for k, v in wrn.stats.iteritems():
-        #    v = stats[k]
+        if os.path.exists(os.path.join(modelPath, 'model.pt7')):
+            print ('Loading Wide Residual Network...')
+            state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
+            params_tensors, stats = state_dict['params'], state_dict['stats']
+            # copy the params tensors
+            for k, v in wrn.params.items():
+                v.data.copy_(params_tensors[k])
+            # copy the stats tensors
+            wrn.stats = stats
+            #for k, v in wrn.stats.items():
+            #    v = stats[k]
 
         print ('Wide Residual Network parameters...')
         print ('\nParameters:')
@@ -209,17 +210,17 @@ class WideResidualNetwork(ConvCNN_Base):
         for i, (key, v) in enumerate(wrn.stats.items()):
             print (str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v))
 
-        n_parameters = sum(p.numel() for p in wrn.params.values() + wrn.stats.values())
-        print ('\nTotal number of parameters:' + n_parameters)
+        n_parameters = sum(p.numel() for p in list(wrn.params.values()) + list(wrn.stats.values()))
+        print ('\nTotal number of parameters: %d' % (n_parameters))
 
         return wrn, None, None
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(params={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(params={k: v.data for k, v in params.items()},
                         stats=stats,
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'w'))
+                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'wb'))
         z = self.opt.copy()
         z.update(dictParams)
         logname = os.path.join(self.opt['wrn_save'], 'log.txt')
@@ -299,7 +300,7 @@ class WideResidualNetwork(ConvCNN_Base):
             state_dict = torch.load(resume)
             epoch = state_dict['epoch']
             params_tensors, stats = state_dict['params'], state_dict['stats']
-            for k, v in params.iteritems():
+            for k, v in params.items():
                 v.data.copy_(params_tensors[k])
             optimizer.load_state_dict(state_dict['optimizer'])
 
@@ -360,7 +361,7 @@ class WideResidualNetwork(ConvCNN_Base):
         print ('Loading Wide Residual Network...')
         state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
         params_tensors, stats = state_dict['params'], state_dict['stats']
-        for k, v in params.iteritems():
+        for k, v in params.items():
             v.data.copy_(params_tensors[k])
 
         print ('Wide Residual Network parameters...')
@@ -374,12 +375,12 @@ class WideResidualNetwork(ConvCNN_Base):
             print str(i).ljust(5), key.ljust(kmax + 3), str(tuple(v.size())).ljust(23), torch.typename(v)
 
         n_parameters = sum(p.numel() for p in params.values() + stats.values())
-        print '\nTotal number of parameters:', n_parameters
+        print ('\nTotal number of parameters: %d' % (n_parameters))
 
         return f, params, stats
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(params={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(params={k: v.data for k, v in params.items()},
                         stats=stats,
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
@@ -543,7 +544,7 @@ class InceptionNetwork(ConvCNN_Base):
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(state_dict={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(state_dict={k: v.data for k, v in params.items()},
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
                    open(os.path.join(self.opt['save'], 'model.pt7'), 'w'))
@@ -696,7 +697,7 @@ class VGGNetwork(ConvCNN_Base):
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(state_dict={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(state_dict={k: v.data for k, v in params.items()},
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
                    open(os.path.join(self.opt['save'], 'model.pt7'), 'w'))
@@ -854,7 +855,7 @@ class SqueezeNetNetwork(ConvCNN_Base):
         return inception
 
     def log(self,dictParams, optimizer, params, stats):
-        torch.save(dict(state_dict={k: v.data for k, v in params.iteritems()},
+        torch.save(dict(state_dict={k: v.data for k, v in params.items()},
                         optimizer=optimizer.state_dict(),
                         epoch=dictParams['epoch']),
                    open(os.path.join(self.opt['save'], 'model.pt7'), 'w'))

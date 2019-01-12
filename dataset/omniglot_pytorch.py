@@ -18,6 +18,13 @@ from scipy.misc import imresize as resize
 
 class OmniglotBase(data.Dataset):
 
+    # each alphabet/language has different number of characters.
+    # in order to uniformly sample all characters, we need weigh the probability
+    # of sampling a alphabet by its size. p is that probability
+    def size2p(self, size):
+        s = np.array(size).astype('float64')
+        return s / s.sum()
+
     def __init__(self, root = os.path.join('../../data', 'omniglot.npy'), train='train',
                  transform=None, target_transform=None):
 
@@ -53,14 +60,7 @@ class OmniglotBase(data.Dataset):
                   16, 52, 47, 40, 26, 40, 41, 33, 14, 42, 23, 17, 55, 20, 26, 26, 26,
                   26, 26, 45, 45, 41, 26, 47, 40, 30, 45, 46, 28, 23, 25, 42, 26]
 
-        # each alphabet/language has different number of characters.
-        # in order to uniformly sample all characters, we need weigh the probability
-        # of sampling a alphabet by its size. p is that probability
-        def size2p(size):
-            s = np.array(size).astype('float64')
-            return s / s.sum()
-
-        self.size2p = size2p
+        self.size2p = self.size2p
 
 
     def __getitem__(self, index):
@@ -401,7 +401,7 @@ class OmniglotOneShot(OmniglotOS):
         if self.isWithinAlphabets:
             trial = np.zeros((20+1, self.data.shape[2], self.data.shape[3]), dtype='uint8')
             alphbt_idx = choice(num_alphbts)  # choose an alphabet
-            char_choices = range(self.sizes[alphbt_idx])  # set of all possible chars
+            char_choices = list(range(self.sizes[alphbt_idx]))  # set of all possible chars
             key_char_idx = choice(char_choices)  # this will be the char to be matched
 
             # sample 19 other chars excluding key
@@ -411,7 +411,7 @@ class OmniglotOneShot(OmniglotOS):
             key_char_idx = self.starts[alphbt_idx] + key_char_idx - self.starts[0]
             other_char_idxs = self.starts[alphbt_idx] + other_char_idxs - self.starts[0]
 
-            pos = range(20)
+            pos = list(range(20))
             key_char_pos = choice(pos)  # position of the key char out of 20 pairs
             target = key_char_pos
             pos.pop(key_char_pos)
@@ -435,7 +435,7 @@ class OmniglotOneShot(OmniglotOS):
             trial[-1] = self.data[key_char_idx, choice(self.num_drawers)]
 
             # Select the position of the equal character
-            pos = range(20)
+            pos = list(range(20))
             key_char_pos = choice(pos)  # position of the key char out of 20 pairs
             target = key_char_pos
             # Set the character with the same alphabet and char type.
@@ -447,7 +447,7 @@ class OmniglotOneShot(OmniglotOS):
             # Now sample from all the alphabets any char which is not the selected target alphabet-char.
             for i in range(19):
                 alphbt_idx_other = choice(num_alphbts)  # choose an alphabet
-                char_choices = range(self.sizes[alphbt_idx_other])  # set of all possible chars
+                char_choices = list(range(self.sizes[alphbt_idx_other]))  # set of all possible chars
                 if alphbt_idx == alphbt_idx_other: # exclude the key
                     char_choices.pop(key_char_idx_n)
                 # sample one chars excluded key if same alphabet
@@ -525,14 +525,14 @@ class OmniglotVinyals(OmniglotBase):
 
         X = np.zeros((2 * 20, self.chars.shape[2], self.chars.shape[2]), dtype='uint8')
 
-        char_choices = range(1200, 1623)  # set of all possible chars
+        char_choices = list(range(1200, 1623))  # set of all possible chars
         key_char_idx = choice(char_choices)  # this will be the char to be matched
 
         # sample 19 other chars excluding key
         char_choices.remove(key_char_idx)
         other_char_idxs = choice(char_choices, 19, replace=False)
 
-        pos = range(20)
+        pos = list(range(20))
         key_char_pos = choice(pos)  # position of the key char out of 20 pairs
         pos.remove(key_char_pos)
         other_char_pos = np.array(pos, dtype='int32')

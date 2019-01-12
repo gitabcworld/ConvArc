@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime
 import torch
 import multiprocessing
+import torch
 
 # Set global values so are being modified.
 best_validation_loss = sys.float_info.max
@@ -63,6 +64,7 @@ def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, log
             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
         # Save the context model
         torch.save(context_fn, opt.naive_full_save_path)
+        # Acc - loss values
         best_validation_loss = val_loss_epoch
         best_accuracy = val_acc_epoch
         is_model_saved = True

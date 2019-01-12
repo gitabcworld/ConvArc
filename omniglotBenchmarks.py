@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import torch.utils.data
@@ -42,6 +43,20 @@ BanknoteTripletsROI: Triplets of ROIs banknotes. The ROIs are already cropped at
 list_benchmarks = ['omniglotOS','omniglotVerif']
 
 class omniglotBenchMark():
+
+    class windows_lambda():
+        def __init__(self,opt):
+            self.opt = opt
+        def cv2_scale(self,x):
+            return cv2.resize(x, dsize=(self.opt.imageSize, self.opt.imageSize),
+                                        interpolation=cv2.INTER_AREA).astype(np.uint8)
+        def np_reshape(self,x):
+            return np.reshape(x, (self.opt.imageSize, self.opt.imageSize, 1))
+        def np_repeat(self,x):
+            return np.repeat(x, self.opt.nchannels, axis=2)
+        def np_mul(self,x):
+            return lambda x: x * 255.0
+
     def __init__(self,type=OmniglotOS, opt=Options().parse(), train_mean=None, train_std=None):
         self.type = type
         self.opt = opt
@@ -57,25 +72,45 @@ class omniglotBenchMark():
     def __get_mean_std__(self):
 
         kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
-        cv2_scale = lambda x: cv2.resize(x, dsize=(self.opt.imageSize, self.opt.imageSize),
-                                         interpolation=cv2.INTER_AREA).astype(np.uint8)
-        np_reshape = lambda x: np.reshape(x, (self.opt.imageSize, self.opt.imageSize, 1))
-        np_repeat = lambda x: np.repeat(x, self.opt.nchannels, axis=2)
-        np_mul = lambda x: x * 255.0
+        # WINDOWS - LINUX. Lambda objects cannot be pickled on Windows. Thread: https://discuss.pytorch.org/t/cant-pickle-local-object-dataloader-init-locals-lambda/31857
+        if os.name == 'nt': # Windows
+            
+            obj_windows_lambda = self.windows_lambda(opt=self.opt)
 
-        train_transform = transforms.Compose([
-            #cv2_scale,
-            np_reshape,
-            np_repeat,
-            #T.AugmentationAleju(channel_is_first_axis=False,
-            #                    scale_to_percent=self.opt.scale,
-            #                    hflip=self.opt.hflip, vflip=self.opt.vflip,
-            #                    rotation_deg=self.opt.rotation_deg, shear_deg=self.opt.shear_deg,
-            #                    translation_x_px=self.opt.translation_px,
-            #                    translation_y_px=self.opt.translation_px),
-            #np_mul,
-            #transforms.ToTensor(),
-        ])
+            train_transform = transforms.Compose([
+                #obj_windows_lambda.cv2_scale,
+                obj_windows_lambda.np_reshape,
+                obj_windows_lambda.np_repeat,
+                #T.AugmentationAleju(channel_is_first_axis=False,
+                #                    scale_to_percent=self.opt.scale,
+                #                    hflip=self.opt.hflip, vflip=self.opt.vflip,
+                #                    rotation_deg=self.opt.rotation_deg, shear_deg=self.opt.shear_deg,
+                #                    translation_x_px=self.opt.translation_px,
+                #                    translation_y_px=self.opt.translation_px),
+                #obj_windows_lambda.np_mul,
+                #transforms.ToTensor(),
+            ])
+
+        else:
+            cv2_scale = lambda x: cv2.resize(x, dsize=(self.opt.imageSize, self.opt.imageSize),
+                                            interpolation=cv2.INTER_AREA).astype(np.uint8)
+            np_reshape = lambda x: np.reshape(x, (self.opt.imageSize, self.opt.imageSize, 1))
+            np_repeat = lambda x: np.repeat(x, self.opt.nchannels, axis=2)
+            np_mul = lambda x: x * 255.0
+
+            train_transform = transforms.Compose([
+                #cv2_scale,
+                np_reshape,
+                np_repeat,
+                #T.AugmentationAleju(channel_is_first_axis=False,
+                #                    scale_to_percent=self.opt.scale,
+                #                    hflip=self.opt.hflip, vflip=self.opt.vflip,
+                #                    rotation_deg=self.opt.rotation_deg, shear_deg=self.opt.shear_deg,
+                #                    translation_x_px=self.opt.translation_px,
+                #                    translation_y_px=self.opt.translation_px),
+                #np_mul,
+                #transforms.ToTensor(),
+            ])
 
         if self.type == Omniglot_30_10_10 or self.type == Omniglot_30_10_10_Pairs:
             train_loader_mean_std = torch.utils.data.DataLoader(

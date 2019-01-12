@@ -13,12 +13,12 @@ def cast(params, dtype='float'):
     if isinstance(params, dict):
         return {k: cast(v, dtype) for k, v in params.items()}
     else:
-        return getattr(params.cuda(), dtype)()
+        return getattr(params.cuda() if torch.cuda.device_count()>0 else params.cpu(), dtype)()
 
 
 def conv_params(ni, no, k=1, g=1):
     assert ni % g == 0
-    return cast(torch.Tensor(no, ni / g, k, k).normal_(0, 2 / math.sqrt(ni * k * k)))
+    return cast(torch.Tensor(no, int(ni / g), k, k).normal_(0, 2 / math.sqrt(ni * k * k)))
 
 
 def linear_params(ni, no):

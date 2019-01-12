@@ -59,7 +59,4 @@ class ArcBinaryClassifier(nn.Module):
 
         return decision, updated_states
 
-    def save_to_file(self, file_path):
-        torch.save(self.state_dict(), file_path)
-
 

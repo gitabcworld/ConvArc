@@ -11,12 +11,14 @@
 import argparse
 import os
 
+pathResults = os.path.dirname(os.path.abspath(__file__)) + '/results/'
+
 '''
 [
-    ('wrn_save', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_naive/'),
-    ('naive_full_save_path', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_naive/context.pt7'),
-    ('arc_save', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_naive/ARCmodel.pt7'),
-    ('save', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_naive/'),
+    ('wrn_save', pathResults + 'os/lstm_channel_3_carc_naive/'),
+    ('naive_full_save_path', pathResults + 'os/lstm_channel_3_carc_naive/context.pt7'),
+    ('arc_save', pathResults + 'os/lstm_channel_3_carc_naive/ARCmodel.pt7'),
+    ('save', pathResults + 'os/lstm_channel_3_carc_naive/'),
     ('nchannels', 3),
     ('apply_wrn', True),
     ('arc_nchannels', 64),
@@ -30,10 +32,10 @@ import os
     # ('naive_full_val_freq', 5),
 ],
 [
-    ('wrn_save', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_fullcontext/'),
-    ('naive_full_save_path', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_fullcontext/context.pt7'),
-    ('arc_save', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_fullcontext/ARCmodel.pt7'),
-    ('save', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_fullcontext/'),
+    ('wrn_save', pathResults + 'os/lstm_channel_1_carc_fullcontext/'),
+    ('naive_full_save_path', pathResults + 'os/lstm_channel_1_carc_fullcontext/context.pt7'),
+    ('arc_save', pathResults + 'os/lstm_channel_1_carc_fullcontext/ARCmodel.pt7'),
+    ('save', pathResults + 'os/lstm_channel_1_carc_fullcontext/'),
     ('nchannels', 1),
     ('apply_wrn', True),
     ('arc_nchannels', 64),
@@ -47,10 +49,10 @@ import os
     # ('naive_full_val_freq', 5),
 ],
 [
-    ('wrn_save', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_fullcontext/'),
-    ('naive_full_save_path', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_fullcontext/context.pt7'),
-    ('arc_save', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_fullcontext/ARCmodel.pt7'),
-    ('save', '/home/aberenguel/tmp/log/os/lstm_channel_3_carc_fullcontext/'),
+    ('wrn_save', pathResults + 'os/lstm_channel_3_carc_fullcontext/'),
+    ('naive_full_save_path', pathResults + 'os/lstm_channel_3_carc_fullcontext/context.pt7'),
+    ('arc_save', pathResults + 'os/lstm_channel_3_carc_fullcontext/ARCmodel.pt7'),
+    ('save', pathResults + 'os/lstm_channel_3_carc_fullcontext/'),
     ('nchannels', 3),
     ('apply_wrn', True),
     ('arc_nchannels', 64),
@@ -67,46 +69,54 @@ import os
 
 lst_parameters_change = [
     [
-        ('save', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_naive/'),
+        ('save', pathResults + 'os/lstm_channel_1_carc_naive/'),
         ('nchannels', 1),
-        ('train_num_batches', 10000),
+        ('train_num_batches', 10),
         ('isWithinAlphabets', False),
 
         ('apply_wrn', True),
-        ('wrn_save', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_naive/'),
-        ('wrn_load', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_naive/'),
+        ('wrn_save', pathResults + 'os/lstm_channel_1_carc_naive/'),
+        ('wrn_load', pathResults + 'os/lstm_channel_1_carc_naive/'),
+        #('wrn_load', None),
 
         ('arc_nchannels', 64),
         ('arc_attn_type', 'LSTM'),
-        ('arc_save', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
-        ('arc_load', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
+        ('arc_save', pathResults + 'os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
+        #('arc_load', None),
         ('arc_resume', True),
-
+        
         ('naive_full_type', 'Naive'),
-        ('naive_full_save_path', '/home/aberenguel/tmp/log/os/lstm_channel_1_carc_naive/context.pt7'),
-        ('naive_full_load_path', None),
-        ('naive_full_resume', False),
+        ('naive_full_save_path', pathResults + 'os/lstm_channel_1_carc_naive/context.pt7'),
+        ('naive_full_load_path', pathResults + 'os/lstm_channel_1_carc_naive/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/context_optimizer.pt7'),
     ],
     [
-        ('save', '/home/aberenguel/tmp/log/os_within/lstm_channel_1_carc_naive/'),
+        ('save', pathResults + 'os_within/lstm_channel_1_carc_naive/'),
         ('nchannels', 1),
         ('train_num_batches', 10000),
         ('isWithinAlphabets', True),
 
         ('apply_wrn', True),
-        ('wrn_save', '/home/aberenguel/tmp/log/os_within/lstm_channel_1_carc_naive/'),
-        ('wrn_load', '/home/aberenguel/tmp/log/os_within/lstm_channel_1_carc_naive/'),
+        ('wrn_save', pathResults + 'os_within/lstm_channel_1_carc_naive/'),
+        ('wrn_load', pathResults + 'os_within/lstm_channel_1_carc_naive/'),
 
         ('arc_nchannels', 64),
         ('arc_attn_type', 'LSTM'),
-        ('arc_save', '/home/aberenguel/tmp/log/os_within/lstm_channel_1_carc_naive/ARCmodel.pt7'),
-        ('arc_load', '/home/aberenguel/tmp/log/os_within/lstm_channel_1_carc_naive/ARCmodel.pt7'),
+        ('arc_save', pathResults + 'os_within/lstm_channel_1_carc_naive/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'os_within/lstm_channel_1_carc_naive/ARCmodel.pt7'),
         ('arc_resume', True),
 
         ('naive_full_type', 'Naive'),
-        ('naive_full_save_path', '/home/aberenguel/tmp/log/os_within/lstm_channel_1_carc_naive/context.pt7'),
-        ('naive_full_load_path', None),
-        ('naive_full_resume', False),
+        ('naive_full_save_path', pathResults + 'os_within/lstm_channel_1_carc_naive/context.pt7'),
+        ('naive_full_load_path', pathResults + 'os_within/lstm_channel_1_carc_naive/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'os_within/lstm_channel_1_carc_naive/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'os_within/lstm_channel_1_carc_naive/context_optimizer.pt7'),
     ],
 ]
 
@@ -124,29 +134,28 @@ class Options():
 
         # General settings
         parser = argparse.ArgumentParser(description='Wide Residual Networks')
-        parser.add_argument('--train_num_batches', type=int, default=1500000, help='train epochs')
-        parser.add_argument('--val_freq', type=int, default=1000, help='validation frequency')
-        parser.add_argument('--val_num_batches', type=int, default=250, help='validation num batches')
-        parser.add_argument('--test_num_batches', type=int, default=500, help='test num batches')
-        parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
-        parser.add_argument('--cuda', action='store_true', default=True, help='enables cuda')
+        parser.add_argument('--train_num_batches', type=int, default=10, help='train epochs')
+        parser.add_argument('--val_freq', type=int, default=5, help='validation frequency')
+        parser.add_argument('--val_num_batches', type=int, default=5, help='validation num batches')
+        parser.add_argument('--test_num_batches', type=int, default=10, help='test num batches')
+        parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
         parser.add_argument('--nthread', default=7, type=int)
         parser.add_argument('--dropout', default=0.1, type=float, help='Dropout for training. Done in the input'
                                                                        'in the case of ARC and in the residual block'
                                                                        'in the case of CARC.')
-        parser.add_argument('--save', default='/home/aberenguel/tmp/log/os/lstm_0/',
+        parser.add_argument('--save', default=pathResults + 'os/lstm_0/',
                             help='path of the folder to create general info.')
 
         # Dataset
         parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to ARC')
         parser.add_argument('--nchannels', default=3, help='num channels input images.')
-        parser.add_argument('--dataroot', default=os.path.join('./data', 'omniglot.npy'), type=str)
+        parser.add_argument('--dataroot', default=os.path.join('D:/PhD/code/dataset/convarc', 'omniglot.npy'), type=str)
         parser.add_argument('--isWithinAlphabets', default=False, type=bool,
                             help='default: False')
         parser.add_argument('--reduced_dataset', default=False, type=bool)
-        parser.add_argument('--numTrials', type=int, default=128, help='number of Trials. Equal to batch size.')
+        parser.add_argument('--numTrials', type=int, default=32, help='number of Trials. Equal to batch size.')
 
 
         # Augmentation
@@ -163,7 +172,7 @@ class Options():
                             help='type name of the network')
         parser.add_argument('--wrn_load', default=None, type=str,
                             help='path to the trained wide residual network.')
-        parser.add_argument('--wrn_save', default='/home/aberenguel/tmp/log/os/lstm_0/', type=str,
+        parser.add_argument('--wrn_save', default=pathResults + 'os/lstm_0/', type=str,
                             help='folder to store the network')
         parser.add_argument('--wrn_train_resume', default=None, help='path to continue training from a checkpoint.')
         parser.add_argument('--wrn_depth', default=4, help='depth of wide Residual Networks.')
@@ -189,7 +198,7 @@ class Options():
         parser.add_argument('--arc_load', default=None,
                             help='the model to load from. Start fresh if not specified.')
         parser.add_argument('--arc_resume', default=False, type=bool, help='continue ARC training?')
-        parser.add_argument('--arc_save', default='/home/aberenguel/tmp/log/os/lstm_0/ARCmodel.pt7',
+        parser.add_argument('--arc_save', default=pathResults + 'os/lstm_0/ARCmodel.pt7',
                             help='the model to load from. Start fresh if not specified.')
         parser.add_argument('--arc_nchannels', type=int, default=3, help='num inputs channels to discriminator')
         parser.add_argument('--arc_glimpseSize', type=int, default=4, help='the height / width of glimpse seen by ARC')
@@ -213,7 +222,7 @@ class Options():
         parser.add_argument('--naive_full_load_path', default=None,
                             help='the model to load from. Start fresh if not specified.')
         parser.add_argument('--naive_full_resume', default=False, type=bool, help='continue ARC training?')
-        parser.add_argument('--naive_full_save_path', default='/home/aberenguel/tmp/log/os/lstm_0/context.pt7',
+        parser.add_argument('--naive_full_save_path', default=pathResults + 'os/lstm_0/context.pt7',
                             help='the model to load from. Start fresh if not specified.')
         parser.add_argument('--naive_full_layer_sizes', default=128, type=int,
                             help='Layer sizes in the LSTM from the full context model.')
@@ -221,10 +230,13 @@ class Options():
                             help='Num of LSTM layers from the full context model.')
         parser.add_argument('--naive_full_lr', default=3e-4, type=float, help='learning rate, default=0.0001')
         parser.add_argument('--naive_full_lr_patience', default=50000, type=int, help='num epochs to check lr stagnation.')
-        parser.add_argument('--naive_full_epochs', default=50000, type=int, help='num epochs training naive/full context')
-        parser.add_argument('--naive_full_val_freq', default=1000, type=int, help='n epochs for evaluation dataset '
+        parser.add_argument('--naive_full_epochs', default=10, type=int, help='num epochs training naive/full context')
+        parser.add_argument('--naive_full_val_freq', default=5, type=int, help='n epochs for evaluation dataset '
                                                                          'during training')
 
+        # Optimizers
+        parser.add_argument('--arc_optimizer_path', default=None, help='arc optimizer path to load/save')
+        parser.add_argument('--naive_full_optimizer_path', default=None, help='naive/full optimizer path to load/save')
 
         self.parser = parser
 

@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from datetime import datetime
 import multiprocessing
+import torch
 
 # Set global values so are being modified.
 best_validation_loss = sys.float_info.max
@@ -57,14 +58,17 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
         if opt.apply_wrn:
             # Save the fully convolutional network
-            n_parameters = sum(p.numel() for p in fcn.params.values() + fcn.stats.values())
+            n_parameters = sum(p.numel() for p in list(fcn.params.values()) + list(fcn.stats.values()))
             convCNN.log({
                 "val_acc": float(val_acc_epoch),
                 "epoch": epoch,
                 "n_parameters": n_parameters,
             }, optimizer, fcn.params, fcn.stats)
         # Save the ARC discriminator
-        discriminator.save_to_file(opt.arc_save)
+        torch.save(discriminator.state_dict(),opt.arc_save)
+        # Save optimizer
+        torch.save(optimizer.state_dict(), opt.arc_optimizer_path)
+        # Acc-loss values
         best_validation_loss = val_loss_epoch
         best_accuracy = val_acc_epoch
         is_model_saved = True

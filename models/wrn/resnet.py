@@ -96,10 +96,10 @@ class WideResNet(nn.Module):
                 o = block(o, params, stats, '%s.block%d' % (base, i), mode, stride if i == 0 else 1)
             return o
 
-        assert input.get_device() == self.params['conv0'].get_device()
-        x = F.conv2d(input, self.params['conv0'], padding=1)
-        # Uncomment for Raghav pc
-        # x = F.conv2d(input.float(), self.params['conv0'], padding=1)
+        assert input.is_cuda == self.params['conv0'].is_cuda
+        if input.is_cuda:
+            assert input.get_device() == self.params['conv0'].get_device()
+        x = F.conv2d(input.float(), self.params['conv0'], padding=1)
         o = group(x, self.params, self.stats, 'group0', self.mode, stride=1)
         if self.num_groups >= 1:
             o = group(o, self.params, self.stats, 'group1', self.mode, stride=2)
