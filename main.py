@@ -221,9 +221,15 @@ def train(index = 0):
         num_layers = opt.naive_full_num_layers
         context_fn = FullContextARC(hidden_size=layer_sizes, num_layers=num_layers, vector_dim=vector_dim)
 
-    if opt.naive_full_load_path is not None and os.path.exists(opt.naive_full_load_path):
-        discriminator.load_state_dict(torch.load(opt.naive_full_load_path))
+    # Load the discriminator
+    if opt.arc_load is not None and os.path.exists(opt.arc_load):
+        discriminator.load_state_dict(torch.load(opt.arc_load))
+    if opt.cuda and discriminator is not None:
+        discriminator = discriminator.cuda()
 
+    # Load the Naive / Full classifier
+    if opt.naive_full_load_path is not None and os.path.exists(opt.naive_full_load_path):
+        context_fn.load_state_dict(torch.load(opt.naive_full_load_path))
     if opt.cuda and context_fn is not None:
         context_fn = context_fn.cuda()
 
