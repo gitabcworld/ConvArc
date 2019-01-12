@@ -4,7 +4,7 @@ from datetime import datetime
 from models.conv_cnn import ConvCNNFactory
 import multiprocessing
 
-def context_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
+def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, logger):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ("[%s] ... loading last validation model" % multiprocessing.current_process().name)
@@ -26,7 +26,7 @@ def context_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
         fcn.eval()
 
     # Load the context model
-    context_fn = torch.load(opt.naive_full_save_path)
+    context_fn.load_state_dict(torch.load(opt.naive_full_save_path))
     for param in context_fn.parameters():
         param.requires_grad = False
     context_fn.eval()

@@ -280,7 +280,7 @@ def train(index = 0):
                         torch.save(optimizer.state_dict(), opt.naive_full_optimizer_path)
                         # Test the model
                         test_acc_epoch = context_test.context_test(epoch, do_epoch_naive_full, opt, test_loader,
-                                                               discriminator, logger)
+                                                                    discriminator, context_fn, logger)
                 logger.step()
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
