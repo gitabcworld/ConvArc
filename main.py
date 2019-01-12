@@ -294,7 +294,7 @@ def train(index = 0):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
-    test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+    test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
 def main():
