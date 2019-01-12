@@ -215,7 +215,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
             optimizer.step()
 
         values, index = torch.nn.Softmax(dim=1)(features).max(1)
-        acc_epoch.append(accuracy_score(y_true=targets, y_pred=index))
+        acc_epoch.append(accuracy_score(y_true=targets.cpu().data.numpy(), y_pred=index.cpu().data.numpy()))
 
 
     return acc_epoch, loss_epoch

@@ -1,5 +1,12 @@
 import os
 import sys
+
+# Add all the python paths needed to execute when using Python 3.6
+sys.path.append(os.path.join(os.path.dirname(__file__), "models"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "models/arc"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "skiprnn_pytorch"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "models/wrn"))
+
 import time
 import numpy as np
 from datetime import datetime, timedelta
@@ -42,9 +49,9 @@ import cv2
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # CUDA_VISIBLE_DEVICES == 1 (710) / CUDA_VISIBLE_DEVICES == 0 (1070)
-import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+#import os
+#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+#os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 
 def train(index = 0):
