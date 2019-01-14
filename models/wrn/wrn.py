@@ -7,7 +7,7 @@ from torch.autograd import Variable
 from visualization.visualize import make_dot
 import os.path
 import urllib3
-
+import tempfile
 
 __all__ = ['WideResNet', 'wrn']
 model_urls = {
@@ -46,7 +46,8 @@ class WideResNetImageNet(nn.Module):
         self.num_groups = num_groups
         self.num_classes = num_classes
 
-        pathWeigths = os.path.join('./data', 'wide-resnet-50-2-export.hkl')
+        #pathWeigths = os.path.join('/tmp', 'wide-resnet-50-2-export.hkl')
+        pathWeigths = os.path.join(tempfile.gettempdir(), 'wide-resnet-50-2-export.hkl')
         if not os.path.isfile(pathWeigths):
             print('Downloading pretrained WideResNet to %s' % pathWeigths)
             urlModel = 'https://s3.amazonaws.com/pytorch/h5models/wide-resnet-50-2-export.hkl'

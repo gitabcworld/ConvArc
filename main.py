@@ -20,15 +20,25 @@ from models import models
 from models.models import ArcBinaryClassifier
 
 from torch.autograd import Variable
-from omniglotBenchmarks import omniglotBenchMark
 import torch.backends.cudnn as cudnn
 
 from option import Options, tranform_options
-from dataset.omniglot_pytorch import OmniglotOS
-from dataset.omniglot_pytorch import OmniglotOSPairs
-from dataset.omniglot_pytorch import Omniglot_30_10_10
-from dataset.omniglot_pytorch import Omniglot_30_10_10_Pairs
-from dataset.omniglot_pytorch import OmniglotOneShot
+
+# Omniglot dataset
+from omniglotDataLoader import omniglotDataLoader
+from dataset.omniglot import OmniglotOS
+from dataset.omniglot import OmniglotOSPairs
+from dataset.omniglot import Omniglot_30_10_10
+from dataset.omniglot import Omniglot_30_10_10_Pairs
+from dataset.omniglot import OmniglotOneShot
+
+# Mini-imagenet dataset
+from miniimagenetDataLoader import miniImagenetDataLoader
+from dataset.mini_imagenet import MiniImagenet
+from dataset.mini_imagenet import MiniImagenetPairs
+from dataset.mini_imagenet import MiniImagenetOneShot
+
+# Banknote dataset
 from dataset.banknote_pytorch import FullBanknoteROI
 
 from models.conv_cnn import ConvCNNFactory
@@ -64,21 +74,28 @@ def train(index = 0):
     options.cuda = torch.cuda.is_available()
 
     cudnn.benchmark = True # set True to speedup
-    #bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options)
+    #bnktDataLoader = omniglotDataLoader(type=OmniglotOSPairs, opt=options)
 
     train_mean = None
     train_std = None
     if os.path.exists(os.path.join(options.save, 'mean.npy')):
         train_mean = np.load(os.path.join(options.save, 'mean.npy'))
         train_std = np.load(os.path.join(options.save, 'std.npy'))
-    #bnktBenchmark = omniglotBenchMark(type=Omniglot_30_10_10_Pairs, opt=options, train_mean=train_mean,
-    bnktBenchmark = omniglotBenchMark(type=OmniglotOSPairs, opt=options, train_mean=train_mean,
-                                      train_std=train_std)
-    opt = bnktBenchmark.opt
-    train_loader, val_loader, test_loader = bnktBenchmark.get()
+    
+    if options.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenetPairs, opt=options)
+    elif options.datasetName == 'omniglot':
+        #dataLoader = omniglotDataLoader(type=Omniglot_30_10_10_Pairs, opt=options, train_mean=train_mean,
+        dataLoader = omniglotDataLoader(type=OmniglotOSPairs, opt=options, train_mean=train_mean,
+                                        train_std=train_std)
+    else:
+        pass
 
-    train_mean = bnktBenchmark.train_mean
-    train_std = bnktBenchmark.train_std
+    opt = dataLoader.opt
+    train_loader, val_loader, test_loader = dataLoader.get()
+
+    train_mean = dataLoader.train_mean
+    train_std = dataLoader.train_std
     if not os.path.exists(os.path.join(options.save, 'mean.npy')):
         np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
         np.save(os.path.join(opt.save, 'std.npy'), train_std)
@@ -236,10 +253,18 @@ def train(index = 0):
     # Set the epoch function
     do_epoch_fn = do_epoch_naive_full
 
-    bnktBenchmark = omniglotBenchMark(type=OmniglotOneShot, opt=options, train_mean=train_mean,
+    # Load the dataset
+    if options.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenetOneShot, opt=options)
+    elif options.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=OmniglotOneShot, opt=options, train_mean=train_mean,
                                       train_std=train_std)
-    opt = bnktBenchmark.opt
-    train_loader, val_loader, test_loader = bnktBenchmark.get()
+    else:
+        pass
+
+    
+    opt = dataLoader.opt
+    train_loader, val_loader, test_loader = dataLoader.get()
 
     loss_fn = torch.nn.CrossEntropyLoss()
     if opt.cuda:

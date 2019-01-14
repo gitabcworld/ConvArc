@@ -13,13 +13,13 @@ from util import cvtransforms as T
 import torchvision.transforms as transforms
 
 from option import Options
-from dataset.omniglot_pytorch import OmniglotOS
-from dataset.omniglot_pytorch import OmniglotOSPairs
-from dataset.omniglot_pytorch import OmniglotOSLake
-from dataset.omniglot_pytorch import OmniglotOneShot
-from dataset.omniglot_pytorch import OmniglotVinyals
-from dataset.omniglot_pytorch import Omniglot_30_10_10
-from dataset.omniglot_pytorch import Omniglot_30_10_10_Pairs
+from dataset.omniglot import OmniglotOS
+from dataset.omniglot import OmniglotOSPairs
+from dataset.omniglot import OmniglotOSLake
+from dataset.omniglot import OmniglotOneShot
+from dataset.omniglot import OmniglotVinyals
+from dataset.omniglot import Omniglot_30_10_10
+from dataset.omniglot import Omniglot_30_10_10_Pairs
 
 '''
 Benchmark configurations:
@@ -42,7 +42,7 @@ BanknoteTripletsROI: Triplets of ROIs banknotes. The ROIs are already cropped at
 '''
 list_benchmarks = ['omniglotOS','omniglotVerif']
 
-class omniglotBenchMark():
+class omniglotDataLoader():
 
     class windows_lambda():
         def __init__(self,opt):
@@ -211,6 +211,7 @@ class omniglotBenchMark():
                                       reduced_dataset=self.opt.reduced_dataset,
                                       train='train', transform=train_transform, target_transform=None,
                                       isWithinAlphabets=self.opt.isWithinAlphabets,
+                                      n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                       numTrials=self.opt.numTrials)
         elif self.type == Omniglot_30_10_10:
             datasetParams = self.type(root=self.opt.dataroot,
@@ -250,6 +251,7 @@ class omniglotBenchMark():
                        reduced_dataset=self.opt.reduced_dataset,
                        train='val', transform=eval_test_transform, target_transform=None,
                                       isWithinAlphabets=self.opt.isWithinAlphabets,
+                                      n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                       numTrials=self.opt.numTrials)
         elif self.type == Omniglot_30_10_10:
             datasetParams = self.type(root=self.opt.dataroot,
@@ -279,6 +281,7 @@ class omniglotBenchMark():
                        reduced_dataset=self.opt.reduced_dataset,
                        train='test', transform=eval_test_transform, target_transform=None,
                                       isWithinAlphabets=self.opt.isWithinAlphabets,
+                                      n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                       numTrials=self.opt.numTrials)
         elif self.type == Omniglot_30_10_10:
             datasetParams = self.type(root=self.opt.dataroot,

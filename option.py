@@ -69,8 +69,13 @@ pathResults = os.path.dirname(os.path.abspath(__file__)) + '/results/'
 
 lst_parameters_change = [
     [
+        ('datasetName', 'omniglot'),
+        ('dataroot', 'D:/PhD/code/datasets/convarc/omniglot/'),
+        ('one_shot_n_way', 20),
+        ('one_shot_n_shot', 5),
+
         ('save', pathResults + 'os/lstm_channel_1_carc_naive/'),
-        ('nchannels', 1),
+        ('nchannels', 3),
         ('train_num_batches', 10),
         ('isWithinAlphabets', False),
 
@@ -95,6 +100,11 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/context_optimizer.pt7'),
     ],
     [
+        ('datasetName', 'omniglot'),
+        ('dataroot', 'D:/PhD/code/datasets/convarc/omniglot/'),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
         ('save', pathResults + 'os_within/lstm_channel_1_carc_naive/'),
         ('nchannels', 1),
         ('train_num_batches', 10000),
@@ -118,6 +128,38 @@ lst_parameters_change = [
         ('arc_optimizer_path', pathResults + 'os_within/lstm_channel_1_carc_naive/arc_optimizer.pt7'),
         ('naive_full_optimizer_path', pathResults + 'os_within/lstm_channel_1_carc_naive/context_optimizer.pt7'),
     ],
+    [
+        ('datasetName', 'miniImagenet'),
+        ('dataroot', 'D:/PhD/code/datasets/convarc/mini_imagenet'),
+        ('one_shot_n_way', 20),
+        ('one_shot_n_shot', 5),
+
+        ('save', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/'),
+        ('nchannels', 3),
+        ('train_num_batches', 10),
+        ('isWithinAlphabets', False),
+
+        ('apply_wrn', True),
+        ('wrn_save', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/'),
+        ('wrn_load', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/'),
+        #('wrn_load', None),
+
+        ('arc_nchannels', 64),
+        ('arc_attn_type', 'LSTM'),
+        ('arc_save', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/ARCmodel.pt7'),
+        #('arc_load', None),
+        ('arc_resume', True),
+        
+        ('naive_full_type', 'Naive'),
+        ('naive_full_save_path', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/context.pt7'),
+        ('naive_full_load_path', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/context_optimizer.pt7'),
+    ],
+
 ]
 
 
@@ -149,9 +191,10 @@ class Options():
                             help='path of the folder to create general info.')
 
         # Dataset
+        parser.add_argument('--datasetName', default='miniImagenet', type=str, help='omniglot or miniimagenet datasets')
+        parser.add_argument('--dataroot', default='D:/PhD/code/datasets/convarc/mini_imagenet', type=str)
         parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to ARC')
         parser.add_argument('--nchannels', default=3, help='num channels input images.')
-        parser.add_argument('--dataroot', default=os.path.join('D:/PhD/code/dataset/convarc', 'omniglot.npy'), type=str)
         parser.add_argument('--isWithinAlphabets', default=False, type=bool,
                             help='default: False')
         parser.add_argument('--reduced_dataset', default=False, type=bool)
@@ -233,10 +276,13 @@ class Options():
         parser.add_argument('--naive_full_epochs', default=10, type=int, help='num epochs training naive/full context')
         parser.add_argument('--naive_full_val_freq', default=5, type=int, help='n epochs for evaluation dataset '
                                                                          'during training')
-
         # Optimizers
         parser.add_argument('--arc_optimizer_path', default=None, help='arc optimizer path to load/save')
         parser.add_argument('--naive_full_optimizer_path', default=None, help='naive/full optimizer path to load/save')
+
+        # One-Shot parameters
+        parser.add_argument('--one_shot_n_way', type=int, default=5, help='one-shot n-way. Default=5')
+        parser.add_argument('--one_shot_n_shot', type=int, default=1, help='one-shot n-shot. Default=1')
 
         self.parser = parser
 
