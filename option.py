@@ -18,11 +18,11 @@ lst_parameters_change = [
     [
         ('datasetName', 'omniglot'),
         ('dataroot', 'D:/PhD/code/datasets/convarc/omniglot/'),
-        ('one_shot_n_way', 20),
-        ('one_shot_n_shot', 5),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
 
         ('save', pathResults + 'os/lstm_channel_1_carc_naive/'),
-        ('nchannels', 3),
+        ('nchannels', 1),
         ('train_num_batches', 10),
         ('partitionType', 'Lake'),
 

@@ -141,8 +141,6 @@ class omniglotDataLoader():
         data = []
         labels = []
 
-        # Free memory
-        train_loader_mean_std.dataset.clear()
         train_loader_mean_std = None
         gc.collect()
 

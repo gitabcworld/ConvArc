@@ -140,7 +140,7 @@ class Omniglot(OmniglotBase):
         index_intra_character = index - index_inter_character*self.chars.shape[1]
 
         img = self.chars[index_inter_character][index_intra_character]
-        target = self.labels[index]
+        target = self.labels[index_inter_character]
 
         if self.transform is not None:
             img = self.transform(img)
