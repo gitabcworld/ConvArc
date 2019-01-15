@@ -13,59 +13,6 @@ import os
 
 pathResults = os.path.dirname(os.path.abspath(__file__)) + '/results/'
 
-'''
-[
-    ('wrn_save', pathResults + 'os/lstm_channel_3_carc_naive/'),
-    ('naive_full_save_path', pathResults + 'os/lstm_channel_3_carc_naive/context.pt7'),
-    ('arc_save', pathResults + 'os/lstm_channel_3_carc_naive/ARCmodel.pt7'),
-    ('save', pathResults + 'os/lstm_channel_3_carc_naive/'),
-    ('nchannels', 3),
-    ('apply_wrn', True),
-    ('arc_nchannels', 64),
-    ('arc_attn_type', 'LSTM'),
-    ('naive_full_type', 'Naive'),
-    # ('train_num_batches', 100),
-    # ('val_freq', 10),
-    # ('val_num_batches', 5),
-    # ('test_num_batches', 5),
-    # ('naive_full_epochs', 20),
-    # ('naive_full_val_freq', 5),
-],
-[
-    ('wrn_save', pathResults + 'os/lstm_channel_1_carc_fullcontext/'),
-    ('naive_full_save_path', pathResults + 'os/lstm_channel_1_carc_fullcontext/context.pt7'),
-    ('arc_save', pathResults + 'os/lstm_channel_1_carc_fullcontext/ARCmodel.pt7'),
-    ('save', pathResults + 'os/lstm_channel_1_carc_fullcontext/'),
-    ('nchannels', 1),
-    ('apply_wrn', True),
-    ('arc_nchannels', 64),
-    ('arc_attn_type', 'LSTM'),
-    ('naive_full_type', 'FullContext'),
-    # ('train_num_batches', 100),
-    # ('val_freq', 10),
-    # ('val_num_batches', 5),
-    # ('test_num_batches', 5),
-    # ('naive_full_epochs', 20),
-    # ('naive_full_val_freq', 5),
-],
-[
-    ('wrn_save', pathResults + 'os/lstm_channel_3_carc_fullcontext/'),
-    ('naive_full_save_path', pathResults + 'os/lstm_channel_3_carc_fullcontext/context.pt7'),
-    ('arc_save', pathResults + 'os/lstm_channel_3_carc_fullcontext/ARCmodel.pt7'),
-    ('save', pathResults + 'os/lstm_channel_3_carc_fullcontext/'),
-    ('nchannels', 3),
-    ('apply_wrn', True),
-    ('arc_nchannels', 64),
-    ('arc_attn_type', 'LSTM'),
-    ('naive_full_type', 'FullContext'),
-    # ('train_num_batches', 100),
-    # ('val_freq', 10),
-    # ('val_num_batches', 5),
-    # ('test_num_batches', 5),
-    # ('naive_full_epochs', 20),
-    # ('naive_full_val_freq', 5),
-],
-'''
 
 lst_parameters_change = [
     [
@@ -77,7 +24,7 @@ lst_parameters_change = [
         ('save', pathResults + 'os/lstm_channel_1_carc_naive/'),
         ('nchannels', 3),
         ('train_num_batches', 10),
-        ('isWithinAlphabets', False),
+        ('partitionType', 'Lake'),
 
         ('apply_wrn', True),
         ('wrn_save', pathResults + 'os/lstm_channel_1_carc_naive/'),
@@ -108,7 +55,7 @@ lst_parameters_change = [
         ('save', pathResults + 'os_within/lstm_channel_1_carc_naive/'),
         ('nchannels', 1),
         ('train_num_batches', 10000),
-        ('isWithinAlphabets', True),
+        ('partitionType', 'Lake'),
 
         ('apply_wrn', True),
         ('wrn_save', pathResults + 'os_within/lstm_channel_1_carc_naive/'),
@@ -137,7 +84,6 @@ lst_parameters_change = [
         ('save', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/'),
         ('nchannels', 3),
         ('train_num_batches', 10),
-        ('isWithinAlphabets', False),
 
         ('apply_wrn', True),
         ('wrn_save', pathResults + 'os/lstm_miniimagenet_carc_naive_nway_20_nshot_5/'),
@@ -195,8 +141,8 @@ class Options():
         parser.add_argument('--dataroot', default='D:/PhD/code/datasets/convarc/mini_imagenet', type=str)
         parser.add_argument('--imageSize', type=int, default=32, help='the height / width of the input image to ARC')
         parser.add_argument('--nchannels', default=3, help='num channels input images.')
-        parser.add_argument('--isWithinAlphabets', default=False, type=bool,
-                            help='default: False')
+        parser.add_argument('--partitionType', default='30_10_10', type=str,
+                            help='default: 30_10_10')
         parser.add_argument('--reduced_dataset', default=False, type=bool)
         parser.add_argument('--numTrials', type=int, default=32, help='number of Trials. Equal to batch size.')
 

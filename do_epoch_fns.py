@@ -66,10 +66,10 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
 
         '''
         for index in range(inputs.shape[0]):
-            cv2.imwrite('/home/aberenguel/tmp/log/imgs/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
+            cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
                 int(targets[index].data.cpu().numpy())) + '.png',
                         inputs[index, 0, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
-            cv2.imwrite('/home/aberenguel/tmp/log/imgs/batch_' + str(batch_idx) +'_index_' + str(index) + '_img2_target_' + str(
+            cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img2_target_' + str(
                 int(targets[index].data.cpu().numpy())) + '.png',
                         inputs[index, 1, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
         '''
@@ -172,10 +172,12 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
             data = data.cuda()
             label = label.cuda()
 
+        '''
         for index_batch in range(data.shape[0]):
             for index_oneshot in range(data.shape[1]):
-                cv2.imwrite('/home/aberenguel/tmp/cedar/batch_' + str(index_batch) +'_index_' + str(index_oneshot) + 'img_target_' + str(
-                    int(label[index_batch].data.cpu().numpy())) + '.png', data[index_batch, index_oneshot, 0, :, :].data.cpu().numpy() * 255)
+                cv2.imwrite('D:/PhD/images/batch_' + str(index_batch) +'_index_' + str(index_oneshot) + '_img_target_' + str(
+                    int(label[index_batch][index_oneshot].data.cpu().numpy())) + '.png', data[index_batch, index_oneshot].data.cpu().numpy().transpose(1,2,0) * 255)
+        '''
 
         # not needed gradient graph for the FCN and ARC
         inputs = Variable(data, requires_grad = False)

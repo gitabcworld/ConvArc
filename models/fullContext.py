@@ -37,7 +37,7 @@ class FullContextARC(nn.Module):
         ## bidirectional lstm
         x, (hn, cn) = self.lstm(x)
         #x = F.elu(self.dense1(x)).squeeze()
-        x = self.dense1(x).squeeze()
+        x = torch.sigmoid(self.dense1(x).squeeze())
         #x = self.dense2(x).squeeze()
         #x = self.relu(x)
         #x = self.logSoftmax(x)

@@ -25,7 +25,7 @@ class NaiveARC(nn.Module):
     def forward(self, x):
         d1 = torch.squeeze(F.elu(self.dense1(x)))
         #d1 = torch.squeeze(self.dense1(x))
-        d2 = torch.squeeze(self.dense2(d1))
+        d2 = torch.sigmoid(torch.squeeze(self.dense2(d1)))
         return d2
         #decision = nn.Softmax(d2)
         #return decision

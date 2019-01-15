@@ -26,10 +26,8 @@ from option import Options, tranform_options
 
 # Omniglot dataset
 from omniglotDataLoader import omniglotDataLoader
-from dataset.omniglot import OmniglotOS
-from dataset.omniglot import OmniglotOSPairs
-from dataset.omniglot import Omniglot_30_10_10
-from dataset.omniglot import Omniglot_30_10_10_Pairs
+from dataset.omniglot import Omniglot
+from dataset.omniglot import Omniglot_Pairs
 from dataset.omniglot import OmniglotOneShot
 
 # Mini-imagenet dataset
@@ -74,7 +72,6 @@ def train(index = 0):
     options.cuda = torch.cuda.is_available()
 
     cudnn.benchmark = True # set True to speedup
-    #bnktDataLoader = omniglotDataLoader(type=OmniglotOSPairs, opt=options)
 
     train_mean = None
     train_std = None
@@ -85,14 +82,23 @@ def train(index = 0):
     if options.datasetName == 'miniImagenet':
         dataLoader = miniImagenetDataLoader(type=MiniImagenetPairs, opt=options)
     elif options.datasetName == 'omniglot':
-        #dataLoader = omniglotDataLoader(type=Omniglot_30_10_10_Pairs, opt=options, train_mean=train_mean,
-        dataLoader = omniglotDataLoader(type=OmniglotOSPairs, opt=options, train_mean=train_mean,
+        dataLoader = omniglotDataLoader(type=Omniglot_Pairs, opt=options, train_mean=train_mean,
                                         train_std=train_std)
     else:
         pass
 
+    # Get the params
     opt = dataLoader.opt
-    train_loader, val_loader, test_loader = dataLoader.get()
+    
+    # Use the same seed to split the train - val - test
+    if os.path.exists(os.path.join(options.save, 'dataloader_rnd_seed_arc.npy')):
+        rnd_seed = np.load(os.path.join(options.save, 'dataloader_rnd_seed_arc.npy'))
+    else:    
+        rnd_seed = np.random.randint(0, 100000)
+        np.save(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy'), rnd_seed)
+
+    # Get the DataLoaders from train - val - test
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed)
 
     train_mean = dataLoader.train_mean
     train_std = dataLoader.train_std
@@ -262,11 +268,22 @@ def train(index = 0):
     else:
         pass
 
-    
+    # Get the params
     opt = dataLoader.opt
-    train_loader, val_loader, test_loader = dataLoader.get()
 
-    loss_fn = torch.nn.CrossEntropyLoss()
+    # Use the same seed to split the train - val - test
+    if os.path.exists(os.path.join(options.save, 'dataloader_rnd_seed_naive_full.npy')):
+        rnd_seed = np.load(os.path.join(options.save, 'dataloader_rnd_seed_naive_full.npy'))
+    else:    
+        rnd_seed = np.random.randint(0, 100000)
+        np.save(os.path.join(opt.save, 'dataloader_rnd_seed_naive_full.npy'), rnd_seed)
+
+    # Get the DataLoaders from train - val - test
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed)
+
+    # Loss
+    #loss_fn = torch.nn.CrossEntropyLoss()
+    loss_fn = torch.nn.BCELoss()
     if opt.cuda:
         loss_fn = loss_fn.cuda()
 

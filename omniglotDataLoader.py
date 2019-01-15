@@ -13,13 +13,9 @@ from util import cvtransforms as T
 import torchvision.transforms as transforms
 
 from option import Options
-from dataset.omniglot import OmniglotOS
-from dataset.omniglot import OmniglotOSPairs
-from dataset.omniglot import OmniglotOSLake
 from dataset.omniglot import OmniglotOneShot
-from dataset.omniglot import OmniglotVinyals
-from dataset.omniglot import Omniglot_30_10_10
-from dataset.omniglot import Omniglot_30_10_10_Pairs
+from dataset.omniglot import Omniglot
+from dataset.omniglot import Omniglot_Pairs
 
 '''
 Benchmark configurations:
@@ -40,7 +36,6 @@ BanknotePairsROI: Pairs of Rois banknotes. The ROIs are already cropped at a fix
 BanknoteTripletsROI: Triplets of ROIs banknotes. The ROIs are already cropped at a fixed
                     position. The full banknote is not loaded.
 '''
-list_benchmarks = ['omniglotOS','omniglotVerif']
 
 class omniglotDataLoader():
 
@@ -57,7 +52,7 @@ class omniglotDataLoader():
         def np_mul(self,x):
             return lambda x: x * 255.0
 
-    def __init__(self,type=OmniglotOS, opt=Options().parse(), train_mean=None, train_std=None):
+    def __init__(self,type=Omniglot, opt=Options().parse(), train_mean=None, train_std=None):
         self.type = type
         self.opt = opt
         if train_mean is None and train_std is None:
@@ -112,17 +107,11 @@ class omniglotDataLoader():
                 #transforms.ToTensor(),
             ])
 
-        if self.type == Omniglot_30_10_10 or self.type == Omniglot_30_10_10_Pairs:
-            train_loader_mean_std = torch.utils.data.DataLoader(
-                Omniglot_30_10_10(root=self.opt.dataroot,
-                                  train='train', transform=train_transform, target_transform=None),
-                batch_size=self.opt.batchSize, shuffle=True, **kwargs)
-        else:
-            train_loader_mean_std = torch.utils.data.DataLoader(
-                OmniglotOS(root=self.opt.dataroot,
-                           reduced_dataset = self.opt.reduced_dataset,
-                           train='train', transform=train_transform, target_transform=None),
-                batch_size=self.opt.batchSize, shuffle=True, **kwargs)
+        train_loader_mean_std = torch.utils.data.DataLoader(
+            Omniglot(root=self.opt.dataroot,
+                                train='train', transform=train_transform, target_transform=None,
+                                partitionType=self.opt.partitionType),
+            batch_size=self.opt.batchSize, shuffle=True, **kwargs)
 
         print('Calculate mean and std for training set....')
         pbar = tqdm(enumerate(train_loader_mean_std))
@@ -159,7 +148,7 @@ class omniglotDataLoader():
 
         return train_mean, train_std
 
-    def get(self):
+    def get(self, rnd_seed = 42):
 
         if self.train_mean is None and self.train_std is None:
             train_mean, train_std = self.__get_mean_std__()
@@ -195,30 +184,21 @@ class omniglotDataLoader():
             #T.Normalize(train_mean, train_std),
         ])
 
-        if self.type == OmniglotOS:
-            datasetParams = self.type(root=self.opt.dataroot,
-                       reduced_dataset=self.opt.reduced_dataset,
-                       train='train', transform=train_transform, target_transform=None,
-                                      targetsByCharacters=self.opt.wrn_targetsByCharacters)
-        elif self.type == OmniglotOSPairs:
+        if self.type == OmniglotOneShot:
             datasetParams = self.type(root=self.opt.dataroot,
                                       reduced_dataset=self.opt.reduced_dataset,
-                                      train='train', transform=train_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
-                                      numTrials=self.opt.numTrials)
-        elif self.type == OmniglotOneShot:
-            datasetParams = self.type(root=self.opt.dataroot,
-                                      reduced_dataset=self.opt.reduced_dataset,
-                                      train='train', transform=train_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
+                                      train='train', rnd_seed=rnd_seed, transform=train_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType,
                                       n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                       numTrials=self.opt.numTrials)
-        elif self.type == Omniglot_30_10_10:
+        elif self.type == Omniglot:
             datasetParams = self.type(root=self.opt.dataroot,
-                                      train='train', transform=train_transform, target_transform=None)
-        elif self.type == Omniglot_30_10_10_Pairs:
+                                      train='train', rnd_seed=rnd_seed, transform=train_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType)
+        elif self.type == Omniglot_Pairs:
             datasetParams = self.type(root=self.opt.dataroot,
-                                      train='train', transform=train_transform, target_transform=None,
+                                      train='train', rnd_seed=rnd_seed, transform=train_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType,
                                       numTrials=self.opt.numTrials)
 
         train_loader = torch.utils.data.DataLoader(
@@ -235,60 +215,42 @@ class omniglotDataLoader():
             #T.Normalize(train_mean, train_std),
         ])
 
-        if self.type == OmniglotOS:
+        if self.type == OmniglotOneShot:
             datasetParams = self.type(root=self.opt.dataroot,
                        reduced_dataset=self.opt.reduced_dataset,
-                       train='val', transform=eval_test_transform, target_transform=None,
-                                      targetsByCharacters=self.opt.wrn_targetsByCharacters)
-        elif self.type == OmniglotOSPairs:
-            datasetParams = self.type(root=self.opt.dataroot,
-                       reduced_dataset=self.opt.reduced_dataset,
-                       train='val', transform=eval_test_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
-                                      numTrials=self.opt.numTrials)
-        elif self.type == OmniglotOneShot:
-            datasetParams = self.type(root=self.opt.dataroot,
-                       reduced_dataset=self.opt.reduced_dataset,
-                       train='val', transform=eval_test_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
+                       train='val', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType,
                                       n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                       numTrials=self.opt.numTrials)
-        elif self.type == Omniglot_30_10_10:
+        elif self.type == Omniglot:
             datasetParams = self.type(root=self.opt.dataroot,
-                       train='val', transform=eval_test_transform, target_transform=None)
-        elif self.type == Omniglot_30_10_10_Pairs:
+                                train='val', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
+                                partitionType=self.opt.partitionType)
+        elif self.type == Omniglot_Pairs:
             datasetParams = self.type(root=self.opt.dataroot,
-                       train='val', transform=eval_test_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                train='val', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
+                                partitionType=self.opt.partitionType,
+                                numTrials=self.opt.numTrials)
 
         val_loader = torch.utils.data.DataLoader(
             datasetParams,
             batch_size=self.opt.batchSize, shuffle=False, **kwargs)
 
-        if self.type == OmniglotOS:
+        if self.type == OmniglotOneShot:
             datasetParams = self.type(root=self.opt.dataroot,
                        reduced_dataset=self.opt.reduced_dataset,
-                       train='test', transform=eval_test_transform, target_transform=None,
-                                      targetsByCharacters=self.opt.wrn_targetsByCharacters)
-        elif self.type == OmniglotOSPairs:
-            datasetParams = self.type(root=self.opt.dataroot,
-                       reduced_dataset=self.opt.reduced_dataset,
-                       train='test', transform=eval_test_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
-                                      numTrials=self.opt.numTrials)
-        elif self.type == OmniglotOneShot:
-            datasetParams = self.type(root=self.opt.dataroot,
-                       reduced_dataset=self.opt.reduced_dataset,
-                       train='test', transform=eval_test_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
+                       train='test', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType,
                                       n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                       numTrials=self.opt.numTrials)
-        elif self.type == Omniglot_30_10_10:
+        elif self.type == Omniglot:
             datasetParams = self.type(root=self.opt.dataroot,
-                                      train='test', transform=eval_test_transform, target_transform=None)
-        elif self.type == Omniglot_30_10_10_Pairs:
+                                      train='test', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType)
+        elif self.type == Omniglot_Pairs:
             datasetParams = self.type(root=self.opt.dataroot,
-                                      train='test', transform=eval_test_transform, target_transform=None,
+                                      train='test', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
+                                      partitionType=self.opt.partitionType,
                                       numTrials=self.opt.numTrials)
 
         test_loader = torch.utils.data.DataLoader(
