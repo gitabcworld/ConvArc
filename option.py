@@ -36,7 +36,7 @@ lst_parameters_change = [
         ('arc_save', pathResults + 'os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
         ('arc_load', pathResults + 'os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
         #('arc_load', None),
-        ('arc_resume', True),
+        ('arc_resume', False),
         
         ('naive_full_type', 'Naive'),
         ('naive_full_save_path', pathResults + 'os/lstm_channel_1_carc_naive/context.pt7'),

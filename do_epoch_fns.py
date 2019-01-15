@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from torch.autograd import Variable
 import cv2
 
@@ -183,6 +183,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         inputs = Variable(data, requires_grad = False)
         #inputs = Variable(data, requires_grad=True)
         targets = Variable(label)
+        targets_binary = torch.stack([targets[0,:-1] == targets[0,-1] for i in range(len(targets))])
 
         batch_size, npair, nchannels, x_size, y_size = inputs.shape
         inputs = inputs.view(batch_size * npair, nchannels, x_size, y_size)
@@ -207,7 +208,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         #features = torch.cat(hidden_features, dim=1)
         features = model_fn(features)
         if loss_fn:
-            loss = loss_fn(features, targets.long())
+            loss = loss_fn(features, targets_binary.float())
             loss_epoch.append(loss.item())
 
         # Training...
@@ -216,8 +217,18 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
             loss.backward()
             optimizer.step()
 
-        values, index = torch.nn.Softmax(dim=1)(features).max(1)
-        acc_epoch.append(accuracy_score(y_true=targets.cpu().data.numpy(), y_pred=index.cpu().data.numpy()))
+        # Find the top n-shots values. 
+        values, index = torch.topk(features, k = data_loader.dataset.n_shot, dim=1, largest=True, sorted=True)
+        features_binary = torch.zeros(targets_binary.size())
+        # Set the indices to 1
+        features_binary[index] = 1
+        tn, fp, fn, tp = confusion_matrix(targets_binary.view(-1).cpu().data.numpy(), features_binary.view(-1).cpu().data.numpy()).ravel()
+        tnr = float(tn) / float(tn+fp)
+        fnr = float(fn) / float(fn+tp)
+        acc = float(tp+tn)/float(tp+tn+fp+fn)
+        acc_epoch.append(acc)
+        #values, index = torch.nn.Softmax(dim=1)(features).max(1)
+        #acc_epoch.append(accuracy_score(y_true=targets.cpu().data.numpy(), y_pred=index.cpu().data.numpy()))
 
 
     return acc_epoch, loss_epoch
