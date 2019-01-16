@@ -92,6 +92,8 @@ class Omniglot(OmniglotBase):
             self.a_size = self.a_size[selected_alphabets]
             self.p = self.p[selected_alphabets]
             self.labels = self.labels[[elem in selected_alphabets for elem in self.labels]]
+            # Make this partition probabilities to sum 1
+            self.p = self.p / self.p.sum()
         
         if self.partitionType == 'Lake':
             '''
@@ -127,6 +129,8 @@ class Omniglot(OmniglotBase):
             # Train (964, 16, H, W) / Eval (964, 4, H, W) / Test (659, 20, H, W)
             self.chars = self.chars[:,:16,:,:] if self.train == 'train' else self.chars 
             self.chars = self.chars[:,16:,:,:] if self.train == 'val' else self.chars
+            # Make this partition probabilities to sum 1
+            self.p = self.p / self.p.sum()
 
         # set the choice function to random again
         np.random.seed(None)

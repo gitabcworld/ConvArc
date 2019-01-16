@@ -24,7 +24,7 @@ lst_parameters_change = [
         ('save', pathResults + 'os/lstm_channel_1_carc_naive/'),
         ('nchannels', 1),
         ('train_num_batches', 10),
-        ('partitionType', 'Lake'),
+        ('partitionType', 'OmniglotStandard'),
 
         ('apply_wrn', True),
         ('wrn_save', pathResults + 'os/lstm_channel_1_carc_naive/'),
@@ -36,7 +36,7 @@ lst_parameters_change = [
         ('arc_save', pathResults + 'os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
         ('arc_load', pathResults + 'os/lstm_channel_1_carc_naive/ARCmodel.pt7'),
         #('arc_load', None),
-        ('arc_resume', False),
+        ('arc_resume', True),
         
         ('naive_full_type', 'Naive'),
         ('naive_full_save_path', pathResults + 'os/lstm_channel_1_carc_naive/context.pt7'),

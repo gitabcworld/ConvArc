@@ -26,8 +26,8 @@ class miniImagenetDataLoader():
 
     def get(self):
 
-        #kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
-        kwargs = {}
+        kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
+        #kwargs = {}
 
         #################################
         # TRANSFORMATIONS: transformations for the TRAIN dataset
