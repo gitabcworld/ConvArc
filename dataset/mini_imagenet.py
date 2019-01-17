@@ -81,7 +81,9 @@ class MiniImagenetBase(data.Dataset):
             return True
 
     def _check_preprocess(self):
-        return os.listdir('%s/compacted' % self.root) == []
+        str_size = 'size_None' if self.size is None else str(self.size[0])
+        return os.listdir('%s/compacted' % self.root) == [] or \
+                not os.path.exists(os.path.join(self.root, 'compacted', 'mini_imagenet_size_%s_train.pickle' % (str_size)))
 
     def get_image_paths(self, file):
         images_path, class_names = [], []
@@ -385,7 +387,7 @@ class MiniImagenetOneShot(MiniImagenetBase):
                 # Set in the last position the information of the positive label
                 labels[-1] = class_ 
             else:
-                samples = random.sample(self.data[class_], self.num_shots)
+                samples = random.sample(self.data[class_], self.n_shot)
 
             for s_i in range(0, len(samples)):
                 batches_xi[indexes_perm[counter]] = samples[s_i]

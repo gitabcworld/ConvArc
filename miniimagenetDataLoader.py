@@ -24,7 +24,7 @@ class miniImagenetDataLoader():
         self.train_mean = np.array([120.45/255.0,115.74/255.0,104.65/255.0]) # RGB
         self.train_std = np.array([127.5/255.0,127.5/255.0,127.5/255.0])
 
-    def get(self):
+    def get(self, rnd_seed=None):
 
         kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
         #kwargs = {}
@@ -52,7 +52,7 @@ class miniImagenetDataLoader():
             datasetParams = self.type(root=self.opt.dataroot, train='train', 
                                         size = (self.opt.imageSize,self.opt.imageSize),
                                         transform=train_transform, target_transform=None,
-                                        n_way = self.opt.one_shot_n_way, num_shots = self.opt.one_shot_n_shot,
+                                        n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                         numTrials=self.opt.numTrials)
 
         train_loader = torch.utils.data.DataLoader(
@@ -77,7 +77,7 @@ class miniImagenetDataLoader():
             datasetParams = self.type(root=self.opt.dataroot, train='val', 
                                         size = (self.opt.imageSize,self.opt.imageSize),
                                         transform=train_transform, target_transform=None,
-                                        n_way = self.opt.one_shot_n_way, num_shots = self.opt.one_shot_n_shot,
+                                        n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                         numTrials=self.opt.numTrials)
 
         val_loader = torch.utils.data.DataLoader(
@@ -97,7 +97,7 @@ class miniImagenetDataLoader():
             datasetParams = self.type(root=self.opt.dataroot, train='test', 
                                         size = (self.opt.imageSize,self.opt.imageSize),
                                         transform=train_transform, target_transform=None,
-                                        n_way = self.opt.one_shot_n_way, num_shots = self.opt.one_shot_n_shot,
+                                        n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                         numTrials=self.opt.numTrials)
 
         test_loader = torch.utils.data.DataLoader(
