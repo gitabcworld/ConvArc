@@ -190,7 +190,10 @@ class WideResidualNetwork(ConvCNN_Base):
 
         if os.path.exists(os.path.join(modelPath, 'model.pt7')):
             print ('Loading Wide Residual Network...')
-            state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
+            if torch.cuda.is_available():
+                state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
+            else:
+                state_dict = torch.load(os.path.join(modelPath, 'model.pt7'), map_location=torch.device('cpu'))
             params_tensors, stats = state_dict['params'], state_dict['stats']
             # copy the params tensors
             for k, v in wrn.params.items():

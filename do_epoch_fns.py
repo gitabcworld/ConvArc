@@ -183,7 +183,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         inputs = Variable(data, requires_grad = False)
         #inputs = Variable(data, requires_grad=True)
         targets = Variable(label)
-        targets_binary = torch.stack([targets[0,:-1] == targets[0,-1] for i in range(len(targets))])
+        targets_binary = torch.stack([targets[i,:-1] == targets[i,-1] for i in range(len(targets))])
 
         batch_size, npair, nchannels, x_size, y_size = inputs.shape
         inputs = inputs.view(batch_size * npair, nchannels, x_size, y_size)
@@ -221,7 +221,8 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         values, index = torch.topk(features, k = data_loader.dataset.n_shot, dim=1, largest=True, sorted=True)
         features_binary = torch.zeros(targets_binary.size())
         # Set the indices to 1
-        features_binary[index] = 1
+        for i in range(len(index)):
+            features_binary[i,index[i]]=1 
         tn, fp, fn, tp = confusion_matrix(targets_binary.view(-1).cpu().data.numpy(), features_binary.view(-1).cpu().data.numpy()).ravel()
         tnr = float(tn) / float(tn+fp)
         fnr = float(fn) / float(fn+tp)

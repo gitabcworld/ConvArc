@@ -61,8 +61,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-
-def train(index = 0):
+def train(index = 1):
 
     # change parameters
     options = Options().parse()
@@ -156,7 +155,11 @@ def train(index = 0):
 
     # load from a previous checkpoint, if specified.
     if opt.arc_load is not None and os.path.exists(opt.arc_load):
-        discriminator.load_state_dict(torch.load(opt.arc_load))
+        if torch.cuda.is_available():
+            discriminator.load_state_dict(torch.load(opt.arc_load))
+        else:
+            discriminator.load_state_dict(torch.load(opt.arc_load, map_location=torch.device('cpu')))
+        
 
     if opt.cuda:
         discriminator.cuda()
@@ -173,7 +176,10 @@ def train(index = 0):
 
     # load preexisting optimizer values if exists
     if os.path.exists(opt.arc_optimizer_path):
-        optimizer.load_state_dict(torch.load(opt.arc_optimizer_path))
+        if torch.cuda.is_available():
+            optimizer.load_state_dict(torch.load(opt.arc_optimizer_path))
+        else:
+            optimizer.load_state_dict(torch.load(opt.arc_optimizer_path, map_location=torch.device('cpu')))
 
     # Select the epoch functions
     do_epoch_fn = None
@@ -246,13 +252,19 @@ def train(index = 0):
 
     # Load the discriminator
     if opt.arc_load is not None and os.path.exists(opt.arc_load):
-        discriminator.load_state_dict(torch.load(opt.arc_load))
+        if torch.cuda.is_available():
+            discriminator.load_state_dict(torch.load(opt.arc_load))
+        else:
+            discriminator.load_state_dict(torch.load(opt.arc_load, map_location=torch.device('cpu')))
     if opt.cuda and discriminator is not None:
         discriminator = discriminator.cuda()
 
     # Load the Naive / Full classifier
     if opt.naive_full_load_path is not None and os.path.exists(opt.naive_full_load_path):
-        context_fn.load_state_dict(torch.load(opt.naive_full_load_path))
+        if torch.cuda.is_available():
+            context_fn.load_state_dict(torch.load(opt.naive_full_load_path))
+        else:
+            context_fn.load_state_dict(torch.load(opt.naive_full_load_path, map_location=torch.device('cpu')))
     if opt.cuda and context_fn is not None:
         context_fn = context_fn.cuda()
 
@@ -294,7 +306,10 @@ def train(index = 0):
 
     # load preexisting optimizer values if exists
     if os.path.exists(opt.naive_full_optimizer_path):
-        optimizer.load_state_dict(torch.load(opt.naive_full_optimizer_path))
+        if torch.cuda.is_available():
+            optimizer.load_state_dict(torch.load(opt.naive_full_optimizer_path))
+        else:
+            optimizer.load_state_dict(torch.load(opt.naive_full_optimizer_path, map_location=torch.device('cpu')))
 
     ###################################
     ## TRAINING NAIVE/FULLCONTEXT
