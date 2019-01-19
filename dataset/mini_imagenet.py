@@ -31,7 +31,8 @@ def unzip(source_filename, dest_dir):
 class MiniImagenetBase(data.Dataset):
 
     def __init__(self, root = './mini_imagenet', train='train',
-                    size = None, # normally size = (84,84)
+                    datasetCompactSize = None, # typically 84
+                    size = None, # normally size = 84
                     transform=None, target_transform=None):
 
         self.root = root
@@ -39,6 +40,7 @@ class MiniImagenetBase(data.Dataset):
         self.target_transform = target_transform
         self.train = train  # training, validation or test set
         self.size = size
+        self.datasetCompactSize = datasetCompactSize
 
         if not self._check_exists_():
             self._init_folders_()
@@ -81,7 +83,7 @@ class MiniImagenetBase(data.Dataset):
             return True
 
     def _check_preprocess(self):
-        str_size = 'size_None' if self.size is None else str(self.size[0])
+        str_size = 'None' if self.datasetCompactSize is None else str(self.datasetCompactSize)
         return os.listdir('%s/compacted' % self.root) == [] or \
                 not os.path.exists(os.path.join(self.root, 'compacted', 'mini_imagenet_size_%s_train.pickle' % (str_size)))
 
@@ -97,7 +99,16 @@ class MiniImagenetBase(data.Dataset):
                 class_names.append(class_)
         return class_names, images_path
 
+    def load_img(self, path, size = None):
+        img = pil_image.open(path)
+        img = img.convert('RGB')
+        if not(size is None):
+            img = img.resize((size,size), pil_image.ANTIALIAS) # 2-tuple resize: (width, height)
+        img = np.array(img, dtype='float32')
+        return img
+
     def _preprocess_(self):
+
         print('\nPreprocessing Mini-Imagenet images...')
         (class_names_train, images_path_train) = self.get_image_paths('%s/train.csv' % self.root)
         (class_names_test, images_path_test) = self.get_image_paths('%s/test.csv' % self.root)
@@ -121,14 +132,14 @@ class MiniImagenetBase(data.Dataset):
         counter = 0
         train_set = {}
         for class_, path in zip(class_names_train, images_path_train):
-            img = pil_image.open(path)
-            img = img.convert('RGB')
-            if not (self.size is None):
-                img = img.resize(self.size, pil_image.ANTIALIAS)
-            img = np.array(img, dtype='float32')
+            data_to_store = None
+            if self.datasetCompactSize == None:
+                data_to_store = path
+            else:
+                data_to_store = self.load_img(path, self.datasetCompactSize)
             if label_encoder[class_] not in train_set:
                 train_set[label_encoder[class_]] = []
-            train_set[label_encoder[class_]].append(img)
+            train_set[label_encoder[class_]].append(data_to_store)
             counter += 1
             if counter % 1000 == 0:
                 print("Counter "+str(counter) + " from " + str(len(images_path_train) + len(class_names_test) +
@@ -136,15 +147,14 @@ class MiniImagenetBase(data.Dataset):
 
         test_set = {}
         for class_, path in zip(class_names_test, images_path_test):
-            img = pil_image.open(path)
-            img = img.convert('RGB')
-            if not (self.size is None):
-                img = img.resize(self.size, pil_image.ANTIALIAS)
-            img = np.array(img, dtype='float32')
-
+            data_to_store = None
+            if self.datasetCompactSize == None:
+                data_to_store = path
+            else:
+                data_to_store = self.load_img(path, self.datasetCompactSize)
             if label_encoder[class_] not in test_set:
                 test_set[label_encoder[class_]] = []
-            test_set[label_encoder[class_]].append(img)
+            test_set[label_encoder[class_]].append(data_to_store)
             counter += 1
             if counter % 1000 == 0:
                 print("Counter " + str(counter) + " from "+str(len(images_path_train) + len(class_names_test) +
@@ -152,21 +162,20 @@ class MiniImagenetBase(data.Dataset):
 
         val_set = {}
         for class_, path in zip(class_names_val, images_path_val):
-            img = pil_image.open(path)
-            img = img.convert('RGB')
-            if not (self.size is None):
-                img = img.resize(self.size, pil_image.ANTIALIAS)
-            img = np.array(img, dtype='float32')
-
+            data_to_store = None
+            if self.datasetCompactSize == None:
+                data_to_store = path
+            else:
+                data_to_store = self.load_img(path, self.datasetCompactSize)
             if label_encoder[class_] not in val_set:
                 val_set[label_encoder[class_]] = []
-            val_set[label_encoder[class_]].append(img)
+            val_set[label_encoder[class_]].append(data_to_store)
             counter += 1
             if counter % 1000 == 0:
                 print("Counter "+str(counter) + " from " + str(len(images_path_train) + len(class_names_test) +
                                                                len(class_names_val)))
 
-        str_size = 'size_None' if self.size is None else str(self.size[0])
+        str_size = 'None' if self.datasetCompactSize is None else str(self.datasetCompactSize)
         with open(os.path.join(self.root, 'compacted', 'mini_imagenet_size_%s_train.pickle' % (str_size)), 'wb') as handle:
             pickle.dump(train_set, handle, protocol=2)
         with open(os.path.join(self.root, 'compacted', 'mini_imagenet_size_%s_test.pickle' % (str_size)), 'wb') as handle:
@@ -190,11 +199,11 @@ class MiniImagenetBase(data.Dataset):
 
         print('Images preprocessed')
 
-    def load_dataset(self, partition, size=(84, 84)):
+    def load_dataset(self, partition):
         
         print("Loading dataset")
 
-        str_size = 'size_None' if self.size is None else str(self.size[0])
+        str_size = 'None' if self.datasetCompactSize is None else str(self.datasetCompactSize)
         with open(os.path.join(self.root, 'compacted', 'mini_imagenet_size_%s_%s.pickle' % (str_size, partition)),
                     'rb') as handle:
             data = pickle.load(handle)
@@ -207,24 +216,17 @@ class MiniImagenetBase(data.Dataset):
                   'rb') as handle:
             label_decoder = pickle.load(handle)
 
-        # Resize images and normalize
-        for class_ in data:
-            for i in range(len(data[class_])):
-                image2resize = pil_image.fromarray(np.uint8(data[class_][i]))
-                if not (size is None) and not size[0] == image2resize.width and not size[1] == image2resize.height:
-                    image_resized = image2resize.resize((size[1], size[0]))
-                else:
-                    image_resized = image2resize
-                #image_resized = np.array(image_resized, dtype='float32')
-
-                # Normalize
-                #image_resized = np.transpose(image_resized, (2, 0, 1))
-                #image_resized[0, :, :] -= 120.45  # R
-                #image_resized[1, :, :] -= 115.74  # G
-                #image_resized[2, :, :] -= 104.65  # B
-                #image_resized /= 127.5
-
-                data[class_][i] = image_resized
+        # If we have an option size then resize if needed.
+        if not (self.size is None) and not (self.datasetCompactSize is None):
+            # Resize images and normalize
+            for class_ in data:
+                for i in range(len(data[class_])):
+                    image2resize = pil_image.fromarray(np.uint8(data[class_][i]))
+                    if not (self.size is None) and not self.size == image2resize.width and not self.size == image2resize.height:
+                        image_resized = image2resize.resize((self.size, self.size))
+                    else:
+                        image_resized = image2resize
+                    data[class_][i] = image_resized
 
         classes = data.keys()
         print("Num classes " + str(len(data)))
@@ -239,28 +241,31 @@ class MiniImagenetBase(data.Dataset):
 class MiniImagenet(MiniImagenetBase):
 
     def __init__(self, root = './mini_imagenet', train='train',
-                 size=None, # normally size = (84,84)
+                 datasetCompactSize = None,
+                 size=None, # normally size = 84
                  transform=None, target_transform=None):
 
-        MiniImagenetBase.__init__(self, root, train, size, transform, target_transform)
-        self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train, self.size)
+        MiniImagenetBase.__init__(self, root = root, train = train, datasetCompactSize = datasetCompactSize, 
+                                    size = size, transform = transform, target_transform = target_transform)
+        self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train)
+        self.idx_to_class = np.array([np.repeat(class_,len(self.data[class_])) for class_ in self.data]).flatten()
+        self.idx_to_img = np.array([range(len(self.data[class_])) for class_ in self.data]).flatten()
 
     def __getitem__(self, index):
 
-        # set the choice function to random
-        np.random.seed(None)
-        num_classes = len(self.data)
-        
-        # pick one class
-        class_choice = np.random.choice(self.data.keys())
+        class_choice = self.idx_to_class[index]
+        sample_choice = self.idx_to_img[index]
 
-        idx_class = np.random.choice(range(len(self.data[class_choice])))
-        img1 = self.data[class_choice][idx_class]
+        img1 = self.data[class_choice][sample_choice]
         target = class_choice
+
+        # If we have paths in self.data then load the image
+        if type(img1).__name__ == 'str':
+            img1 = self.load_img(path=img1,size=self.size)
+            img1 = pil_image.fromarray(np.uint8(img1))
 
         if self.transform is not None:
             img1 = self.transform(img1)
-            img2 = self.transform(img2)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
@@ -286,12 +291,14 @@ class MiniImagenet(MiniImagenetBase):
 class MiniImagenetPairs(MiniImagenetBase):
 
     def __init__(self, root = './mini_imagenet', train='train',
-                 size=None, # normally size = (84,84)
+                 datasetCompactSize = None,
+                 size=None, # normally size = 84
                  transform=None, target_transform=None,
                  numTrials = 512):
 
-        MiniImagenetBase.__init__(self, root, train, size, transform, target_transform)
-        self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train, self.size)
+        MiniImagenetBase.__init__(self, root = root, train = train, datasetCompactSize = datasetCompactSize, 
+                                    size = size, transform = transform, target_transform = target_transform)
+        self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train)
         self.numTrials = numTrials
 
     def __getitem__(self, index):
@@ -319,6 +326,16 @@ class MiniImagenetPairs(MiniImagenetBase):
 
         target = int(similar_classes)
 
+        # If we have paths in self.data then load the image
+        if type(img1).__name__ == 'str':
+            img1 = self.load_img(path=img1,size=self.size)
+            img1 = pil_image.fromarray(np.uint8(img1))
+        
+        # If we have paths in self.data then load the image
+        if type(img2).__name__ == 'str':
+            img2 = self.load_img(path=img2,size=self.size)
+            img2 = pil_image.fromarray(np.uint8(img2))        
+
         if self.transform is not None:
             img1 = self.transform(img1)
             img2 = self.transform(img2)
@@ -343,15 +360,17 @@ class MiniImagenetPairs(MiniImagenetBase):
 class MiniImagenetOneShot(MiniImagenetBase):
 
     def __init__(self, root = './mini_imagenet', train='train',
-                 size=None, # normally size = (84,84)
+                 datasetCompactSize = None,
+                 size=None, # normally size = 84
                  transform=None, target_transform=None,
                  n_way = 20,
                  n_shot = 1,
                  numTrials = 32,
                  ):
 
-        MiniImagenetBase.__init__(self, root, train, size, transform, target_transform)
-        self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train, self.size)
+        MiniImagenetBase.__init__(self, root = root, train = train, datasetCompactSize = datasetCompactSize, 
+                                    size = size, transform = transform, target_transform = target_transform)
+        self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train)
         self.n_way = n_way
         self.n_shot = n_shot
         self.numTrials = numTrials
@@ -367,7 +386,7 @@ class MiniImagenetOneShot(MiniImagenetBase):
         
         batches_xi = []
         for i in range(self.n_way*self.n_shot + 1):
-            batches_xi.append(np.zeros((channels, self.size[0], self.size[1]), dtype='float32'))
+            batches_xi.append(np.zeros((channels, self.size, self.size), dtype='float32'))
 
         # Select the batch
         positive_class_counter = random.randint(0, self.n_way - 1)

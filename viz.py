@@ -83,10 +83,10 @@ def display(opt, image1, mask1, image2, mask2, name="no_name.png"):
     ax[1].imshow(image2, cmap=mpl.cm.bone)
     ax[1].imshow(mask2, interpolation="nearest", cmap=mpl.cm.ocean, alpha=0.7)
 
-    plt.savefig(os.path.join('D:/PhD/logs/images/', name))
+    plt.savefig(os.path.join('D:/PhD/images/', name))
+    plt.close()
 
-
-def visualize(index = 0):
+def visualize(index = 2):
 
     # change parameters
     options = Options().parse()
@@ -177,8 +177,10 @@ def visualize(index = 0):
 
     # load from a previous checkpoint, if specified.
     if opt.arc_load is not None and os.path.exists(opt.arc_load):
-        discriminator.load_state_dict(torch.load(opt.arc_load))
-
+        if torch.cuda.is_available():
+            discriminator.load_state_dict(torch.load(opt.arc_load))
+        else:
+            discriminator.load_state_dict(torch.load(opt.arc_load, map_location=torch.device('cpu')))
     if opt.cuda:
         discriminator.cuda()
 
@@ -220,11 +222,18 @@ def visualize(index = 0):
         channels = 3
         for glimpse_i, (mask1, mask2) in enumerate(zip(masks1, masks2)):
             for batch_i in range(data.shape[0]):
-                sample_0 = ((data[batch_i,0].data.cpu().numpy() * train_std + train_mean)*255.0).transpose(1,2,0).astype(np.uint8)
-                sample_1 = ((data[batch_i,1].data.cpu().numpy() * train_std + train_mean)*255.0).transpose(1,2,0).astype(np.uint8)
+                
+                if len(train_mean.shape) == 1:
+                    sample_0 = ((data[batch_i,0].data.cpu().numpy().transpose(1,2,0) * train_std + train_mean)*255.0).astype(np.uint8)
+                    sample_1 = ((data[batch_i,1].data.cpu().numpy().transpose(1,2,0) * train_std + train_mean)*255.0).astype(np.uint8)
+                else:
+                    sample_0 = ((data[batch_i,0].data.cpu().numpy().transpose(1,2,0) * train_std.transpose(1,2,0) + train_mean.transpose(1,2,0))*255.0).astype(np.uint8)
+                    sample_1 = ((data[batch_i,1].data.cpu().numpy().transpose(1,2,0) * train_std.transpose(1,2,0) + train_mean.transpose(1,2,0))*255.0).astype(np.uint8)
+                
                 if sample_0.shape[2] == 1:
                     sample_0 = np.repeat(sample_0,3,axis=2)
                     sample_1 = np.repeat(sample_1,3,axis=2)
+                
                 display(opt, sample_0, mask1[batch_i], sample_1, mask2[batch_i],"img_batch_%d_glimpse_%d.png" % (batch_i,glimpse_i))
 
 

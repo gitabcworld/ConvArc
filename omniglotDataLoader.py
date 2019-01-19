@@ -150,7 +150,7 @@ class omniglotDataLoader():
                                       train='train', rnd_seed=rnd_seed, transform=train_transform, target_transform=None,
                                       partitionType=self.opt.partitionType,
                                       n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
         elif self.type == Omniglot:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='train', rnd_seed=rnd_seed, transform=train_transform, target_transform=None,
@@ -159,7 +159,7 @@ class omniglotDataLoader():
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='train', rnd_seed=rnd_seed, transform=train_transform, target_transform=None,
                                       partitionType=self.opt.partitionType,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
 
         train_loader = torch.utils.data.DataLoader(
             datasetParams,
@@ -181,7 +181,7 @@ class omniglotDataLoader():
                        train='val', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
                                       partitionType=self.opt.partitionType,
                                       n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
         elif self.type == Omniglot:
             datasetParams = self.type(root=self.opt.dataroot,
                                 train='val', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
@@ -190,7 +190,7 @@ class omniglotDataLoader():
             datasetParams = self.type(root=self.opt.dataroot,
                                 train='val', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
                                 partitionType=self.opt.partitionType,
-                                numTrials=self.opt.numTrials)
+                                numTrials=self.opt.batchSize)
 
         val_loader = torch.utils.data.DataLoader(
             datasetParams,
@@ -202,7 +202,7 @@ class omniglotDataLoader():
                        train='test', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
                                       partitionType=self.opt.partitionType,
                                       n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
         elif self.type == Omniglot:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='test', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
@@ -211,7 +211,7 @@ class omniglotDataLoader():
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='test', rnd_seed=rnd_seed, transform=eval_test_transform, target_transform=None,
                                       partitionType=self.opt.partitionType,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
 
         test_loader = torch.utils.data.DataLoader(
             datasetParams,

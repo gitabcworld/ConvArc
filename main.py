@@ -61,7 +61,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-def train(index = 1):
+def train(index = 2):
 
     # change parameters
     options = Options().parse()
@@ -238,7 +238,6 @@ def train(index = 1):
 
     # Set the new batchSize as in the ARC code.
     options.__dict__['batchSize'] = opt.naive_batchSize
-    options.__dict__['numTrials'] = opt.naive_numTrials
 
     # Add the model_fn Naive / Full Context classification
     context_fn = None

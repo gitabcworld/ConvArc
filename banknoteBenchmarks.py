@@ -136,19 +136,18 @@ class omniglotBenchMark():
         if self.type == ROIBanknote:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='train', transform=train_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
-                                      numTrials=self.opt.numTrials)
+                                      isWithinAlphabets=self.opt.isWithinAlphabets)
         elif self.type == ROIBanknotePairs:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='train', transform=train_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
         elif self.type == FullBanknoteROI:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='train', transform=train_transform, target_transform=None)
         elif self.type == FullBanknoteROIPairs:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='train', transform=train_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
 
         train_loader = torch.utils.data.DataLoader(
             datasetParams,
@@ -165,19 +164,18 @@ class omniglotBenchMark():
         if self.type == ROIBanknote:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='val', transform=train_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
-                                      numTrials=self.opt.numTrials)
+                                      isWithinAlphabets=self.opt.isWithinAlphabets)
         elif self.type == ROIBanknotePairs:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='val', transform=train_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
         elif self.type == FullBanknoteROI:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='val', transform=train_transform, target_transform=None)
         elif self.type == FullBanknoteROIPairs:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='val', transform=train_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
 
         val_loader = torch.utils.data.DataLoader(
             datasetParams,
@@ -186,19 +184,18 @@ class omniglotBenchMark():
         if self.type == ROIBanknote:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='test', transform=train_transform, target_transform=None,
-                                      isWithinAlphabets=self.opt.isWithinAlphabets,
-                                      numTrials=self.opt.numTrials)
+                                      isWithinAlphabets=self.opt.isWithinAlphabets)
         elif self.type == ROIBanknotePairs:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='test', transform=train_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
         elif self.type == FullBanknoteROI:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='test', transform=train_transform, target_transform=None)
         elif self.type == FullBanknoteROIPairs:
             datasetParams = self.type(root=self.opt.dataroot,
                                       train='test', transform=train_transform, target_transform=None,
-                                      numTrials=self.opt.numTrials)
+                                      numTrials=self.opt.batchSize)
 
         test_loader = torch.utils.data.DataLoader(
             datasetParams,

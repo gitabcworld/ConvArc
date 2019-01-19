@@ -40,20 +40,23 @@ class miniImagenetDataLoader():
         ])
 
         if self.type == MiniImagenet:
-            datasetParams = self.type(root=self.opt.dataroot, train='train', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),  
+            datasetParams = self.type(root=self.opt.dataroot, train='train',
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=train_transform, target_transform=None)
         elif self.type == MiniImagenetPairs:
             datasetParams = self.type(root=self.opt.dataroot, train='train', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),  
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=train_transform, target_transform=None,
-                                        numTrials=self.opt.numTrials)
+                                        numTrials=self.opt.batchSize)
         elif self.type == MiniImagenetOneShot:
             datasetParams = self.type(root=self.opt.dataroot, train='train', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=train_transform, target_transform=None,
                                         n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                        numTrials=self.opt.numTrials)
+                                        numTrials=self.opt.batchSize)
 
         train_loader = torch.utils.data.DataLoader(
             datasetParams,
@@ -66,19 +69,22 @@ class miniImagenetDataLoader():
 
         if self.type == MiniImagenet:
             datasetParams = self.type(root=self.opt.dataroot, train='val', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),  
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=eval_test_transform, target_transform=None)
         elif self.type == MiniImagenetPairs:
             datasetParams = self.type(root=self.opt.dataroot, train='val', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=eval_test_transform, target_transform=None,
-                                        numTrials=self.opt.numTrials)
+                                        numTrials=self.opt.batchSize)
         elif self.type == MiniImagenetOneShot:
             datasetParams = self.type(root=self.opt.dataroot, train='val', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=train_transform, target_transform=None,
                                         n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                        numTrials=self.opt.numTrials)
+                                        numTrials=self.opt.batchSize)
 
         val_loader = torch.utils.data.DataLoader(
             datasetParams,
@@ -86,19 +92,22 @@ class miniImagenetDataLoader():
 
         if self.type == MiniImagenet:
             datasetParams = self.type(root=self.opt.dataroot, train='test', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),  
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=eval_test_transform, target_transform=None)
         elif self.type == MiniImagenetPairs:
             datasetParams = self.type(root=self.opt.dataroot, train='test', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=eval_test_transform, target_transform=None,
-                                        numTrials=self.opt.numTrials)
+                                        numTrials=self.opt.batchSize)
         elif self.type == MiniImagenetOneShot:
             datasetParams = self.type(root=self.opt.dataroot, train='test', 
-                                        size = (self.opt.imageSize,self.opt.imageSize),
+                                        datasetCompactSize = self.opt.datasetCompactSize,
+                                        size = self.opt.imageSize,  
                                         transform=train_transform, target_transform=None,
                                         n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                        numTrials=self.opt.numTrials)
+                                        numTrials=self.opt.batchSize)
 
         test_loader = torch.utils.data.DataLoader(
             datasetParams,
