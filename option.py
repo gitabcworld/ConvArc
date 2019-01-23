@@ -12,12 +12,15 @@ import argparse
 import os
 
 pathResults = os.path.dirname(os.path.abspath(__file__)) + '/results/'
-
+if os.path.exists('D:/PhD/code/datasets/convarc/omniglot'):
+    dataroot = 'D:/PhD/code/datasets/convarc/omniglot'
+else:
+    dataroot = '/datatmp/users/aberenguel/convarc/omniglot/'
 
 lst_parameters_change = [
     [
         ('datasetName', 'omniglot'),
-        ('dataroot', 'D:/PhD/code/datasets/convarc/omniglot'),
+        ('dataroot', dataroot),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
@@ -48,7 +51,7 @@ lst_parameters_change = [
     ],
     [
         ('datasetName', 'omniglot'),
-        ('dataroot', 'D:/PhD/code/datasets/convarc/omniglot/'),
+        ('dataroot', dataroot),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
@@ -77,7 +80,7 @@ lst_parameters_change = [
     ],
     [
         ('datasetName', 'miniImagenet'),
-        ('dataroot', 'D:/PhD/code/datasets/convarc/mini_imagenet'),
+        ('dataroot', dataroot),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
@@ -126,7 +129,7 @@ class Options():
         parser.add_argument('--val_freq', type=int, default=1000, help='validation frequency')
         parser.add_argument('--val_num_batches', type=int, default=250, help='validation num batches')
         parser.add_argument('--test_num_batches', type=int, default=500, help='test num batches')
-        parser.add_argument('--batchSize', type=int, default=128, help='input batch size')
+        parser.add_argument('--batchSize', type=int, default=5, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
         parser.add_argument('--nthread', default=7, type=int)

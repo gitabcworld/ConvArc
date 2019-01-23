@@ -61,6 +61,29 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
+# Keeping the filters
+# Q_a = torch.zeros([10, 1024, 14, 14], dtype=torch.float32)
+# Q_b = torch.zeros([10, 1024, 14, 14], dtype=torch.float32)
+# W = torch.zeros([pow(14,2), pow(14,2)], dtype=torch.float32)
+# torch.matmul(Q_a.view(10,1024,-1),W)*Q_b.view(10,1024,-1)
+
+# Sum all the filters
+# option 1
+# Q_a.sum(dim=1).view(10,1,-1)*Q_a.sum(dim=1).view(10,-1,1)
+# option 2
+# torch.bmm(Q_a.sum(dim=1).view(10,-1,1),Q_a.sum(dim=1).view(10,1,-1)).shape
+# 
+
+# Simple matrix multiplication.
+# a = torch.zeros(1,3)
+# a[0] = torch.arange(0,3)
+# b = torch.zeros(1,3)
+# b[0] = torch.arange(0,3)
+# print(a)
+# print(b)
+# c = torch.matmul((a.transpose(0,1)),b)
+# print(c)
+
 def train(index = 2):
 
     # change parameters
