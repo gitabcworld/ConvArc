@@ -20,7 +20,7 @@ else:
 lst_parameters_change = [
     [
         ('datasetName', 'omniglot'),
-        ('dataroot', os.path.join(dataroot,'omniglot'),
+        ('dataroot', os.path.join(dataroot,'omniglot')),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
@@ -47,11 +47,11 @@ lst_parameters_change = [
         ('naive_full_resume', True),
 
         ('arc_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/arc_optimizer.pt7'),
-        ('naive_full_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/context_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/context_optimizer.pt7')
     ],
     [
         ('datasetName', 'omniglot'),
-        ('dataroot', os.path.join(dataroot,'omniglot'),
+        ('dataroot', os.path.join(dataroot,'omniglot')),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
@@ -80,7 +80,7 @@ lst_parameters_change = [
     ],
     [
         ('datasetName', 'miniImagenet'),
-        ('dataroot', os.path.join(dataroot,'mini_imagenet'),
+        ('dataroot', os.path.join(dataroot,'mini_imagenet')),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
@@ -110,7 +110,7 @@ lst_parameters_change = [
     ],
     [
         ('datasetName', 'miniImagenet'),
-        ('dataroot', os.path.join(dataroot,'mini_imagenet'),
+        ('dataroot', os.path.join(dataroot,'mini_imagenet')),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
