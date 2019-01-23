@@ -34,7 +34,9 @@ class miniImagenetDataLoader():
         #################################
         train_transform = transforms.Compose([            
             transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
+            #transforms.RandomVerticalFlip(),
+            transforms.ColorJitter(brightness=0.4,contrast=0.4,saturation=0.4),
+            transforms.RandomAffine(degrees=(0,10), translate=(0.1, 0.1), scale=(0.8, 1.2)),
             transforms.ToTensor(),
             transforms.Normalize(self.train_mean,self.train_std), 
         ])
