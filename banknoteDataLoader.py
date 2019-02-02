@@ -10,6 +10,7 @@ from torch.autograd import Variable
 import torchvision.transforms as transforms
 import torchvision.models as models
 from models.customResnet50 import CustomResNet50
+import pdb
 
 from option import Options
 from dataset.banknote_pytorch import FullBanknotePairs, FullBanknote, FullBanknoteOneShot
@@ -40,10 +41,10 @@ class banknoteDataLoader():
         if train == 'train':
             lst_transforms.append(transforms.ColorJitter(brightness=0.4,contrast=0.4,saturation=0.4))
             lst_transforms.append(transforms.RandomAffine(degrees=(0,10), translate=(0.1, 0.1), scale=(0.8, 1.2)))
-            #if self.opt.imageSize is None:
-            #    lst_transforms.append(transforms.RandomCrop(size=896))
-        #if not(train == 'train'):
-        #    lst_transforms.append(transforms.CenterCrop(size=896))
+            if self.opt.imageSize is None:
+                lst_transforms.append(transforms.RandomCrop(size=224))
+        if not(train == 'train'):
+            lst_transforms.append(transforms.CenterCrop(size=224))
 
         lst_transforms.append(transforms.ToTensor())
 
@@ -115,6 +116,7 @@ class banknoteDataLoader():
             self.train_std = train_std
 
         kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
+        #kwargs = {}
 
         train_transform = transforms.Compose(self.getlstTransforms(train = 'train'))
 

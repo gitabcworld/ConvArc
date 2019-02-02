@@ -91,7 +91,8 @@ class ResNet50(ConvCNN_Base):
         super(ResNet50, self).__init__(opt)
 
         # Initialize network 
-        self.model = CustomResNet50(out_size=(100,60))
+        #self.model = CustomResNet50(out_size=(100,60))
+        self.model = CustomResNet50(out_size=None)
 
     def forward(self, x):
         return self.model(x)

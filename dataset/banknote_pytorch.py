@@ -18,6 +18,7 @@ from dataset.dataModel import DataModel
 import torchvision.transforms as transforms
 import torch
 from PIL import Image as pil_image
+import pdb
 
 class BanknoteBase(data.Dataset):
 
@@ -372,13 +373,13 @@ class FullBanknotePairs(BanknoteBase):
             target1 = self.target_transform(target1)
             target2 = self.target_transform(target2)
 
-        data = torch.stack((img1,img2))
+        ret_data = torch.stack((img1,img2))
         labels = (model1, target1, model2, target2)
         isSimilar = False
         if model1 == model2 and target1 == target2:
             isSimilar = True
 
-        return data, int(isSimilar)
+        return ret_data, int(isSimilar)
 
     def __len__(self):
         return self.nImages
@@ -435,18 +436,23 @@ class FullBanknoteOneShot(BanknoteBase):
             for idx in idxs[:-1]:
                 list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
                                                                             self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx]]
+                                                                            self.data[positive_class]['labels'][idx],
+                                                                            self.data[positive_class]['sizes'][idx]]
                 counter_added_elements = counter_added_elements + 1                                                 
             
             # Add the reference positive class
-            list_idxs[-1] = [positive_class,self.data[positive_class]['inputs'][idxs[-1]],self.data[positive_class]['labels'][idxs[-1]]]
+            list_idxs[-1] = [positive_class,
+                                self.data[positive_class]['inputs'][idxs[-1]],
+                                self.data[positive_class]['labels'][idxs[-1]],
+                                self.data[positive_class]['sizes'][idxs[-1]]]
 
             # Add the negative image
             idxs = np.random.choice(idx_positive_class_counterfeit,self.n_shot)
             for idx in idxs[:-1]:
                 list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
                                                                             self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx]]
+                                                                            self.data[positive_class]['labels'][idx],
+                                                                            self.data[positive_class]['sizes'][idx]]
                 counter_added_elements = counter_added_elements + 1                                                 
 
         # the elements are from the other classes + genuine and the probability=0.5 of having one counterfeit.
@@ -467,14 +473,16 @@ class FullBanknoteOneShot(BanknoteBase):
                     for idx in idxs:
                         list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
                                                                             self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx]]
+                                                                            self.data[positive_class]['labels'][idx],
+                                                                            self.data[positive_class]['sizes'][idx]]
                         counter_added_elements = counter_added_elements + 1
                 else:
                     idxs = np.random.choice(range(len(self.data[classes_negative[i]]['inputs'])),self.n_shot)
                     for idx in idxs:
                         list_idxs[indexes_perm[counter_added_elements]] = [classes_negative[i],
                                                                             self.data[classes_negative[i]]['inputs'][idx],
-                                                                            self.data[classes_negative[i]]['labels'][idx]]
+                                                                            self.data[classes_negative[i]]['labels'][idx],
+                                                                            self.data[classes_negative[i]]['sizes'][idx]]
                         counter_added_elements = counter_added_elements + 1
 
             # Add now the positive class 
@@ -482,11 +490,15 @@ class FullBanknoteOneShot(BanknoteBase):
             for idx in idxs[:-1]:
                 list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
                                                                             self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx]]
+                                                                            self.data[positive_class]['labels'][idx],
+                                                                            self.data[positive_class]['sizes'][idx]]
                 counter_added_elements = counter_added_elements + 1
 
             # Add positive class to compare with
-            list_idxs[-1] = [positive_class,self.data[positive_class]['inputs'][idxs[-1]],self.data[positive_class]['labels'][idxs[-1]]]
+            list_idxs[-1] = [positive_class,
+                                    self.data[positive_class]['inputs'][idxs[-1]],
+                                    self.data[positive_class]['labels'][idxs[-1]],
+                                    self.data[positive_class]['sizes'][idxs[-1]]]
 
 
         # Iterate over the selected samples and load the images
@@ -495,7 +507,7 @@ class FullBanknoteOneShot(BanknoteBase):
         labels_genuine_counterfeit = []
         for elem in list_idxs:
             if type(elem[1]).__name__ == 'str':
-                img1 = self.load_img(path=elem[1],size=self.size)
+                img1 = self.load_img(path=elem[1], info_dpi= elem[3], size=self.size)
                 img1 = pil_image.fromarray(np.uint8(img1))
             else:
                 img1 = elem[1]

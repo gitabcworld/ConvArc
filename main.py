@@ -88,7 +88,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 # c = torch.matmul((a.transpose(0,1)),b)
 # print(c)
 
-def train(index = 4):
+def train(index = 0):
 
     # change parameters
     opt = Options().parse()
@@ -117,6 +117,8 @@ def train(index = 4):
                 fcn.load_state_dict(torch.load(opt.wrn_load))
             else:
                 fcn.load_state_dict(torch.load(opt.wrn_load, map_location=torch.device('cpu')))
+        if opt.cuda:
+            fcn.cuda()
 
     # Load Dataset
     if opt.datasetName == 'miniImagenet':
@@ -290,6 +292,8 @@ def train(index = 4):
             fcn.load_state_dict(torch.load(opt.wrn_load))
         else:
             fcn.load_state_dict(torch.load(opt.wrn_load, map_location=torch.device('cpu')))
+        if opt.cuda:
+            fcn.cuda()
 
     # Load the discriminator
     if opt.arc_load is not None and os.path.exists(opt.arc_load):
