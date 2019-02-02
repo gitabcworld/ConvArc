@@ -13,7 +13,7 @@ def context_train(epoch, epoch_fn, opt, train_loader, discriminator, context_fn,
     discriminator.eval()
     # set all gradients to True and the fcn in evaluation format.
     if opt.apply_wrn:
-        for param in fcn.params.values():
+        for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
     # set all gradients to true in the context model.

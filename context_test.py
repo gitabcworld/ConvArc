@@ -4,7 +4,7 @@ from datetime import datetime
 from models.conv_cnn import ConvCNNFactory
 import multiprocessing
 
-def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, logger):
+def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ("[%s] ... loading last validation model" % multiprocessing.current_process().name)
@@ -14,13 +14,8 @@ def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, l
         param.requires_grad = False
     discriminator.eval()
 
-    # Load FCN?
+    # freeze the weights from the fcn and set it to eval.
     if opt.apply_wrn:
-        # Convert the opt params to dict.
-        optDict = dict([(key, value) for key, value in opt._get_kwargs()])
-        convCNN = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
-        # Load the last saved fully convolutional model
-        fcn, _, _ = convCNN.load(opt.wrn_save, fully_convolutional=True)
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()

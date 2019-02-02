@@ -9,6 +9,7 @@ import numpy as np
 import torch.utils.data as data
 from numpy.random import choice
 from scipy.misc import imresize as resize
+from PIL import Image
 
 # if sys.version_info[0] == 2:
 #     import cPickle as pickle
@@ -26,15 +27,15 @@ class OmniglotBase(data.Dataset):
         self.train = train  # training, validation or test set
         self.rnd_seed = rnd_seed
 
-        self.chars = np.load(os.path.join(self.root,'omniglot.npy'))
+        self.chars = np.load(os.path.join(self.root,'omniglot.npy')).astype(np.uint8)
 
         # SPEED UP: CASE image_size == 32. DELETE!!!
-        from scipy.misc import imresize as resize
-        resized_chars = np.zeros((1623, 20, 32, 32), dtype='uint8')
-        for i in range(1623):
-            for j in range(20):
-                resized_chars[i, j] = resize(self.chars[i, j], (32, 32))
-        self.chars = resized_chars
+        #from scipy.misc import imresize as resize
+        #resized_chars = np.zeros((1623, 20, 32, 32), dtype='uint8')
+        #for i in range(1623):
+        #    for j in range(20):
+        #        resized_chars[i, j] = resize(self.chars[i, j], (32, 32))
+        #self.chars = resized_chars
 
         self.channels = 1
         self.nDiffCharacters, self.nSameCharacters, self.image_size, self.image_size = self.chars.shape
@@ -144,6 +145,8 @@ class Omniglot(OmniglotBase):
         index_intra_character = index - index_inter_character*self.chars.shape[1]
 
         img = self.chars[index_inter_character][index_intra_character]
+        img = Image.fromarray(img)
+
         target = self.labels[index_inter_character]
 
         if self.transform is not None:
@@ -157,7 +160,7 @@ class Omniglot(OmniglotBase):
     def __len__(self):
         return self.chars.shape[0]*self.chars.shape[1]
 
-class Omniglot_Pairs(Omniglot):
+class OmniglotPairs(Omniglot):
 
     def __init__(self, root = '../../data', train='train', rnd_seed = 42,
                  reduced_dataset=False,
@@ -202,9 +205,17 @@ class Omniglot_Pairs(Omniglot):
 
         target = int(similar_characters)
 
+        # Convert the image to PIL
+        img1 = Image.fromarray(img1)
+        img2 = Image.fromarray(img2)
+        
         if self.transform is not None:
             img1 = self.transform(img1)
             img2 = self.transform(img2)
+            # Case the FCN is done inside the DataLoader
+            if len(img1.shape)>3:
+                img1 = img1[0]
+                img2 = img2[0]
 
         if self.target_transform is not None:
             target = self.target_transform(target)
@@ -282,7 +293,11 @@ class OmniglotOneShot(Omniglot):
         imgs = []
         if self.transform is not None:
             for i in range(trial.shape[0]):
-                imgs.append(self.transform(trial[i]))
+                img_transformed = self.transform(Image.fromarray(trial[i]))
+                 # Case the FCN is done inside the DataLoader
+                if len(img_transformed.shape)>3:
+                    img_transformed = img_transformed[0]
+                imgs.append(img_transformed)
         trial = torch.stack(imgs)
 
         if self.target_transform is not None:

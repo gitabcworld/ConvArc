@@ -67,12 +67,12 @@ def flatten_params(params):
     flat_params = OrderedDict()
     for keys, v in nested_dict(params).iteritems_flat():
         if v is not None:
-            flat_params['.'.join(keys)] = Variable(v, requires_grad=True)
+            flat_params['_'.join(keys)] = Variable(v, requires_grad=True)
     return flat_params
 
 
 def flatten_stats(stats):
     flat_stats = OrderedDict()
     for keys, v in nested_dict(stats).iteritems_flat():
-        flat_stats['.'.join(keys)] = v
+        flat_stats['_'.join(keys)] = v
     return flat_stats

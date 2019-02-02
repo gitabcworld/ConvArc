@@ -339,6 +339,10 @@ class MiniImagenetPairs(MiniImagenetBase):
         if self.transform is not None:
             img1 = self.transform(img1)
             img2 = self.transform(img2)
+            # Case the FCN is done inside the DataLoader
+            if len(img1.shape)>3:
+                img1 = img1[0]
+                img2 = img2[0]
 
         if self.target_transform is not None:
             target = self.target_transform(target)
@@ -413,7 +417,20 @@ class MiniImagenetOneShot(MiniImagenetBase):
                 labels[indexes_perm[counter]] = class_
                 counter += 1
 
-        batches_xi = torch.stack([self.transform(batch_xi) for batch_xi in batches_xi])
+        batches_tmp = []
+        for batch_xi in batches_xi:
+            if type(batch_xi).__name__ == 'str':
+                img1 = self.load_img(path=batch_xi,size=self.size)
+                img1 = pil_image.fromarray(np.uint8(img1))
+            else:
+                img1 = batch_xi
+            img1 = self.transform(img1)
+            # Case the FCN is done inside the DataLoader
+            if len(img1.shape)>3:
+                img1 = img1[0]
+            batches_tmp.append(img1)
+
+        batches_xi = torch.stack(batches_tmp)
         labels = torch.from_numpy(labels)
 
         '''

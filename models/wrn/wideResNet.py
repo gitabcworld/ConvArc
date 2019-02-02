@@ -39,26 +39,33 @@ class WideResNet(nn.Module):
             return {'block%d' % i: {'bn0': bnstats(ni if i == 0 else no), 'bn1': bnstats(no)}
                     for i in range(count)}
 
-        self.params = {'conv0': conv_params(ni=ninputs, no=widths[0], k=3)}
-        self.stats = {}
+        params = {'conv0': conv_params(ni=ninputs, no=widths[0], k=3)}
+        stats = {}
 
         for i in range(num_groups+1):
             if i == 0:
-                self.params.update({'group'+str(i): gen_group_params(widths[i], widths[i], depth)})
-                self.stats.update({'group'+str(i): gen_group_stats(widths[i], widths[i], depth)})
+                params.update({'group'+str(i): gen_group_params(widths[i], widths[i], depth)})
+                stats.update({'group'+str(i): gen_group_stats(widths[i], widths[i], depth)})
             else:
-                self.params.update({'group'+str(i): gen_group_params(widths[i-1], widths[i], depth)})
-                self.stats.update({'group'+str(i): gen_group_stats(widths[i-1], widths[i], depth)})
+                params.update({'group'+str(i): gen_group_params(widths[i-1], widths[i], depth)})
+                stats.update({'group'+str(i): gen_group_stats(widths[i-1], widths[i], depth)})
 
         if num_classes is not None:
-            self.params.update({'fc': linear_params(widths[i], num_classes)})
-        self.params.update({'bn': bnparams(widths[i])})
-        self.stats.update({'bn': bnstats(widths[i])})
+            params.update({'fc': linear_params(widths[i], num_classes)})
+        params.update({'bn': bnparams(widths[i])})
+        stats.update({'bn': bnstats(widths[i])})
 
-        self.params = flatten_params(self.params)
-        self.stats = flatten_stats(self.stats)
+        params = flatten_params(params)
+        stats = flatten_stats(stats)        
 
+        self.params = nn.ParameterDict({})
+        self.stats = nn.ParameterDict({})
+        for key in params.keys():
+            self.params.update({key:nn.Parameter(params[key],requires_grad=True)})
+        for key in stats.keys():
+            self.stats.update({key:nn.Parameter(stats[key], requires_grad=False)})  
 
+    ''' TODO:CHECK
     def train(self, mode=True):
         self.mode = mode
         for key in self.params.keys():
@@ -70,30 +77,31 @@ class WideResNet(nn.Module):
         for key in self.params.keys():
             self.params[key].requires_grad = self.mode
         return super(WideResNet, self).eval()
+    '''
 
     def forward(self, input):
 
         def activation(x, params, stats, base, mode):
-            return F.relu(F.batch_norm(x, weight=params[base + '.weight'],
-                                       bias=params[base + '.bias'],
-                                       running_mean=stats[base + '.running_mean'],
-                                       running_var=stats[base + '.running_var'],
+            return F.relu(F.batch_norm(x, weight=params[base + '_weight'],
+                                       bias=params[base + '_bias'],
+                                       running_mean=stats[base + '_running_mean'],
+                                       running_var=stats[base + '_running_var'],
                                        training=mode, momentum=0.1, eps=1e-5), inplace=True)
 
         def block(x, params, stats, base, mode, stride):
-            o1 = activation(x, params, stats, base + '.bn0', mode)
-            y = F.conv2d(o1, params[base + '.conv0'], stride=stride, padding=1)
-            o2 = activation(y, params, stats, base + '.bn1', mode)
+            o1 = activation(x, params, stats, base + '_bn0', mode)
+            y = F.conv2d(o1, params[base + '_conv0'], stride=stride, padding=1)
+            o2 = activation(y, params, stats, base + '_bn1', mode)
             o2 = torch.nn.Dropout(p=self.dropout)(o2) # Dropout from the code of ARC. dropout = 0.3
-            z = F.conv2d(o2, params[base + '.conv1'], stride=1, padding=1)
-            if base + '.convdim' in params:
-                return z + F.conv2d(o1, params[base + '.convdim'], stride=stride)
+            z = F.conv2d(o2, params[base + '_conv1'], stride=1, padding=1)
+            if base + '_convdim' in params:
+                return z + F.conv2d(o1, params[base + '_convdim'], stride=stride)
             else:
                 return z + x
 
         def group(o, params, stats, base, mode, stride):
             for i in range(self.depth):
-                o = block(o, params, stats, '%s.block%d' % (base, i), mode, stride if i == 0 else 1)
+                o = block(o, params, stats, '%s_block%d' % (base, i), mode, stride if i == 0 else 1)
             return o
 
         assert input.is_cuda == self.params['conv0'].is_cuda
@@ -110,22 +118,8 @@ class WideResNet(nn.Module):
         if self.num_classes is not None:
             o = F.avg_pool2d(o, o.shape[2], 1, 0)
             o = o.view(o.size(0), -1)
-            o = F.linear(o, self.params['fc.weight'], self.params['fc.bias'])
+            o = F.linear(o, self.params['fc_weight'], self.params['fc_bias'])
         return o
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

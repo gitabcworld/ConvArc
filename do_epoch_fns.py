@@ -55,36 +55,45 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
 
     for batch_idx, (data, label) in enumerate(data_loader):
 
-        if opt.cuda:
-            data = data.cuda()
-            label = label.cuda()
-        if optimizer:
-            inputs = Variable(data, requires_grad=True)
+        # If the input has been already forwarded in the DataLoader do not it again
+        if not opt.fcn_applyOnDataLoader:
+
+            if opt.cuda:
+                data = data.cuda()
+                label = label.cuda()
+            if optimizer:
+                inputs = Variable(data, requires_grad=True)
+            else:
+                inputs = Variable(data, requires_grad=False)
+            targets = Variable(label)
+
+            '''
+            for index in range(inputs.shape[0]):
+                cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
+                    int(targets[index].data.cpu().numpy())) + '.png',
+                            inputs[index, 0, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
+                cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img2_target_' + str(
+                    int(targets[index].data.cpu().numpy())) + '.png',
+                            inputs[index, 1, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
+            '''
+
+            # The dropout is done in the input if not CARC. If CARC the dropout is done in the
+            # residual blocks in the Wide Residual Network.
+            if optimizer and not fcn:
+                inputs = torch.nn.Dropout(p=opt.dropout)(inputs)
+
+            batch_size, npair, nchannels, x_size, y_size = inputs.shape
+            inputs = inputs.view(batch_size * npair, nchannels, x_size, y_size)
+            if fcn:
+                inputs = fcn(inputs)
+            _ , nfilters, featx_size, featy_size = inputs.shape
+            inputs = inputs.view(batch_size, npair, nfilters, featx_size, featy_size)
         else:
-            inputs = Variable(data, requires_grad=False)
-        targets = Variable(label)
+            inputs = data
+            if opt.cuda:
+                label = label.cuda()
+            targets = Variable(label)
 
-        '''
-        for index in range(inputs.shape[0]):
-            cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
-                int(targets[index].data.cpu().numpy())) + '.png',
-                        inputs[index, 0, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
-            cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img2_target_' + str(
-                int(targets[index].data.cpu().numpy())) + '.png',
-                        inputs[index, 1, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
-        '''
-
-        # The dropout is done in the input if not CARC. If CARC the dropout is done in the
-        # residual blocks in the Wide Residual Network.
-        if optimizer and not fcn:
-            inputs = torch.nn.Dropout(p=opt.dropout)(inputs)
-
-        batch_size, npair, nchannels, x_size, y_size = inputs.shape
-        inputs = inputs.view(batch_size * npair, nchannels, x_size, y_size)
-        if fcn:
-            inputs = fcn(inputs)
-        _ , nfilters, featx_size, featy_size = inputs.shape
-        inputs = inputs.view(batch_size, npair, nfilters, featx_size, featy_size)
 
         features, updated_states = discriminator(inputs)
         if loss_fn:
@@ -168,33 +177,42 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
 
     for batch_idx, (data, label) in enumerate(data_loader):
 
-        if opt.cuda:
-            data = data.cuda()
-            label = label.cuda()
+        # If the input has been already forwarded in the DataLoader do not it again
+        if not opt.fcn_applyOnDataLoader:
+            if opt.cuda:
+                data = data.cuda()
+                label = label.cuda()
 
-        '''
-        for index_batch in range(data.shape[0]):
-            for index_oneshot in range(data.shape[1]):
-                cv2.imwrite('D:/PhD/images/batch_' + str(index_batch) +'_index_' + str(index_oneshot) + '_img_target_' + str(
-                    int(label[index_batch][index_oneshot].data.cpu().numpy())) + '.png', data[index_batch, index_oneshot].data.cpu().numpy().transpose(1,2,0) * 255)
-        '''
+            '''
+            for index_batch in range(data.shape[0]):
+                for index_oneshot in range(data.shape[1]):
+                    cv2.imwrite('D:/PhD/images/batch_' + str(index_batch) +'_index_' + str(index_oneshot) + '_img_target_' + str(
+                        int(label[index_batch][index_oneshot].data.cpu().numpy())) + '.png', data[index_batch, index_oneshot].data.cpu().numpy().transpose(1,2,0) * 255)
+            '''
 
-        # not needed gradient graph for the FCN and ARC
-        inputs = Variable(data, requires_grad = False)
-        #inputs = Variable(data, requires_grad=True)
-        targets = Variable(label)
-        targets_binary = torch.stack([targets[i,:-1] == targets[i,-1] for i in range(len(targets))])
+            # not needed gradient graph for the FCN and ARC
+            inputs = Variable(data, requires_grad = False)
+            #inputs = Variable(data, requires_grad=True)
+            targets = Variable(label)
+            targets_binary = torch.stack([targets[i,:-data_loader.dataset.n_shot] == targets[i,-data_loader.dataset.n_shot] for i in range(len(targets))])
 
-        batch_size, npair, nchannels, x_size, y_size = inputs.shape
-        inputs = inputs.view(batch_size * npair, nchannels, x_size, y_size)
-        if fcn:
-            inputs = fcn(inputs)
-        _ , nfilters, featx_size, featy_size = inputs.shape
-        inputs = inputs.view(batch_size, npair, nfilters, featx_size, featy_size)
-        support_train = inputs[:,:npair-1,:]
+            batch_size, npair, nchannels, x_size, y_size = inputs.shape
+            inputs = inputs.view(batch_size * npair, nchannels, x_size, y_size)
+            if fcn:
+                inputs = fcn(inputs)
+            _ , nfilters, featx_size, featy_size = inputs.shape
+            inputs = inputs.view(batch_size, npair, nfilters, featx_size, featy_size)
+        else:
+            inputs = data
+            if opt.cuda:
+                label = label.cuda()
+            targets = Variable(label)
+            targets_binary = torch.stack([targets[i,:-data_loader.dataset.n_shot] == targets[i,-data_loader.dataset.n_shot] for i in range(len(targets))])
+
+        support_train = inputs[:,:data_loader.dataset.n_shot*data_loader.dataset.n_way,:]
         # repmat support test if all the discriminator could be processed in a single batch
         #support_test = inputs[:, npair-1:, :].expand(batch_size, npair-1, nfilters, featx_size, featy_size)
-        support_test = inputs[:, npair - 1:, :]
+        support_test = inputs[:,data_loader.dataset.n_shot*data_loader.dataset.n_way:, :]
 
         hidden_features = []
         for i in range(support_train.shape[1]):

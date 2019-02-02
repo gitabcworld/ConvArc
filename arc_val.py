@@ -10,7 +10,7 @@ best_accuracy = 0.0
 saving_threshold = 1.02
 
 def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
-                convCNN = None, optimizer=None, loss_fn=None, fcn=None):
+                optimizer=None, loss_fn=None, fcn=None):
 
     global best_validation_loss, best_accuracy, saving_threshold
 
@@ -57,13 +57,7 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
         if opt.apply_wrn:
-            # Save the fully convolutional network
-            n_parameters = sum(p.numel() for p in list(fcn.params.values()) + list(fcn.stats.values()))
-            convCNN.log({
-                "val_acc": float(val_acc_epoch),
-                "epoch": epoch,
-                "n_parameters": n_parameters,
-            }, optimizer, fcn.params, fcn.stats)
+            torch.save(fcn.state_dict(),opt.wrn_save)
         # Save the ARC discriminator
         torch.save(discriminator.state_dict(),opt.arc_save)
         # Save optimizer

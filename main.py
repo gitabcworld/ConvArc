@@ -27,7 +27,7 @@ from option import Options, tranform_options
 # Omniglot dataset
 from omniglotDataLoader import omniglotDataLoader
 from dataset.omniglot import Omniglot
-from dataset.omniglot import Omniglot_Pairs
+from dataset.omniglot import OmniglotPairs
 from dataset.omniglot import OmniglotOneShot
 
 # Mini-imagenet dataset
@@ -37,7 +37,11 @@ from dataset.mini_imagenet import MiniImagenetPairs
 from dataset.mini_imagenet import MiniImagenetOneShot
 
 # Banknote dataset
-from dataset.banknote_pytorch import FullBanknoteROI
+from banknoteDataLoader import banknoteDataLoader
+from dataset.banknote_pytorch import FullBanknote
+from dataset.banknote_pytorch import FullBanknotePairs
+from dataset.banknote_pytorch import FullBanknoteOneShot
+
 
 from models.conv_cnn import ConvCNNFactory
 from models.fullContext import FullContextARC
@@ -84,37 +88,54 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 # c = torch.matmul((a.transpose(0,1)),b)
 # print(c)
 
-def train(index = 2):
+def train(index = 4):
 
     # change parameters
-    options = Options().parse()
-    #options = Options().parse() if options is None else options
-    options = tranform_options(index, options)
+    opt = Options().parse()
+    #opt = Options().parse() if opt is None else opt
+    opt = tranform_options(index, opt)
     # use cuda?
-    options.cuda = torch.cuda.is_available()
+    opt.cuda = torch.cuda.is_available()
 
     cudnn.benchmark = True # set True to speedup
 
+    # Load mean/std if exists
     train_mean = None
     train_std = None
-    if os.path.exists(os.path.join(options.save, 'mean.npy')):
-        train_mean = np.load(os.path.join(options.save, 'mean.npy'))
-        train_std = np.load(os.path.join(options.save, 'std.npy'))
+    if os.path.exists(os.path.join(opt.save, 'mean.npy')):
+        train_mean = np.load(os.path.join(opt.save, 'mean.npy'))
+        train_std = np.load(os.path.join(opt.save, 'std.npy'))
     
-    if options.datasetName == 'miniImagenet':
-        dataLoader = miniImagenetDataLoader(type=MiniImagenetPairs, opt=options)
-    elif options.datasetName == 'omniglot':
-        dataLoader = omniglotDataLoader(type=Omniglot_Pairs, opt=options, train_mean=train_mean,
+    # Load FCN
+    fcn = None
+    if opt.apply_wrn:
+        # Convert the opt params to dict.
+        optDict = dict([(key, value) for key, value in opt._get_kwargs()])
+        fcn = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
+        if opt.wrn_load and os.path.exists(opt.wrn_load):
+            if torch.cuda.is_available():
+                fcn.load_state_dict(torch.load(opt.wrn_load))
+            else:
+                fcn.load_state_dict(torch.load(opt.wrn_load, map_location=torch.device('cpu')))
+
+    # Load Dataset
+    if opt.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenetPairs, opt=opt, fcn=fcn)
+    elif opt.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=OmniglotPairs, opt=opt, fcn=fcn,train_mean=train_mean,
+                                        train_std=train_std)
+    elif opt.datasetName == 'banknote':
+        dataLoader = banknoteDataLoader(type=FullBanknotePairs, opt=opt, fcn=fcn, train_mean=train_mean,
                                         train_std=train_std)
     else:
         pass
 
     # Get the params
-    opt = dataLoader.opt
+    # opt = dataLoader.opt
     
     # Use the same seed to split the train - val - test
-    if os.path.exists(os.path.join(options.save, 'dataloader_rnd_seed_arc.npy')):
-        rnd_seed = np.load(os.path.join(options.save, 'dataloader_rnd_seed_arc.npy'))
+    if os.path.exists(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy')):
+        rnd_seed = np.load(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy'))
     else:    
         rnd_seed = np.random.randint(0, 100000)
         np.save(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy'), rnd_seed)
@@ -124,7 +145,7 @@ def train(index = 2):
 
     train_mean = dataLoader.train_mean
     train_std = dataLoader.train_std
-    if not os.path.exists(os.path.join(options.save, 'mean.npy')):
+    if not os.path.exists(os.path.join(opt.save, 'mean.npy')):
         np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
         np.save(os.path.join(opt.save, 'std.npy'), train_std)
 
@@ -154,18 +175,6 @@ def train(index = 2):
     # create logger
     logger = Logger(models_path)
 
-    fcn = None
-    convCNN = None
-    if opt.apply_wrn:
-        # Convert the opt params to dict.
-        optDict = dict([(key, value) for key, value in opt._get_kwargs()])
-        convCNN = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
-        if opt.wrn_load:
-            # Load the model in fully convolutional mode
-            fcn, params, stats = convCNN.load(opt.wrn_load, fully_convolutional = True)
-        else:
-            fcn = convCNN.create(fully_convolutional = True)
-
     # initialise the model
     discriminator = ArcBinaryClassifier(num_glimpses=opt.arc_numGlimpses,
                                         glimpse_h=opt.arc_glimpseSize,
@@ -192,7 +201,7 @@ def train(index = 2):
         loss_fn = loss_fn.cuda()
 
     if opt.apply_wrn:
-        optimizer = torch.optim.Adam(params=list(discriminator.parameters()) + list(fcn.params.values()), lr=opt.arc_lr)
+        optimizer = torch.optim.Adam(params=list(discriminator.parameters()) + list(fcn.parameters()), lr=opt.arc_lr)
     else:
         optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=opt.arc_lr)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=opt.arc_lr_patience, verbose=True)
@@ -229,7 +238,6 @@ def train(index = 2):
                 if epoch % opt.val_freq == 0:
                     val_acc_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
                                                                                     discriminator, logger,
-                                                                                    convCNN=convCNN,
                                                                                     optimizer=optimizer,
                                                                                     loss_fn=loss_fn, fcn=fcn)
                     if is_model_saved:
@@ -260,7 +268,7 @@ def train(index = 2):
     print ('###########################################')
 
     # Set the new batchSize as in the ARC code.
-    options.__dict__['batchSize'] = opt.naive_batchSize
+    opt.__dict__['batchSize'] = opt.naive_batchSize
 
     # Add the model_fn Naive / Full Context classification
     context_fn = None
@@ -271,6 +279,17 @@ def train(index = 2):
         vector_dim = opt.arc_numStates
         num_layers = opt.naive_full_num_layers
         context_fn = FullContextARC(hidden_size=layer_sizes, num_layers=num_layers, vector_dim=vector_dim)
+
+    # Load the Fcn
+    fcn = None
+    if opt.apply_wrn:
+        # Convert the opt params to dict.
+        optDict = dict([(key, value) for key, value in opt._get_kwargs()])
+        fcn = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
+        if torch.cuda.is_available():
+            fcn.load_state_dict(torch.load(opt.wrn_load))
+        else:
+            fcn.load_state_dict(torch.load(opt.wrn_load, map_location=torch.device('cpu')))
 
     # Load the discriminator
     if opt.arc_load is not None and os.path.exists(opt.arc_load):
@@ -294,11 +313,14 @@ def train(index = 2):
     do_epoch_fn = do_epoch_naive_full
 
     # Load the dataset
-    if options.datasetName == 'miniImagenet':
-        dataLoader = miniImagenetDataLoader(type=MiniImagenetOneShot, opt=options)
-    elif options.datasetName == 'omniglot':
-        dataLoader = omniglotDataLoader(type=OmniglotOneShot, opt=options, train_mean=train_mean,
+    if opt.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenetOneShot, opt=opt, fcn=fcn)
+    elif opt.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=OmniglotOneShot, opt=opt, fcn=fcn, train_mean=train_mean,
                                       train_std=train_std)
+    elif opt.datasetName == 'banknote':
+        dataLoader = banknoteDataLoader(type=FullBanknoteOneShot, opt=opt, fcn=fcn, 
+                                            train_mean=train_mean, train_std=train_std)
     else:
         pass
 
@@ -306,8 +328,8 @@ def train(index = 2):
     opt = dataLoader.opt
 
     # Use the same seed to split the train - val - test
-    if os.path.exists(os.path.join(options.save, 'dataloader_rnd_seed_naive_full.npy')):
-        rnd_seed = np.load(os.path.join(options.save, 'dataloader_rnd_seed_naive_full.npy'))
+    if os.path.exists(os.path.join(opt.save, 'dataloader_rnd_seed_naive_full.npy')):
+        rnd_seed = np.load(os.path.join(opt.save, 'dataloader_rnd_seed_naive_full.npy'))
     else:    
         rnd_seed = np.random.randint(0, 100000)
         np.save(os.path.join(opt.save, 'dataloader_rnd_seed_naive_full.npy'), rnd_seed)
@@ -359,7 +381,7 @@ def train(index = 2):
                         torch.save(optimizer.state_dict(), opt.naive_full_optimizer_path)
                         # Test the model
                         test_acc_epoch = context_test.context_test(epoch, do_epoch_naive_full, opt, test_loader,
-                                                                    discriminator, context_fn, logger)
+                                                                    discriminator, context_fn, logger, fcn)
                 logger.step()
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
@@ -373,7 +395,7 @@ def train(index = 2):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
-    test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger)
+    test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn=fcn)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
 def main():

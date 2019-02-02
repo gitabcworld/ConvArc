@@ -4,7 +4,7 @@ import hickle as hkl
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-from visualization.visualize import make_dot
+#from visualization.visualize import make_dot
 import os.path
 import urllib3
 import tempfile
@@ -39,7 +39,7 @@ def group(input, params, base, stride, n):
 
 
 # Code from: https://github.com/szagoruyko/functional-zoo/blob/master/wide-resnet-50-2-export.ipynb
-class WideResNetImageNet(nn.Module):
+class WideResNet_50_2(nn.Module):
 
     def __init__(self, useCuda= True, num_groups = 3, num_classes = None):
         super(WideResNetImageNet, self).__init__()

@@ -17,9 +17,12 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     if opt.apply_wrn:
         # Convert the opt params to dict.
         optDict = dict([(key, value) for key, value in opt._get_kwargs()])
-        convCNN = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
-        # Load the last saved fully convolutional model
-        fcn, _, _ = convCNN.load(opt.wrn_save, fully_convolutional=True)
+        fcn = ConvCNNFactory.createCNN(opt.wrn_name_type, optDict)
+        if torch.cuda.is_available():
+            fcn.load_state_dict(torch.load(opt.wrn_load))
+        else:
+            fcn.load_state_dict(torch.load(opt.wrn_load, map_location=torch.device('cpu')))
+        
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
