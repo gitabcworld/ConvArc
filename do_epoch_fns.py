@@ -44,7 +44,7 @@ def binary_accuracy(pred, target):
     return accuracy
 
 def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
-             optimizer=None, fcn=None):
+             optimizer=None, fcn=None, coAttn=None):
     acc_epoch = []
     loss_epoch = []
 
@@ -94,6 +94,9 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
                 label = label.cuda()
             targets = Variable(label)
 
+        # COAttention Module 
+        if opt.use_coAttn:
+            inputs = coAttn(inputs)
 
         features, updated_states = discriminator(inputs)
         if loss_fn:
@@ -169,7 +172,7 @@ def do_epoch_ARC_unroll(opt, loss_fn, discriminator, data_loader,
     return acc_epoch, loss_epoch
 
 def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
-                        loss_fn=None, optimizer=None, fcn=None):
+                        loss_fn=None, optimizer=None, fcn=None, coAttn=None):
     acc_epoch = []
     loss_epoch = []
 
@@ -209,6 +212,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
             targets = Variable(label)
             targets_binary = torch.stack([targets[i,:-data_loader.dataset.n_shot] == targets[i,-data_loader.dataset.n_shot] for i in range(len(targets))])
 
+
         support_train = inputs[:,:data_loader.dataset.n_shot*data_loader.dataset.n_way,:]
         # repmat support test if all the discriminator could be processed in a single batch
         #support_test = inputs[:, npair-1:, :].expand(batch_size, npair-1, nfilters, featx_size, featy_size)
@@ -218,6 +222,8 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         for i in range(support_train.shape[1]):
             #inputs = torch.cat((support_train[:, i, :].unsqueeze(1),support_test[:, i, :].unsqueeze(1)), dim=1)
             inputs = torch.cat((support_train[:, i, :].unsqueeze(1), support_test), dim=1)
+            if opt.use_coAttn:
+                inputs = coAttn(inputs)
             features = discriminator(inputs, return_arc_out = True)[0]
             hidden_features.append(features.unsqueeze(1))
         # Add the gradient graph control

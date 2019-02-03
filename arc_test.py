@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from datetime import datetime
 from models.conv_cnn import ConvCNNFactory
+from models.coAttn import CoAttn
 import multiprocessing
 
 def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
@@ -27,6 +28,17 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
             param.requires_grad = False
         fcn.eval()
 
+    # Load the Co-Attn module
+    coAttn = None
+    if opt.use_coAttn:
+        coAttn = CoAttn(size = opt.coAttn_size, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
+        if torch.cuda.is_available():
+            coAttn.load_state_dict(torch.load(opt.coattn_load))
+        else:
+            coAttn.load_state_dict(torch.load(opt.coattn_load, map_location=torch.device('cpu')))
+        if opt.cuda:
+            coAttn.cuda()
+
     # TEST of FCN and ARC models
     start_time = datetime.now()
     print ('[%s] ... testing' % multiprocessing.current_process().name)
@@ -38,11 +50,11 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
             test_acc, test_loss = epoch_fn(opt=opt, loss_fn=None,
                                                discriminator=discriminator,
                                                data_loader=test_loader,
-                                               fcn=fcn)
+                                               fcn=fcn, coAttn=coAttn )
         else:
             test_acc, test_loss = epoch_fn(opt=opt, loss_fn=None,
                                                discriminator=discriminator,
-                                               data_loader=test_loader)
+                                               data_loader=test_loader, coAttn=coAttn)
         test_acc_epoch.append(np.mean(test_acc))
 
     time_elapsed = datetime.now() - start_time

@@ -10,7 +10,7 @@ best_accuracy = 0.0
 saving_threshold = 1.02
 
 def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
-                optimizer=None, loss_fn=None, fcn=None):
+                optimizer=None, loss_fn=None, fcn=None, coAttn=None):
 
     global best_validation_loss, best_accuracy, saving_threshold
 
@@ -23,6 +23,11 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+    # freeze weigths from the coAttn module
+    if opt.use_coAttn:
+        for param in coAttn.parameters():
+            param.requires_grad = False
+        coAttn.eval()
 
     val_epoch = 0
     val_acc_epoch = []
@@ -34,11 +39,11 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
             val_acc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                             discriminator=discriminator,
                                             data_loader=val_loader,
-                                            fcn=fcn)
+                                            fcn=fcn, coAttn=coAttn)
         else:
             val_acc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                             discriminator=discriminator,
-                                            data_loader=val_loader)
+                                            data_loader=val_loader, coAttn=coAttn)
         val_acc_epoch.append(np.mean(val_acc))
         val_loss_epoch.append(np.mean(val_loss))
     time_elapsed = datetime.now() - start_time
@@ -56,10 +61,14 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
     if best_accuracy < (saving_threshold * val_acc_epoch):
         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
+        # save the fcn model
         if opt.apply_wrn:
             torch.save(fcn.state_dict(),opt.wrn_save)
         # Save the ARC discriminator
         torch.save(discriminator.state_dict(),opt.arc_save)
+        # Save the Co-attn model
+        if opt.use_coAttn:
+            torch.save(coAttn.state_dict(),opt.coattn_save)
         # Save optimizer
         torch.save(optimizer.state_dict(), opt.arc_optimizer_path)
         # Acc-loss values

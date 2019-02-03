@@ -4,7 +4,7 @@ from datetime import datetime
 from models.conv_cnn import ConvCNNFactory
 import multiprocessing
 
-def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn):
+def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn, coAttn):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ("[%s] ... loading last validation model" % multiprocessing.current_process().name)
@@ -19,6 +19,12 @@ def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, l
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+
+    # set all gradient to True
+    if opt.use_coAttn:
+        for param in coAttn.parameters():
+            param.requires_grad = False
+        coAttn.eval()
 
     # Load the context model
     context_fn.load_state_dict(torch.load(opt.naive_full_save_path))
@@ -37,11 +43,11 @@ def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, l
             test_acc, _ = epoch_fn(opt=opt, discriminator=discriminator,
                                             data_loader=test_loader,
                                             model_fn=context_fn,
-                                            fcn=fcn)
+                                            fcn=fcn, coAttn=coAttn)
         else:
             test_acc, _ = epoch_fn(opt=opt, discriminator=discriminator,
                                             data_loader=test_loader,
-                                            model_fn=context_fn)
+                                            model_fn=context_fn, coAttn=coAttn)
         test_acc_epoch.append(np.mean(test_acc))
 
     time_elapsed = datetime.now() - start_time

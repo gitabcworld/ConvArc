@@ -93,7 +93,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'miniimagenet/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 64),
+        ('arc_nchannels', 2048),
         ('arc_attn_type', 'LSTM'),
         ('arc_save', pathResults + 'miniimagenet/ARCmodel.pt7'),
         ('arc_load', pathResults + 'miniimagenet/ARCmodel.pt7'),
@@ -107,6 +107,13 @@ lst_parameters_change = [
 
         ('arc_optimizer_path', pathResults + 'miniimagenet/arc_optimizer.pt7'),
         ('naive_full_optimizer_path', pathResults + 'miniimagenet/context_optimizer.pt7'),
+
+        ('use_coAttn', True),
+        ('coAttn_size', (7,7)),
+        ('coAttn_type', 'sum_abs_pow'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'miniimagenet/coAttn.pt7'),
+        ('coattn_save', pathResults + 'miniimagenet/coAttn.pt7'),
     ],
     [
         ('datasetName', 'miniImagenet'),
@@ -188,7 +195,7 @@ class Options():
         parser.add_argument('--val_freq', type=int, default=5, help='validation frequency')
         parser.add_argument('--val_num_batches', type=int, default=2, help='validation num batches')
         parser.add_argument('--test_num_batches', type=int, default=5, help='test num batches')
-        parser.add_argument('--batchSize', type=int, default=10, help='input batch size')
+        parser.add_argument('--batchSize', type=int, default=2, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
         parser.add_argument('--nthread', default=7, type=int)
@@ -202,7 +209,7 @@ class Options():
         parser.add_argument('--datasetName', default='miniImagenet', type=str, help='omniglot or miniimagenet datasets')
         parser.add_argument('--dataroot', default='D:/PhD/code/datasets/convarc/mini_imagenet', type=str)
         parser.add_argument('--datasetCompactSize', type=int, default=None, help='the height / width of the input image to save as a compacted file')
-        parser.add_argument('--imageSize', type=int, default=None, help='the height / width of the input image to ARC')
+        parser.add_argument('--imageSize', type=int, default=224, help='the height / width of the input image to ARC')
         parser.add_argument('--nchannels', default=3, help='num channels input images.')
         parser.add_argument('--partitionType', default='30_10_10', type=str,
                             help='default: 30_10_10')
@@ -295,6 +302,14 @@ class Options():
         # One-Shot parameters
         parser.add_argument('--one_shot_n_way', type=int, default=5, help='one-shot n-way. Default=5')
         parser.add_argument('--one_shot_n_shot', type=int, default=1, help='one-shot n-shot. Default=1')
+
+        # Co-Attention parameters
+        parser.add_argument('--use_coAttn', type=bool, default=True, help='Activate co-Attn. Default=True')
+        parser.add_argument('--coAttn_size', type=int, nargs='+', default=(7,7), help='co-Attn size. Default=(7,7)')
+        parser.add_argument('--coAttn_type', type=str, default='sum_abs', help='co-Attn type. Types: None/sum_abs/sum_abs_pow/max_abs_pow. Default=sum_abs')
+        parser.add_argument('--coAttn_p', type=int, default=2, help='co-Attn size. Default=2')
+        parser.add_argument('--coattn_load', type=str, default=pathResults + '/coAttn.pt7', help='co-Attn path load.')
+        parser.add_argument('--coattn_save', type=str, default=pathResults + '/coAttn.pt7', help='co-Attn path save.')
 
         self.parser = parser
 

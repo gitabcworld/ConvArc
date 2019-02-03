@@ -42,10 +42,13 @@ from dataset.banknote_pytorch import FullBanknote
 from dataset.banknote_pytorch import FullBanknotePairs
 from dataset.banknote_pytorch import FullBanknoteOneShot
 
-
+# FCN
 from models.conv_cnn import ConvCNNFactory
+# Attention module in ARC
 from models.fullContext import FullContextARC
 from models.naiveARC import NaiveARC
+# Co-Attn module
+from models.coAttn import CoAttn
 
 from do_epoch_fns import do_epoch_ARC, do_epoch_ARC_unroll, do_epoch_naive_full
 import arc_train
@@ -65,30 +68,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-# Keeping the filters
-# Q_a = torch.zeros([10, 1024, 14, 14], dtype=torch.float32)
-# Q_b = torch.zeros([10, 1024, 14, 14], dtype=torch.float32)
-# W = torch.zeros([pow(14,2), pow(14,2)], dtype=torch.float32)
-# torch.matmul(Q_a.view(10,1024,-1),W)*Q_b.view(10,1024,-1)
-
-# Sum all the filters
-# option 1
-# Q_a.sum(dim=1).view(10,1,-1)*Q_a.sum(dim=1).view(10,-1,1)
-# option 2
-# torch.bmm(Q_a.sum(dim=1).view(10,-1,1),Q_a.sum(dim=1).view(10,1,-1)).shape
-# 
-
-# Simple matrix multiplication.
-# a = torch.zeros(1,3)
-# a[0] = torch.arange(0,3)
-# b = torch.zeros(1,3)
-# b[0] = torch.arange(0,3)
-# print(a)
-# print(b)
-# c = torch.matmul((a.transpose(0,1)),b)
-# print(c)
-
-def train(index = 0):
+def train(index = 2):
 
     # change parameters
     opt = Options().parse()
@@ -193,19 +173,34 @@ def train(index = 0):
             discriminator.load_state_dict(torch.load(opt.arc_load))
         else:
             discriminator.load_state_dict(torch.load(opt.arc_load, map_location=torch.device('cpu')))
-        
-
     if opt.cuda:
         discriminator.cuda()
+
+    # Load the Co-Attn module
+    coAttn = None
+    if opt.use_coAttn:
+        coAttn = CoAttn(size = opt.coAttn_size, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
+        if opt.coattn_load is not None and os.path.exists(opt.coattn_load):
+            if torch.cuda.is_available():
+                coAttn.load_state_dict(torch.load(opt.coattn_load))
+            else:
+                coAttn.load_state_dict(torch.load(opt.coattn_load, map_location=torch.device('cpu')))
+        if opt.cuda:
+            coAttn.cuda()
 
     loss_fn = torch.nn.BCELoss()
     if opt.cuda:
         loss_fn = loss_fn.cuda()
 
+    lstOptimizationParameters = []
+    lstOptimizationParameters.append(list(discriminator.parameters()))
     if opt.apply_wrn:
-        optimizer = torch.optim.Adam(params=list(discriminator.parameters()) + list(fcn.parameters()), lr=opt.arc_lr)
-    else:
-        optimizer = torch.optim.Adam(params=discriminator.parameters(), lr=opt.arc_lr)
+        lstOptimizationParameters.append(list(fcn.parameters()))
+    if opt.use_coAttn:
+        lstOptimizationParameters.append(list(coAttn.parameters()))
+    
+    flatten_lstOptimizationParameters = [item for sublist in lstOptimizationParameters for item in sublist]
+    optimizer = torch.optim.Adam(params=flatten_lstOptimizationParameters, lr=opt.arc_lr)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=opt.arc_lr_patience, verbose=True)
 
     # load preexisting optimizer values if exists
@@ -234,14 +229,14 @@ def train(index = 0):
 
                 train_acc_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
                                                                         discriminator, logger, optimizer=optimizer,
-                                                                        loss_fn=loss_fn, fcn=fcn)
+                                                                        loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
                 # Reduce learning rate when a metric has stopped improving
                 scheduler.step(train_loss_epoch)
                 if epoch % opt.val_freq == 0:
                     val_acc_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
                                                                                     discriminator, logger,
                                                                                     optimizer=optimizer,
-                                                                                    loss_fn=loss_fn, fcn=fcn)
+                                                                                    loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
                     if is_model_saved:
                         test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
 
@@ -303,6 +298,18 @@ def train(index = 0):
             discriminator.load_state_dict(torch.load(opt.arc_load, map_location=torch.device('cpu')))
     if opt.cuda and discriminator is not None:
         discriminator = discriminator.cuda()
+
+    # Load the Co-Attn module
+    coAttn = None
+    if opt.use_coAttn:
+        coAttn = CoAttn(size = opt.coAttn_size, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
+        if opt.coattn_load is not None and os.path.exists(opt.coattn_load):
+            if torch.cuda.is_available():
+                coAttn.load_state_dict(torch.load(opt.coattn_load))
+            else:
+                coAttn.load_state_dict(torch.load(opt.coattn_load, map_location=torch.device('cpu')))
+        if opt.cuda:
+            coAttn.cuda()
 
     # Load the Naive / Full classifier
     if opt.naive_full_load_path is not None and os.path.exists(opt.naive_full_load_path):
@@ -369,7 +376,7 @@ def train(index = 0):
                 epoch += 1
                 train_acc_epoch, train_loss_epoch = context_train.context_train(epoch, do_epoch_naive_full, opt,
                                                                                 train_loader, discriminator, context_fn,
-                                                                                logger, optimizer, loss_fn, fcn)
+                                                                                logger, optimizer, loss_fn, fcn, coAttn)
 
                 # Reduce learning rate when a metric has stopped improving
                 scheduler.step(train_loss_epoch)
@@ -379,13 +386,13 @@ def train(index = 0):
                     val_acc_epoch, val_loss_epoch, is_model_saved = context_val.context_val(epoch, do_epoch_naive_full,
                                                                                             opt, val_loader,
                                                                                             discriminator, context_fn,
-                                                                                            logger, loss_fn, fcn)
+                                                                                            logger, loss_fn, fcn, coAttn)
                     if is_model_saved:
                         # Save the optimizer
                         torch.save(optimizer.state_dict(), opt.naive_full_optimizer_path)
                         # Test the model
                         test_acc_epoch = context_test.context_test(epoch, do_epoch_naive_full, opt, test_loader,
-                                                                    discriminator, context_fn, logger, fcn)
+                                                                    discriminator, context_fn, logger, fcn, coAttn)
                 logger.step()
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
@@ -399,7 +406,7 @@ def train(index = 0):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
-    test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn=fcn)
+    test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn=fcn, coAttn=coAttn)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
 def main():

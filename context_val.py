@@ -10,7 +10,7 @@ best_validation_loss = sys.float_info.max
 best_accuracy = 0.0
 saving_threshold = 1.02
 
-def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, logger, loss_fn=None, fcn=None):
+def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, logger, loss_fn=None, fcn=None, coAttn=None):
 
     global best_validation_loss, best_accuracy, saving_threshold
 
@@ -23,6 +23,11 @@ def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, log
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+    # set all gradient to True
+    if opt.use_coAttn:
+        for param in coAttn.parameters():
+            param.requires_grad = False
+        coAttn.eval()
     # set all gradients to true in the context model.
     for param in context_fn.parameters():
         param.requires_grad = False
@@ -39,12 +44,12 @@ def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, log
                                                     discriminator=discriminator,
                                                     data_loader=val_loader,
                                                     model_fn=context_fn,
-                                                    fcn=fcn)
+                                                    fcn=fcn, coAttn=coAttn)
         else:
             val_acc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                                     discriminator=discriminator,
                                                     data_loader=val_loader,
-                                                    model_fn=context_fn)
+                                                    model_fn=context_fn, coAttn=coAttn)
 
         val_acc_epoch.append(np.mean(val_acc))
         val_loss_epoch.append(np.mean(val_loss))

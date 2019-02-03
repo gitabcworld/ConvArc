@@ -3,7 +3,7 @@ from datetime import datetime
 import multiprocessing
 
 def context_train(epoch, epoch_fn, opt, train_loader, discriminator, context_fn, logger,
-              optimizer=None, loss_fn=None, fcn=None):
+              optimizer=None, loss_fn=None, fcn=None, coAttn=None):
 
     start_time = datetime.now()
 
@@ -16,6 +16,11 @@ def context_train(epoch, epoch_fn, opt, train_loader, discriminator, context_fn,
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+    # set all gradient to True
+    if opt.use_coAttn:
+        for param in coAttn.parameters():
+            param.requires_grad = False
+        coAttn.eval()
     # set all gradients to true in the context model.
     for param in context_fn.parameters():
         param.requires_grad = True
@@ -26,13 +31,13 @@ def context_train(epoch, epoch_fn, opt, train_loader, discriminator, context_fn,
                                                                 discriminator=discriminator,
                                                                 data_loader=train_loader,
                                                                 model_fn=context_fn,
-                                                                optimizer=optimizer, fcn=fcn)
+                                                                optimizer=optimizer, fcn=fcn, coAttn=coAttn)
     else:
         train_acc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,
                                                                 discriminator=discriminator,
                                                                 data_loader=train_loader,
                                                                 model_fn=context_fn,
-                                                                optimizer=optimizer)
+                                                                optimizer=optimizer, coAttn=coAttn)
 
     time_elapsed = datetime.now() - start_time
     train_acc_epoch = np.mean(train_acc_epoch)
