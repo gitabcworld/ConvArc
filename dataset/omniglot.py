@@ -173,6 +173,10 @@ class OmniglotPairs(Omniglot):
                                 partitionType)
         self.numTrials = numTrials
 
+    # Not needed to implement
+    def generate_pairs(self, nPairs):
+        pass
+
     def __getitem__(self, index):
 
         similar_characters = True

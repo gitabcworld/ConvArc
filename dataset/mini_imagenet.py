@@ -301,6 +301,10 @@ class MiniImagenetPairs(MiniImagenetBase):
         self.data, self.label_encoder, self.label_decoder = self.load_dataset(self.train)
         self.numTrials = numTrials
 
+    # Not needed to implement
+    def generate_pairs(self, nPairs):
+        pass
+
     def __getitem__(self, index):
 
         # set the choice function to random

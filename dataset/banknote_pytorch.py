@@ -201,6 +201,20 @@ class BanknoteBase(data.Dataset):
         img = np.array(img, dtype='float32')
         return img
 
+    def makeDeterministicTransforms(self, seed):
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+    
+    def resetDeterministicTransforms(self):
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+        np.random.seed(None)
+        random.seed(None)
+
     def __getitem__(self, index):
         pass
 
@@ -278,9 +292,22 @@ class FullBanknotePairs(BanknoteBase):
         # pair tuples selected
         self.data_idx = []
 
+        nPositivePairs = int(nPairs*self.percentagePairs[0])
+        nNegativePairsSameClass = int(nPairs*self.percentagePairs[1])
+        nNegativePairsDifferentClass = int(nPairs*self.percentagePairs[2])
+        nDiff = nPairs - (nPositivePairs+nNegativePairsSameClass+nNegativePairsDifferentClass)
+        if nDiff > 0:
+            groupToAdd = random.randint(0, 3)
+            if groupToAdd == 0:
+                nPositivePairs = nPositivePairs + 1
+            if groupToAdd == 1:
+                nNegativePairsSameClass = nNegativePairsSameClass + 1
+            if groupToAdd == 2:
+                nNegativePairsDifferentClass = nNegativePairsDifferentClass + 1
+
         # Select N/2 positive pairs
         modelsWithGenuine = list(self.data.keys())
-        selected_model_genuine = np.random.choice(modelsWithGenuine, int(nPairs*self.percentagePairs[0]), replace=True)
+        selected_model_genuine = np.random.choice(modelsWithGenuine, nPositivePairs, replace=True)
         for model in selected_model_genuine:
             idx_positive_class_genuine = np.array(range(len(self.data[model]['labels'])))[np.array(self.data[model]['labels'])==1]
             idx_selected = np.random.choice(idx_positive_class_genuine,2, replace=False)
@@ -288,7 +315,7 @@ class FullBanknotePairs(BanknoteBase):
 
         # Select N/4 negative pairs same class. Counterfeits.
         modelsWithCounterfeit = list(self.counterfeitModels.keys())
-        select_model_counterfeit = np.random.choice(modelsWithCounterfeit, int(nPairs*self.percentagePairs[1]), replace=True)
+        select_model_counterfeit = np.random.choice(modelsWithCounterfeit, nNegativePairsSameClass, replace=True)
         for model in select_model_counterfeit:           
             idx_positive_class_genuine = np.array(range(len(self.data[model]['labels'])))[np.array(self.data[model]['labels'])==1]
             idx_positive_class_counterfeit = np.array(range(len(self.data[model]['labels'])))[np.array(self.data[model]['labels'])==0]
@@ -296,7 +323,7 @@ class FullBanknotePairs(BanknoteBase):
 
         # Select N/4 negative pairs different class
         modelsWithGenuine = list(self.data.keys())
-        for i in range(int(nPairs*self.percentagePairs[2])):
+        for i in range(nNegativePairsDifferentClass):
             models_selected = np.random.choice(modelsWithGenuine, 2, replace=False)
             idx_positive_class1_genuine = np.array(range(len(self.data[models_selected[0]]['labels'])))[np.array(self.data[models_selected[0]]['labels'])==1]
             idx_positive_class2_genuine = np.array(range(len(self.data[models_selected[1]]['labels'])))[np.array(self.data[models_selected[1]]['labels'])==1]
@@ -329,45 +356,17 @@ class FullBanknotePairs(BanknoteBase):
         img2 = pil_image.fromarray(np.uint8(img2))        
 
         if self.transform is not None:
+            # Make the same transformation
+            rand_number = int(np.random.uniform()*1000)
+            self.makeDeterministicTransforms(seed=rand_number)
             img1 = self.transform(img1)
+            self.makeDeterministicTransforms(seed=rand_number)
             img2 = self.transform(img2)
+            self.resetDeterministicTransforms()
             # Case the FCN is done inside the DataLoader
             if len(img1.shape)>3:
                 img1 = img1[0]
                 img2 = img2[0]
-
-        '''
-        def addPadding(img,left_padding, right_padding, top_padding, bottom_padding):
-            left_padding = 0 if left_padding < 0 else left_padding
-            right_padding = 0 if right_padding < 0 else right_padding
-            top_padding = 0 if top_padding < 0 else top_padding
-            bottom_padding = 0 if bottom_padding < 0 else bottom_padding
-            color = [0, 0, 0]
-            if left_padding > 0 or right_padding > 0 or top_padding > 0 or bottom_padding > 0:
-                img = cv2.copyMakeBorder(img, top_padding, bottom_padding, left_padding, right_padding,
-                                     borderType=cv2.BORDER_CONSTANT,
-                                     value=color)
-            return img
-
-        def addPaddingBottomRight(img,left_padding, right_padding, top_padding, bottom_padding):
-            left_padding = 0 if left_padding < 0 else left_padding
-            right_padding = 0 if right_padding < 0 else right_padding
-            top_padding = 0 if top_padding < 0 else top_padding
-            bottom_padding = 0 if bottom_padding < 0 else bottom_padding
-            color = [0, 0, 0]
-            if left_padding > 0 or right_padding > 0 or top_padding > 0 or bottom_padding > 0:
-                img = cv2.copyMakeBorder(img, top_padding, bottom_padding, left_padding, right_padding,
-                                     borderType=cv2.BORDER_CONSTANT,
-                                     value=color)
-            return img
-
-        # Add padding to the smaller image
-        height1, width1, channels1 = img1.shape
-        height2, width2, channels2 = img2.shape
-        # Add padding at bottom and right if needed
-        img1 = addPadding(img1, 0, max(width1, width2) - width1, 0, max(height1, height2) - height1)
-        img2 = addPadding(img2, 0, max(width1, width2) - width2, 0, max(height1, height2) - height2)
-        '''
 
         if self.target_transform is not None:
             target1 = self.target_transform(target1)
@@ -505,13 +504,26 @@ class FullBanknoteOneShot(BanknoteBase):
         data = []
         labels_model = []
         labels_genuine_counterfeit = []
+        # for the positive class we want the same cropping and transformation. 
+        # save first a random seed.
+        rand_seed = int(np.random.uniform()*1000)
+            
         for elem in list_idxs:
+            # load image
             if type(elem[1]).__name__ == 'str':
                 img1 = self.load_img(path=elem[1], info_dpi= elem[3], size=self.size)
                 img1 = pil_image.fromarray(np.uint8(img1))
             else:
                 img1 = elem[1]
+            
+            # if is the positive class crop the same zone and apply the same transforms
+            if elem[0] == positive_class:
+                self.makeDeterministicTransforms(seed=rand_seed)
+            # apply transforms
             img1 = self.transform(img1)
+            if elem[0] == positive_class:
+                self.resetDeterministicTransforms()
+
             # Case the FCN is done inside the DataLoader
             if len(img1.shape)>3:
                 img1 = img1[0]

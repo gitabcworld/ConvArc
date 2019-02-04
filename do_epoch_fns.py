@@ -51,7 +51,8 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
     activations_layers = []
 
     # Set for the first batch a random seed for AumentationAleju
-    data_loader.dataset.agumentation_seed = int(np.random.rand() * 1000)
+    #data_loader.dataset.agumentation_seed = int(np.random.rand() * 1000)
+    data_loader.dataset.generate_pairs(opt.batchSize)
 
     for batch_idx, (data, label) in enumerate(data_loader):
 
@@ -66,7 +67,7 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
             else:
                 inputs = Variable(data, requires_grad=False)
             targets = Variable(label)
-
+            
             '''
             for index in range(inputs.shape[0]):
                 cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
@@ -177,7 +178,7 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
     acc_epoch = []
     loss_epoch = []
 
-    data_loader.dataset.agumentation_seed = int(np.random.rand() * 1000)
+    #data_loader.dataset.agumentation_seed = int(np.random.rand() * 1000)
 
     for batch_idx, (data, label) in enumerate(data_loader):
 
