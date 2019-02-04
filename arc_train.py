@@ -11,16 +11,24 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
     for param in discriminator.parameters():
         param.requires_grad = True
     discriminator.train(mode=True)
+    if opt.cuda:
+        discriminator.cuda()
+
     # set all gradients to True and the fcn in evaluation format.
     if opt.apply_wrn:
         for param in fcn.parameters():
             param.requires_grad = True
         fcn.train()
+        if opt.cuda:
+            fcn.cuda()
+
     # set all gradient to True
     if opt.use_coAttn:
         for param in coAttn.parameters():
             param.requires_grad = True
         coAttn.train()
+        if opt.cuda:
+            coAttn.cuda()
 
     if opt.apply_wrn:
         train_acc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,

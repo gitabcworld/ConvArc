@@ -14,6 +14,8 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     for param in discriminator.parameters():
         param.requires_grad = False
     discriminator.eval()
+    if opt.cuda:
+        discriminator.cuda()
 
     if opt.apply_wrn:
         # Convert the opt params to dict.
@@ -23,9 +25,10 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
             fcn.load_state_dict(torch.load(opt.wrn_load))
         else:
             fcn.load_state_dict(torch.load(opt.wrn_load, map_location=torch.device('cpu')))
-        
         for param in fcn.parameters():
             param.requires_grad = False
+        if opt.cuda:
+            fcn.cuda()
         fcn.eval()
 
     # Load the Co-Attn module

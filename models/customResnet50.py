@@ -23,8 +23,8 @@ class CustomResNet50(nn.Module):
 
         x = self.resnet18.layer1(x)
         x = self.resnet18.layer2(x)
-        x = self.resnet18.layer3(x)
-        x = self.resnet18.layer4(x)
+        x = self.resnet18.layer3(x) # 1024 x 14 x 14
+        #x = self.resnet18.layer4(x) # 2048 x 7 x 7
         if not(self.out_size is None):
             x = self.adaptativeAvgPooling(x)
         return x

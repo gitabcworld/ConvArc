@@ -18,20 +18,31 @@ def context_val(epoch, epoch_fn, opt, val_loader, discriminator, context_fn, log
     for param in discriminator.parameters():
         param.requires_grad = False
     discriminator.eval()
+    if opt.cuda:
+        discriminator.cuda()
+
     # freeze the weights from the fcn and set it to eval.
     if opt.apply_wrn:
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+        if opt.cuda:
+            fcn.cuda()
+
     # set all gradient to True
     if opt.use_coAttn:
         for param in coAttn.parameters():
             param.requires_grad = False
         coAttn.eval()
+        if opt.cuda:
+            coAttn.cuda()
+
     # set all gradients to true in the context model.
     for param in context_fn.parameters():
         param.requires_grad = False
     context_fn.eval()  # Set to train the naive/full-context model
+    if opt.cuda:
+        context_fn.cuda()
 
     val_epoch = 0
     val_acc_epoch = []

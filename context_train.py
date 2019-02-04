@@ -11,20 +11,31 @@ def context_train(epoch, epoch_fn, opt, train_loader, discriminator, context_fn,
     for param in discriminator.parameters():
         param.requires_grad = False
     discriminator.eval()
+    if opt.cuda:
+        discriminator.cuda()
+
     # set all gradients to True and the fcn in evaluation format.
     if opt.apply_wrn:
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+        if opt.cuda:
+            fcn.cuda()
+
     # set all gradient to True
     if opt.use_coAttn:
         for param in coAttn.parameters():
             param.requires_grad = False
         coAttn.eval()
+        if opt.cuda:
+            coAttn.cuda()
+
     # set all gradients to true in the context model.
     for param in context_fn.parameters():
         param.requires_grad = True
     context_fn.train(mode=True)  # Set to train the naive/full-context model
+    if opt.cuda:
+        context_fn.cuda()
 
     if opt.apply_wrn:
         train_acc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,

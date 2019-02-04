@@ -18,16 +18,24 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
     for param in discriminator.parameters():
         param.requires_grad = False
     discriminator.eval()
+    if opt.cuda:
+        discriminator.cuda()
+
     # freeze the weights from the fcn and set it to eval.
     if opt.apply_wrn:
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+        if opt.cuda:
+            fcn.cuda()
+
     # freeze weigths from the coAttn module
     if opt.use_coAttn:
         for param in coAttn.parameters():
             param.requires_grad = False
         coAttn.eval()
+        if opt.cuda:
+            coAttn.cuda()
 
     val_epoch = 0
     val_acc_epoch = []

@@ -13,24 +13,32 @@ def context_test(epoch, epoch_fn, opt, test_loader, discriminator, context_fn, l
     for param in discriminator.parameters():
         param.requires_grad = False
     discriminator.eval()
+    if opt.cuda:
+        discriminator.cuda()
 
     # freeze the weights from the fcn and set it to eval.
     if opt.apply_wrn:
         for param in fcn.parameters():
             param.requires_grad = False
         fcn.eval()
+        if opt.cuda:
+            fcn.cuda()
 
     # set all gradient to True
     if opt.use_coAttn:
         for param in coAttn.parameters():
             param.requires_grad = False
         coAttn.eval()
+        if opt.cuda:
+            coAttn.cuda()
 
     # Load the context model
     context_fn.load_state_dict(torch.load(opt.naive_full_save_path))
     for param in context_fn.parameters():
         param.requires_grad = False
     context_fn.eval()
+    if opt.cuda:
+        context_fn.cuda()
 
     # TEST of FCN and ARC models
     start_time = datetime.now()

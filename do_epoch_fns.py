@@ -91,6 +91,7 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
         else:
             inputs = data
             if opt.cuda:
+                inputs = inputs.cuda()
                 label = label.cuda()
             targets = Variable(label)
 
