@@ -18,6 +18,7 @@ from datetime import datetime
 from wrn.wideResNet_50_2 import WideResNet_50_2
 from wrn.wideResNet import WideResNet
 from customResnet50 import CustomResNet50
+from mobilenetv2 import mobilenetv2
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 cudnn.benchmark = True
@@ -82,7 +83,7 @@ class WideResidualNetwork(ConvCNN_Base):
 ######################################################################
 ######################################################################
 
-# Specialized Class. Wide Residual Networks.
+# Specialized Class. ResNet
 
 class ResNet50(ConvCNN_Base):
 
@@ -90,7 +91,7 @@ class ResNet50(ConvCNN_Base):
 
         super(ResNet50, self).__init__(opt)
 
-        # Initialize network 
+        # Initialize network
         #self.model = CustomResNet50(out_size=(100,60))
         self.model = CustomResNet50(out_size=None)
 
@@ -99,6 +100,28 @@ class ResNet50(ConvCNN_Base):
 
     class Factory:
         def create(self,opt): return ResNet50(opt)
+
+
+######################################################################
+######################################################################
+######################################################################
+
+# Specialized Class. Wide Residual Networks.
+
+class Mobilenetv2(ConvCNN_Base):
+
+    def __init__(self, opt):
+
+        super(Mobilenetv2, self).__init__(opt)
+
+        # Initialize network
+        self.model = mobilenetv2(pretrained=True)
+
+    def forward(self, x):
+        return self.model.features(x)
+
+    class Factory:
+        def create(self,opt): return Mobilenetv2(opt)
 
 
 ######################################################################
