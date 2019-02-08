@@ -15,11 +15,12 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
     global best_validation_loss, best_accuracy, saving_threshold
 
     # freeze the weights from the ARC and set it to eval.
-    for param in discriminator.parameters():
-        param.requires_grad = False
-    discriminator.eval()
-    if opt.cuda:
-        discriminator.cuda()
+    if not(discriminator is None):
+        for param in discriminator.parameters():
+            param.requires_grad = False
+        discriminator.eval()
+        if opt.cuda:
+            discriminator.cuda()
 
     # freeze the weights from the fcn and set it to eval.
     if opt.apply_wrn:

@@ -3,6 +3,7 @@ import torch
 from sklearn.metrics import accuracy_score, confusion_matrix
 from torch.autograd import Variable
 import cv2
+from tqdm import tqdm
 
 def compute_budget_loss(loss, updated_states, cost_per_sample = 0.001):
     """
@@ -68,7 +69,7 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
                 inputs = Variable(data, requires_grad=False)
             targets = Variable(label)
             
-            '''
+            
             for index in range(inputs.shape[0]):
                 cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
                     int(targets[index].data.cpu().numpy())) + '.png',
@@ -76,7 +77,7 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
                 cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img2_target_' + str(
                     int(targets[index].data.cpu().numpy())) + '.png',
                             inputs[index, 1, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
-            '''
+            
 
             # The dropout is done in the input if not CARC. If CARC the dropout is done in the
             # residual blocks in the Wide Residual Network.
@@ -257,5 +258,58 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
         #values, index = torch.nn.Softmax(dim=1)(features).max(1)
         #acc_epoch.append(accuracy_score(y_true=targets.cpu().data.numpy(), y_pred=index.cpu().data.numpy()))
 
+
+    return acc_epoch, loss_epoch
+
+
+def do_epoch_classification(opt, loss_fn, discriminator, data_loader,
+                                optimizer=None, fcn=None, coAttn=None):
+    acc_epoch = []
+    loss_epoch = []
+
+    correct = 0
+    total = 0
+    for batch_idx, (data, label) in enumerate(tqdm(data_loader)):
+
+        if not opt.fcn_applyOnDataLoader:
+
+            if opt.cuda:
+                data = data.cuda()
+                label = label.cuda()
+            if optimizer:
+                inputs = Variable(data, requires_grad=True)
+            else:
+                inputs = Variable(data, requires_grad=False)
+            targets = Variable(label)
+            
+            batch_size, nchannels, x_size, y_size = inputs.shape
+            features = fcn(inputs)
+        else:
+            features = data
+            if opt.cuda:
+                features = features.cuda()
+                label = label.cuda()
+            targets = Variable(label)
+
+        if loss_fn:
+            
+            loss = loss_fn(features, targets.long())
+            # Add the budget computation cost
+            #budget_loss = compute_time_restricted_budget_loss(loss, updated_states, num_glimpses=1)
+            #alpha = 0.5
+            #loss_total = alpha * loss + (1-alpha) * budget_loss
+            loss_total = loss
+            loss_epoch.append(loss_total.item())
+
+        # Training...
+        if optimizer and loss_fn:
+            optimizer.zero_grad()
+            loss_total.backward()
+            optimizer.step()
+
+        _, predicted = torch.max(torch.nn.Softmax(dim=1)(features), 1)
+        total += targets.size(0)
+        correct += (predicted == targets).sum().item()
+        acc_epoch.append((predicted == targets).sum().item() / targets.size(0))
 
     return acc_epoch, loss_epoch

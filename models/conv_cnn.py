@@ -101,6 +101,30 @@ class ResNet50(ConvCNN_Base):
     class Factory:
         def create(self,opt): return ResNet50(opt)
 
+######################################################################
+######################################################################
+######################################################################
+
+# Specialized Class. ResNet
+
+class ResNet50Classificaton(ConvCNN_Base):
+
+    def __init__(self, opt, num_classes = 2):
+
+        super(ResNet50Classificaton, self).__init__(opt)
+        # two class problem (genuine-counterfeit)
+        num_classes = 2
+        # Initialize network
+        self.model = self.resnet18 = models.resnet50(pretrained=True)
+        #block_expansion = 1 # Resnet 18,34
+        block_expansion = 4 # Resnet 50,101,152
+        self.model.fc = nn.Linear(512 * block_expansion, num_classes)
+
+    def forward(self, x):
+        return self.model(x)
+
+    class Factory:
+        def create(self,opt): return ResNet50Classificaton(opt)
 
 ######################################################################
 ######################################################################

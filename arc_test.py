@@ -10,12 +10,14 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ("[%s] ... loading last validation model" % multiprocessing.current_process().name)
     discriminator.load_state_dict(torch.load(opt.arc_save))
-    # freeze the weights from the ARC.
-    for param in discriminator.parameters():
-        param.requires_grad = False
-    discriminator.eval()
-    if opt.cuda:
-        discriminator.cuda()
+    
+    if not(discriminator is None):
+        # freeze the weights from the ARC.
+        for param in discriminator.parameters():
+            param.requires_grad = False
+        discriminator.eval()
+        if opt.cuda:
+            discriminator.cuda()
 
     if opt.apply_wrn:
         # Convert the opt params to dict.

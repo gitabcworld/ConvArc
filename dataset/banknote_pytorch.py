@@ -245,7 +245,7 @@ class FullBanknote(BanknoteBase):
         if self.transform is not None:
             img = self.transform(img)
         # squeeze in the 0 dim
-        img = img[0]
+        #img = img[0]
 
         if self.target_transform is not None:
             label = self.target_transform(label)

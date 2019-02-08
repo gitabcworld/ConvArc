@@ -8,11 +8,12 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
     start_time = datetime.now()
 
     # set all gradients to True and the model in evaluation format.
-    for param in discriminator.parameters():
-        param.requires_grad = True
-    discriminator.train(mode=True)
-    if opt.cuda:
-        discriminator.cuda()
+    if not(discriminator is None):
+        for param in discriminator.parameters():
+            param.requires_grad = True
+        discriminator.train(mode=True)
+        if opt.cuda:
+            discriminator.cuda()
 
     # set all gradients to True and the fcn in evaluation format.
     if opt.apply_wrn:
