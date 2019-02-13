@@ -69,7 +69,7 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
                 inputs = Variable(data, requires_grad=False)
             targets = Variable(label)
             
-            
+            '''
             for index in range(inputs.shape[0]):
                 cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img1_target_' + str(
                     int(targets[index].data.cpu().numpy())) + '.png',
@@ -77,7 +77,7 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
                 cv2.imwrite('D:/PhD/images/batch_' + str(batch_idx) +'_index_' + str(index) + '_img2_target_' + str(
                     int(targets[index].data.cpu().numpy())) + '.png',
                             inputs[index, 1, :, :, :].transpose(0, 1).transpose(1, 2).data.cpu().numpy() * 255)
-            
+            '''
 
             # The dropout is done in the input if not CARC. If CARC the dropout is done in the
             # residual blocks in the Wide Residual Network.

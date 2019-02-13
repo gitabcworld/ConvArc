@@ -143,9 +143,32 @@ class Mobilenetv2(ConvCNN_Base):
 
     def forward(self, x):
         return self.model.features(x)
+        # ablation: self.model.features[0](x).shape : B, 32, 112, 112
+        # ablation: self.model.features[1](self.model.features[0](x)).shape : B, 16, 112, 112
 
     class Factory:
         def create(self,opt): return Mobilenetv2(opt)
+
+######################################################################
+######################################################################
+######################################################################
+
+class Mobilenetv2Classification(ConvCNN_Base):
+
+    def __init__(self, opt):
+
+        super(Mobilenetv2Classification, self).__init__(opt)
+
+        # Initialize network
+        self.model = mobilenetv2(pretrained=True)
+        self.model.classifier = nn.Linear(in_features=1280, out_features=2)
+
+    def forward(self, x):
+        return self.model(x)
+
+    class Factory:
+        def create(self,opt): return Mobilenetv2Classification(opt)
+
 
 
 ######################################################################
@@ -622,140 +645,53 @@ class SqueezeNetNetwork(ConvCNN_Base):
 ######################################################################
 ######################################################################
 
-# Specialized Class. Wide Residual Networks. Preloaded imagenet.
 class WideResidualNetworkImagenet(ConvCNN_Base):
 
     def __init__(self, opt):
-        ConvCNN_Base.__init__(self, opt)
-        self.opt = opt
 
-    def __doepoch__(self, data_loader,
-                    f, optimizer, isTraining = False):
+        super(WideResidualNetworkImagenet, self).__init__(opt)
+        self.model = WideResNet_50_2(useCuda= torch.cuda.is_available(), num_groups = self.opt['wrn_groups'], num_classes = None)
+    
+    #Overload parameters to not return the stats parameters which running_mean and running_std does not
+    #contain derivative calculation.
+    def parameters(self, recurse=True):
+        for name, param in self.named_parameters(recurse=recurse):
+            if not('stats' in name):
+                yield param
 
-        all_acc = []
-        all_losses = []
-        for batch_idx, (data, label) in enumerate(data_loader):
-            if self.opt['cuda']:
-                data = data.cuda()
-                label = label.cuda()
-            inputs = Variable(data)
-            targets = Variable(label)
-
-            train_preds = f(inputs)
-            training_loss = F.cross_entropy(train_preds, targets)
-            if isTraining:
-                optimizer.zero_grad()
-                training_loss.backward()
-                optimizer.step()
-
-            train_probs, train_classes = torch.max(train_preds, 1)
-            train_acc = accuracy_score(targets.data.cpu().numpy(),
-                                       train_classes.data.cpu().numpy())
-
-            all_acc.append(train_acc)
-            all_losses.append(training_loss.data.cpu().numpy()[0])
-            # Free memory
-            inputs = []
-            targets = []
-        return f, all_acc, all_losses
-
-    def train(self, train_loader, val_loader, resume = None):
-
-        best_validation_loss = sys.float_info.max
-        best_val_acc = 0
-
-        # create network
-        wrn = WideResNetImageNet(useCuda=True, num_groups = 3, num_classes=self.opt['wrn_num_classes'])
-
-        # create optimizer
-        optimizer = self.create_optimizer(params=wrn.params.values(),
-                                          method=self.opt['wrn_optim_method'],
-                                          lr = self.opt['wrn_lr'])
-
-        epoch = 0
-        if resume is not None:
-            state_dict = torch.load(resume)
-            wrn.params = state_dict['state_dict']
-            epoch = state_dict['epoch']
-            optimizer.load_state_dict(state_dict['optimizer'])
-        try:
-            while epoch < self.opt['wrn_epochs']:
-                epoch += 1
-                time_ini_epoch = datetime.datetime.now()
-                wrn, train_all_acc, train_all_losses = \
-                                    self.__doepoch__(train_loader,
-                                    wrn, optimizer, isTraining=True)
-                time_end_epoch = datetime.datetime.now()
-                print ("train epoch: %d, train loss: %f, train acc: %f. time: %f s." %
-                       (epoch, np.mean(train_all_losses), np.mean(train_all_acc),
-                        int((time_end_epoch-time_ini_epoch).total_seconds())))
-
-                # update optimizer
-                if epoch % self.opt['wrn_epochs_update_optimizer'] == 0:
-                    lr = optimizer.param_groups[0]['lr']
-                    optimizer = self.create_optimizer(params=wrn.params.values(),
-                                                      method=self.opt['wrn_optim_method'],
-                                                      lr=lr * self.opt['wrn_lr_decay_ratio'])
-
-                # do validation
-                if epoch % self.opt['wrn_val_freq'] == 0:
-                    wrn, val_all_acc, val_all_losses = \
-                                    self.__doepoch__(val_loader,
-                                     wrn, optimizer = None, isTraining=False)
-                    val_acc_epoch = np.mean(val_all_acc)
-                    val_losses_epoch = np.mean(val_all_losses)
-                    if val_acc_epoch >= best_val_acc:
-                        n_parameters = sum(p.numel() for p in wrn.params.values())
-                        self.log({
-                            "train_loss": float(np.mean(train_all_losses)),
-                            "train_acc": float(np.mean(train_all_acc)),
-                            "test_acc": val_acc_epoch,
-                            "epoch": epoch,
-                            "num_classes": self.opt['wrn_num_classes'],
-                            "n_parameters": n_parameters,
-                        }, optimizer, wrn.params)
-                        best_val_acc = val_acc_epoch
-
-        except KeyboardInterrupt:
-            pass
-
-        return wrn, best_val_acc
-
-    def load(self, modelPath, fully_convolutional = False):
-        wrn = WideResNetImageNet(useCuda=True, num_groups = 0)
-        state_dict = torch.load(os.path.join(modelPath, 'model.pt7'))
-        wrn.params = state_dict['state_dict']
-        n_parameters = sum(p.numel() for p in wrn.parameters())
-        print ('\nTotal number of parameters:'+ n_parameters)
-        return wrn, None, None
-
-    def log(self,dictParams, optimizer, params):
-        torch.save(dict(state_dict=params,
-                        optimizer=optimizer.state_dict(),
-                        epoch=dictParams['epoch']),
-                   open(os.path.join(self.opt['wrn_save'], 'model.pt7'), 'w'))
-        z = self.opt.copy()
-        z.update(dictParams)
-        logname = os.path.join(self.opt['wrn_save'], 'log.txt')
-        with open(logname, 'a') as f:
-            f.write('json_stats: ' + json.dumps(z) + '\n')
-        print (z)
-
-    def forward(self, data_loader, f, params, stats):
-        params, stats, data_all_acc, data_all_losses = \
-            self.__doepoch__(self, data_loader,
-                             f, params, stats,
-                             optimizer = None, isTraining=False)
-        return params, stats, data_all_acc, data_all_losses
+    def forward(self, x):
+        return self.model.forward(x)
 
     class Factory:
-        def create(self,opt): return WideResidualNetworkv2(opt)
-
+        def create(self,opt): return WideResidualNetworkImagenet(opt)
 
 ######################################################################
 ######################################################################
 ######################################################################
 
+class WideResidualNetworkImagenetClassification(ConvCNN_Base):
+
+    def __init__(self, opt):
+
+        super(WideResidualNetworkImagenetClassification, self).__init__(opt)
+        self.model = WideResNet_50_2(useCuda= torch.cuda.is_available(), num_groups = self.opt['wrn_groups'], num_classes = 2)
+    
+    #Overload parameters to not return the stats parameters which running_mean and running_std does not
+    #contain derivative calculation.
+    def parameters(self, recurse=True):
+        for name, param in self.named_parameters(recurse=recurse):
+            if not('stats' in name):
+                yield param
+
+    def forward(self, x):
+        return self.model.forward(x)
+
+    class Factory:
+        def create(self,opt): return WideResidualNetworkImagenetClassification(opt)
+
+######################################################################
+######################################################################
+######################################################################
 
 
 

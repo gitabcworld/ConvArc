@@ -10,6 +10,11 @@ import torch
 import torch.nn as nn
 import math
 
+import requests
+import tempfile
+import shutil
+import pickle
+
 __all__ = ['mobilenetv2']
 
 def _make_divisible(v, divisor, min_value=None):
@@ -154,7 +159,14 @@ def mobilenetv2(pretrained=False, **kwargs):
     """
     model = MobileNetV2(**kwargs)
     if pretrained:
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),'pretrained/mobilenetv2-0c6065bc.pth')
+        
+        path = os.path.join(tempfile.gettempdir(), 'mobilenetv2-0c6065bc.pth')
+        if not os.path.isfile(path):
+            urlModel = 'https://github.com/d-li14/mobilenetv2.pytorch/blob/master/pretrained/mobilenetv2-0c6065bc.pth?raw=true'
+            print('Downloading mobilenetv2 in %s to %s ...' % (urlModel,path))
+            r = requests.get(urlModel, allow_redirects=True)
+            with open(path, 'wb') as output:
+                output.write(r.content)
         if torch.cuda.is_available():
             model.load_state_dict(torch.load(path))
         else:

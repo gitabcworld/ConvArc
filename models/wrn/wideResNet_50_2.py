@@ -6,24 +6,19 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 #from visualization.visualize import make_dot
 import os.path
-import urllib3
-import tempfile
+from torch.utils import model_zoo
 
-__all__ = ['WideResNet', 'wrn']
-model_urls = {
-    'wrn': 'https://s3.amazonaws.com/pytorch/h5models/wide-resnet-50-2-export.hkl',
-}
 
 # Alternative Code for train WideResNet: https://github.com/xternalz/WideResNet-pytorch/blob/master/wideresnet.py
 
 def conv2d(input, params, base, stride=1, pad=0):
-    return F.conv2d(input, params[base + '.weight'],
-                    params[base + '.bias'], stride, pad)
+    return F.conv2d(input, params[base + '_weight'],
+                    params[base + '_bias'], stride, pad)
 
 def group(input, params, base, stride, n):
     o = input
     for i in range(0, n):
-        b_base = ('%s.block%d.conv') % (base, i)
+        b_base = ('%s_block%d_conv') % (base, i)
         x = o
         o = conv2d(x, params, b_base + '0')
         o = F.relu(o)
@@ -42,47 +37,50 @@ def group(input, params, base, stride, n):
 class WideResNet_50_2(nn.Module):
 
     def __init__(self, useCuda= True, num_groups = 3, num_classes = None):
-        super(WideResNetImageNet, self).__init__()
+        super(WideResNet_50_2, self).__init__()
         self.num_groups = num_groups
         self.num_classes = num_classes
 
-        #pathWeigths = os.path.join('/tmp', 'wide-resnet-50-2-export.hkl')
-        pathWeigths = os.path.join(tempfile.gettempdir(), 'wide-resnet-50-2-export.hkl')
-        if not os.path.isfile(pathWeigths):
-            print('Downloading pretrained WideResNet to %s' % pathWeigths)
-            urlModel = 'https://s3.amazonaws.com/pytorch/h5models/wide-resnet-50-2-export.hkl'
-            wrnWeights = urllib3.urlopen(urlModel)
-            with open(pathWeigths, 'wb') as output:
-                output.write(wrnWeights.read())
-
-        self.params = hkl.load(pathWeigths)
+        params = model_zoo.load_url('https://s3.amazonaws.com/modelzoo-networks/wide-resnet-50-2-export-5ae25d50.pth')
+        
         # convert numpy arrays to torch Variables
-        print('Printing loaded weigths shape...')
-        for k, v in sorted(self.params.items()):
-            print (k, v.shape)
+        print('loaded weigths shape...')
+        for k,v in sorted(params.items()):
+            print(k, tuple(v.shape))
             if useCuda:
-                self.params[k] = Variable(torch.from_numpy(v).cuda(), requires_grad=True)
+                params[k] = Variable(v.cuda(), requires_grad=True)
             else:
-                self.params[k] = Variable(torch.from_numpy(v), requires_grad=True)
+                params[k] = Variable(v, requires_grad=True)
 
         # Change the last fully connected layer
         if num_classes is not None:
             tmp = nn.Linear([256,512,1024,2048][num_groups], num_classes)
             if useCuda:
                 tmp = tmp.cuda()
-            self.params['fc.weight'] = tmp.weight
-            self.params['fc.bias'] = tmp.bias
+            params['fc_weight'] = tmp.weight
+            params['fc_bias'] = tmp.bias
 
-        print ('\nTotal parameters:' + sum(v.numel() for v in self.params.values()))
+        print('\nTotal parameters:', sum(v.numel() for v in params.values()))
 
+        # replace all '.' in the dictionary by '_'
+        params_tmp = {}
+        for key in params.keys():
+            params_tmp[key.replace('.','_')] = params[key]
+        params = params_tmp
+        del params_tmp
+
+        #create nn.Parameters to return them with parameters() function.
+        self.params = nn.ParameterDict({})
+        for key in params.keys():
+            self.params.update({key:nn.Parameter(params[key],requires_grad=True)})
 
     def forward(self, input):
 
         # determine network size by parameters
-        blocks = [sum([re.match('group%d.block\d+.conv0.weight' % j, k) is not None
+        blocks = [sum([re.match('group%d_block\d+_conv0.weight' % j, k) is not None
                        for k in self.params.keys()]) for j in range(4)]
 
-        o = F.conv2d(input, self.params['conv0.weight'], self.params['conv0.bias'], 2, 3)
+        o = F.conv2d(input, self.params['conv0_weight'], self.params['conv0_bias'], 2, 3)
         o = F.relu(o)
         o = F.max_pool2d(o, 3, 2, 1)
         o = group(o, self.params, 'group0', 1, blocks[0])
@@ -95,5 +93,5 @@ class WideResNet_50_2(nn.Module):
         if self.num_classes is not None:
             o = F.avg_pool2d(o, o.shape[2], 1, 0)
             o = o.view(o.size(0), -1)
-            o = F.linear(o, self.params['fc.weight'], self.params['fc.bias'])
+            o = F.linear(o, self.params['fc_weight'], self.params['fc_bias'])
         return o
