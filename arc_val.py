@@ -74,7 +74,8 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         if opt.apply_wrn:
             torch.save(fcn.state_dict(),opt.wrn_save)
         # Save the ARC discriminator
-        torch.save(discriminator.state_dict(),opt.arc_save)
+        if not(discriminator is None):
+            torch.save(discriminator.state_dict(),opt.arc_save)
         # Save the Co-attn model
         if opt.use_coAttn:
             torch.save(coAttn.state_dict(),opt.coattn_save)
