@@ -99,8 +99,6 @@ def train(index = 4):
             features = objFeatures.extract(data[i])
             train_features.append(features)
         train_labels.append(labels)
-        if batch_idx > 10:
-            break
 
     ## TRAIN
     train_features = np.stack(train_features)
@@ -118,15 +116,13 @@ def train(index = 4):
             features = objFeatures.extract(data[i])
             test_features.append(features)
         test_labels.append(labels)
-        if batch_idx > 10:
-            break
 
     ## PREDICT
     test_features = np.stack(test_features)
     test_labels = [item for sublist in test_labels for item in sublist]
-    preds = objFeatures.predict(test_features,test_labels)
+    preds = objFeatures.predict(test_features)
 
-    show_results(test_labels,preds,'HoG')
+    show_results(test_labels,preds[:,0],'HoG')
 
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
