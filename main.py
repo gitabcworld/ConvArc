@@ -68,7 +68,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-def train(index = 2):
+def train(index = 4):
 
     # change parameters
     opt = Options().parse()
@@ -101,6 +101,7 @@ def train(index = 2):
             fcn.cuda()
 
     # Load Dataset
+    opt.setType='set1'
     if opt.datasetName == 'miniImagenet':
         dataLoader = miniImagenetDataLoader(type=MiniImagenetPairs, opt=opt, fcn=fcn)
     elif opt.datasetName == 'omniglot':
@@ -324,6 +325,7 @@ def train(index = 2):
     do_epoch_fn = do_epoch_naive_full
 
     # Load the dataset
+    opt.setType='set1'
     if opt.datasetName == 'miniImagenet':
         dataLoader = miniImagenetDataLoader(type=MiniImagenetOneShot, opt=opt, fcn=fcn)
     elif opt.datasetName == 'omniglot':

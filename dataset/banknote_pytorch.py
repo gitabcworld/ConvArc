@@ -22,7 +22,7 @@ import pdb
 
 class BanknoteBase(data.Dataset):
 
-    def __init__(self, root='./banknote', train='train', size = None,
+    def __init__(self, setType='set1', root='./banknote', train='train', size = None, 
                 transform=None, target_transform=None):
 
         self.root = root
@@ -30,9 +30,10 @@ class BanknoteBase(data.Dataset):
         self.target_transform = target_transform
         self.train = train  # training, validation or test set
         self.size = size
+        self.setType = setType
         partition = 0
 
-        path_info_file_partition = os.path.join(self.root,'tmp/data_minres_400_partition_'+ str(partition) + '.yaml')
+        path_info_file_partition = os.path.join(self.root,'tmp/data_minres_400_partition_'+ str(partition) + '_' + setType + '.yaml')
         # check if exists already the dataset in YAML format
         if os.path.exists(path_info_file_partition):
             print('Loading banknote dataset...')
@@ -46,9 +47,17 @@ class BanknoteBase(data.Dataset):
             models.remove('CUROUD2')
 
             # Limit the dataset to the counterfeit images.
-            models = ['CUEURB1','CUEURB2','CUEURC1','CUEURC2','CUEURD1','CUEURD2','IDESPC1','IDESPC2']
-            # Only to debug, delete this line.
-            #models = ['CUEURB1','CUEURB2']
+            if self.setType == 'set1':
+                models = ['CUEURB1','CUEURB2','CUEURC1','CUEURC2','CUEURD1','CUEURD2','IDESPC1','IDESPC2']
+            else:
+                models.remove('CUEURB1')
+                models.remove('CUEURB2')
+                models.remove('CUEURC1')
+                models.remove('CUEURC2')
+                models.remove('CUEURD1')
+                models.remove('CUEURD2')
+                models.remove('IDESPC1')
+                models.remove('IDESPC2')
 
             # Load the data DB
             self.data = {}
@@ -173,12 +182,42 @@ class BanknoteBase(data.Dataset):
                     self.counterfeitModels[model][datasetType] = num_negative_imgs
 
         # Finally get only the datasetType which we are working with.
+        counterfeitModels_tmp = {}
+        data_tmp = {}
+        
+        for model in self.counterfeitModels:
+            data_tmp[model] = {}
+            data_tmp[model]['labels'] = []
+            data_tmp[model]['inputs'] = []
+            data_tmp[model]['sizes'] = []
+            if model in self.counterfeitModels.keys():
+                counterfeitModels_tmp[model] = 0
+            
+            for datasetType in ['train','test','val']:
+                if datasetType in self.train:
+                    data_tmp[model]['labels'].append(self.data[model]['labels'][datasetType])
+                    data_tmp[model]['inputs'].append(self.data[model]['inputs'][datasetType])
+                    data_tmp[model]['sizes'].append(self.data[model]['sizes'][datasetType])
+                    
+                    if model in self.counterfeitModels.keys():
+                        counterfeitModels_tmp[model] += self.counterfeitModels[model][datasetType]
+
+            # flatten the lists if needed
+            self.data[model]['labels'] = [item for sublist in data_tmp[model]['labels'] for item in sublist]
+            self.data[model]['inputs'] = [item for sublist in data_tmp[model]['inputs'] for item in sublist]
+            self.data[model]['sizes'] = [item for sublist in data_tmp[model]['sizes'] for item in sublist]
+
+        counterfeitModels_tmp = {}
+        data_tmp = {}
+
+        '''             
         for model in self.counterfeitModels:
             self.counterfeitModels[model] = self.counterfeitModels[model][self.train]
         for model in self.data:
             self.data[model]['labels'] = self.data[model]['labels'][self.train]
             self.data[model]['inputs'] = self.data[model]['inputs'][self.train]
             self.data[model]['sizes'] = self.data[model]['sizes'][self.train]
+        '''
 
         self.encode_labels = {}
         self.decode_labels = {}
@@ -223,9 +262,9 @@ class BanknoteBase(data.Dataset):
 
 class FullBanknote(BanknoteBase):
 
-    def __init__(self, root, train='train',  size = None,
+    def __init__(self, setType, root, train='train',  size = None,
                      transform=None, target_transform=None):
-        BanknoteBase.__init__(self, root, train, size, transform, target_transform)
+        BanknoteBase.__init__(self, setType, root, train, size, transform, target_transform)
         
     def __getitem__(self, index):
 
@@ -272,9 +311,9 @@ params:
 '''
 class FullBanknotePairs(BanknoteBase):
 
-    def __init__(self, root, train='train', size = None, numTrials = 1500,
+    def __init__(self, setType, root, train='train', size = None, numTrials = 1500,
                      transform=None, target_transform=None):
-        BanknoteBase.__init__(self, root, train, size,
+        BanknoteBase.__init__(self, setType, root, train, size,
                                     transform, target_transform)
         self.numTrials = numTrials
         self.percentagePairs = [0.5,0.25,0.25]
@@ -386,7 +425,7 @@ class FullBanknotePairs(BanknoteBase):
 
 class FullBanknoteOneShot(BanknoteBase):
 
-    def __init__(self, root, train='train',
+    def __init__(self, setType, root, train='train',
                  size=None, # normally size = 84
                  transform=None, target_transform=None,
                  sameClass = False, # If Same Class there will be only positive and negative examples of the same Class
@@ -394,7 +433,7 @@ class FullBanknoteOneShot(BanknoteBase):
                  n_shot = 1,
                  numTrials = 32):
 
-        BanknoteBase.__init__(self, root, train, size,
+        BanknoteBase.__init__(self, setType, root, train, size,
                                     transform, target_transform)
         
         self.n_way = n_way

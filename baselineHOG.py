@@ -38,7 +38,9 @@ def train(index = 4):
     opt = tranform_options(index, opt)
     opt.cuda = False
 
+
     # Load Dataset
+    opt.setType='set1'
     if opt.datasetName == 'miniImagenet':
         dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
     elif opt.datasetName == 'omniglot':

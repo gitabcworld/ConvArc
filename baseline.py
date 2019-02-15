@@ -85,6 +85,7 @@ def train(index = 4):
         fcn.cuda()
 
     # Load Dataset
+    opt.setType='set1'
     if opt.datasetName == 'miniImagenet':
         dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=fcn)
     elif opt.datasetName == 'omniglot':

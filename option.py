@@ -153,14 +153,14 @@ lst_parameters_change = [
 
         ('save', pathResults + 'banknote'),
         ('nchannels', 3),
-        ('train_num_batches', 5),
+        ('train_num_batches', 2),
 
         ('apply_wrn', True),
         ('wrn_save', pathResults + 'banknote/fcn.pt7'),
         ('wrn_load', pathResults + 'banknote/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 64),
+        ('arc_nchannels', 1024),
         ('arc_attn_type', 'LSTM'),
         ('arc_save', pathResults + 'banknote/ARCmodel.pt7'),
         ('arc_load', pathResults + 'banknote/ARCmodel.pt7'),
@@ -174,6 +174,13 @@ lst_parameters_change = [
 
         ('arc_optimizer_path', pathResults + 'banknote/arc_optimizer.pt7'),
         ('naive_full_optimizer_path', pathResults + 'banknote/context_optimizer.pt7'),
+
+        ('use_coAttn', True),
+        ('coAttn_size', (14,14)),
+        ('coAttn_type', 'None'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'banknote/coAttn.pt7'),
+        ('coattn_save', pathResults + 'banknote/coAttn.pt7'),
     ],
 ]
 
@@ -192,7 +199,7 @@ class Options():
         # General settings
         parser = argparse.ArgumentParser(description='Wide Residual Networks')
         parser.add_argument('--train_num_batches', type=int, default=1500000, help='train epochs')
-        parser.add_argument('--val_freq', type=int, default=5, help='validation frequency')
+        parser.add_argument('--val_freq', type=int, default=1, help='validation frequency')
         parser.add_argument('--val_num_batches', type=int, default=2, help='validation num batches')
         parser.add_argument('--test_num_batches', type=int, default=5, help='test num batches')
         parser.add_argument('--batchSize', type=int, default=2, help='input batch size')
@@ -209,7 +216,7 @@ class Options():
         parser.add_argument('--datasetName', default='miniImagenet', type=str, help='omniglot or miniimagenet datasets')
         parser.add_argument('--dataroot', default='D:/PhD/code/datasets/convarc/mini_imagenet', type=str)
         parser.add_argument('--datasetCompactSize', type=int, default=None, help='the height / width of the input image to save as a compacted file')
-        parser.add_argument('--imageSize', type=int, default=224, help='the height / width of the input image to ARC')
+        parser.add_argument('--imageSize', type=int, default=None, help='the height / width of the input image to ARC')
         parser.add_argument('--nchannels', default=3, help='num channels input images.')
         parser.add_argument('--partitionType', default='30_10_10', type=str,
                             help='default: 30_10_10')
@@ -227,8 +234,13 @@ class Options():
 
         # Fully convolutional network parameters
         parser.add_argument('--apply_wrn', default=False, help='apply wide residual network')
+        #parser.add_argument('--wrn_name_type', default='Mobilenetv2', type=str,
+        #parser.add_argument('--wrn_name_type', default='Mobilenetv2Classification', type=str,
         #parser.add_argument('--wrn_name_type', default='WideResidualNetwork', type=str,
+        #parser.add_argument('--wrn_name_type', default='WideResidualNetworkImagenet', type=str,
+        #parser.add_argument('--wrn_name_type', default='WideResidualNetworkImagenetClassification', type=str,
         parser.add_argument('--wrn_name_type', default='ResNet50', type=str,
+        #parser.add_argument('--wrn_name_type', default='ResNet50Classificaton', type=str,
                             help='type name of the network')
         parser.add_argument('--wrn_load', default=None, type=str,
                             help='path to the trained wide residual network.')
@@ -239,7 +251,7 @@ class Options():
         parser.add_argument('--wrn_width', default=2, help='width of wide Residual Networks.')
         parser.add_argument('--wrn_ngpu', default=1, type=int, help='number of GPUs to use for training.')
         parser.add_argument('--wrn_full', default=False, type=bool, help='apply all groups in Wide Residual Networks.')
-        parser.add_argument('--wrn_groups', default=1, type=int, help='values=[0,1,2,3] Num of groups in WRN.')
+        parser.add_argument('--wrn_groups', default=3, type=int, help='values=[0,1,2,3] Num of groups in WRN.')
         parser.add_argument('--wrn_optim_method', default='SGD', type=str, help='optimizer SGD/ADAM.')
         parser.add_argument('--wrn_lr', default=1e-2, type=float, help='learning rate, default=0.0001')
         parser.add_argument('--wrn_epochs', default=3000, type=int, help='num epochs training wrn')
@@ -254,7 +266,7 @@ class Options():
                                                                     'classes in training. If set to false there will be'
                                                                     ' 30 classes.')
         # Fully convolutional network parameters Update
-        parser.add_argument('--fcn_applyOnDataLoader', default=True, type=bool, help='apply FCN in DataLoader')
+        parser.add_argument('--fcn_applyOnDataLoader', default=False, type=bool, help='apply FCN in DataLoader')
         
 
         # ARC Parameters
@@ -292,8 +304,8 @@ class Options():
                             help='Num of LSTM layers from the full context model.')
         parser.add_argument('--naive_full_lr', default=3e-4, type=float, help='learning rate, default=0.0001')
         parser.add_argument('--naive_full_lr_patience', default=50000, type=int, help='num epochs to check lr stagnation.')
-        parser.add_argument('--naive_full_epochs', default=6, type=int, help='num epochs training naive/full context')
-        parser.add_argument('--naive_full_val_freq', default=2, type=int, help='n epochs for evaluation dataset '
+        parser.add_argument('--naive_full_epochs', default=2, type=int, help='num epochs training naive/full context')
+        parser.add_argument('--naive_full_val_freq', default=1, type=int, help='n epochs for evaluation dataset '
                                                                          'during training')
         # Optimizers
         parser.add_argument('--arc_optimizer_path', default=None, help='arc optimizer path to load/save')

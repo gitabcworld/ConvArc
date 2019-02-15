@@ -74,7 +74,7 @@ class banknoteDataLoader():
         kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
         if self.type == FullBanknotePairs or self.type == FullBanknote:
             train_loader_mean_std = torch.utils.data.DataLoader(
-                FullBanknote(root=self.opt.dataroot, train='train', size = self.opt.imageSize,
+                FullBanknote(setType=self.opt.setType, root=self.opt.dataroot, train='train', size = self.opt.imageSize,
                                     transform=train_transform, target_transform=None),
                 batch_size=self.opt.batchSize, shuffle=True, collate_fn = torch.utils.data.dataloader.default_collate, **kwargs)
         
@@ -108,7 +108,7 @@ class banknoteDataLoader():
 
         return train_mean, train_std
 
-    def get(self, rnd_seed = 42):
+    def get(self, dataPartition = ['train','val','test'] ,rnd_seed = 42):
 
         if self.train_mean is None and self.train_std is None and not(self.opt.imageSize is None):
             train_mean, train_std = self.get_mean_std()
@@ -120,67 +120,76 @@ class banknoteDataLoader():
 
         train_transform = transforms.Compose(self.getlstTransforms(train = 'train'))
 
-        if self.type == FullBanknote:
-            datasetParams = self.type(root=self.opt.dataroot, train='train',
-                                        size = self.opt.imageSize,  
-                                        transform=train_transform, target_transform=None)
-        elif self.type == FullBanknotePairs:
-            datasetParams = self.type(root=self.opt.dataroot, train='train', 
-                                        size = self.opt.imageSize, numTrials=self.opt.batchSize,
-                                        transform=train_transform, target_transform=None)
-        elif self.type == FullBanknoteOneShot:
-            datasetParams = self.type(root=self.opt.dataroot, train='train', 
-                                        size = self.opt.imageSize,  
-                                        transform=train_transform, target_transform=None,
-                                        sameClass = self.opt.datasetBanknoteOneShotSameClass,
-                                        n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                        numTrials=self.opt.batchSize)
+        if len(dataPartition[0]) > 0:
+            if self.type == FullBanknote:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0],
+                                            size = self.opt.imageSize,  
+                                            transform=train_transform, target_transform=None)
+            elif self.type == FullBanknotePairs:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0], 
+                                            size = self.opt.imageSize, numTrials=self.opt.batchSize,
+                                            transform=train_transform, target_transform=None)
+            elif self.type == FullBanknoteOneShot:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0], 
+                                            size = self.opt.imageSize,  
+                                            transform=train_transform, target_transform=None,
+                                            sameClass = self.opt.datasetBanknoteOneShotSameClass,
+                                            n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
+                                            numTrials=self.opt.batchSize)
 
-        train_loader = torch.utils.data.DataLoader(
-            datasetParams,
-            batch_size=self.opt.batchSize, shuffle=True, **kwargs)
+            train_loader = torch.utils.data.DataLoader(
+                datasetParams,
+                batch_size=self.opt.batchSize, shuffle=True, **kwargs)
+        else:
+            train_loader = None
 
         eval_test_transform = transforms.Compose(self.getlstTransforms(train = 'val_test')) 
 
-        if self.type == FullBanknote:
-            datasetParams = self.type(root=self.opt.dataroot, train='val', 
-                                        size = self.opt.imageSize,  
-                                        transform=eval_test_transform, target_transform=None)
-        elif self.type == FullBanknotePairs:
-            datasetParams = self.type(root=self.opt.dataroot, train='val', 
-                                        size = self.opt.imageSize, numTrials=self.opt.batchSize,
-                                        transform=eval_test_transform, target_transform=None)
-        elif self.type == FullBanknoteOneShot:
-            datasetParams = self.type(root=self.opt.dataroot, train='val', 
-                                        size = self.opt.imageSize,  
-                                        transform=train_transform, target_transform=None,
-                                        sameClass = self.opt.datasetBanknoteOneShotSameClass,
-                                        n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                        numTrials=self.opt.batchSize)
+        if len(dataPartition[1]) > 0:
+            if self.type == FullBanknote:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1], 
+                                            size = self.opt.imageSize,  
+                                            transform=eval_test_transform, target_transform=None)
+            elif self.type == FullBanknotePairs:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1],
+                                            size = self.opt.imageSize, numTrials=self.opt.batchSize,
+                                            transform=eval_test_transform, target_transform=None)
+            elif self.type == FullBanknoteOneShot:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1],
+                                            size = self.opt.imageSize,  
+                                            transform=train_transform, target_transform=None,
+                                            sameClass = self.opt.datasetBanknoteOneShotSameClass,
+                                            n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
+                                            numTrials=self.opt.batchSize)
 
-        val_loader = torch.utils.data.DataLoader(
-            datasetParams,
-            batch_size=self.opt.batchSize, shuffle=False, **kwargs)
+            val_loader = torch.utils.data.DataLoader(
+                datasetParams,
+                batch_size=self.opt.batchSize, shuffle=False, **kwargs)
+        else:
+            val_loader = None
 
-        if self.type == FullBanknote:
-            datasetParams = self.type(root=self.opt.dataroot, train='test', 
-                                        size = self.opt.imageSize,  
-                                        transform=eval_test_transform, target_transform=None)
-        elif self.type == FullBanknotePairs:
-            datasetParams = self.type(root=self.opt.dataroot, train='test', 
-                                        size = self.opt.imageSize, numTrials=self.opt.batchSize,
-                                        transform=eval_test_transform, target_transform=None)
-        elif self.type == FullBanknoteOneShot:
-            datasetParams = self.type(root=self.opt.dataroot, train='test', 
-                                        size = self.opt.imageSize,  
-                                        transform=train_transform, target_transform=None,
-                                        sameClass = self.opt.datasetBanknoteOneShotSameClass,
-                                        n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
-                                        numTrials=self.opt.batchSize)
+        if len(dataPartition[2]) > 0:
+            if self.type == FullBanknote:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
+                                            size = self.opt.imageSize,  
+                                            transform=eval_test_transform, target_transform=None)
+            elif self.type == FullBanknotePairs:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
+                                            size = self.opt.imageSize, numTrials=self.opt.batchSize,
+                                            transform=eval_test_transform, target_transform=None)
+            elif self.type == FullBanknoteOneShot:
+                datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
+                                            size = self.opt.imageSize,  
+                                            transform=train_transform, target_transform=None,
+                                            sameClass = self.opt.datasetBanknoteOneShotSameClass,
+                                            n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
+                                            numTrials=self.opt.batchSize)
 
-        test_loader = torch.utils.data.DataLoader(
-            datasetParams,
-            batch_size=self.opt.batchSize, shuffle=False, **kwargs)
+            test_loader = torch.utils.data.DataLoader(
+                datasetParams,
+                batch_size=self.opt.batchSize, shuffle=False, **kwargs)
+        else:
+            test_loader = None
 
         return train_loader, val_loader, test_loader
 
