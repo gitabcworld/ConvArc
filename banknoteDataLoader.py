@@ -120,7 +120,7 @@ class banknoteDataLoader():
 
         train_transform = transforms.Compose(self.getlstTransforms(train = 'train'))
 
-        if len(dataPartition[0]) > 0:
+        if len(dataPartition) > 0 and not(dataPartition[0] is None):
             if self.type == FullBanknote:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0],
                                             size = self.opt.imageSize,  
@@ -145,7 +145,7 @@ class banknoteDataLoader():
 
         eval_test_transform = transforms.Compose(self.getlstTransforms(train = 'val_test')) 
 
-        if len(dataPartition[1]) > 0:
+        if len(dataPartition) > 0 and not(dataPartition[1] is None):
             if self.type == FullBanknote:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1], 
                                             size = self.opt.imageSize,  
@@ -168,7 +168,7 @@ class banknoteDataLoader():
         else:
             val_loader = None
 
-        if len(dataPartition[2]) > 0:
+        if len(dataPartition) > 0 and not(dataPartition[2] is None):
             if self.type == FullBanknote:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
                                             size = self.opt.imageSize,  

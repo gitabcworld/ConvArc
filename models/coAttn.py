@@ -54,7 +54,7 @@ class CoAttn(nn.Module):
         Z_b = Z_b.view(batch_size,nfilters,sizeFilterX,sizeFilterY)
 
         '''
-        if self.typeActivation == 'None': # keep the nfilters
+        if self.typeActivation == 'expand': # keep the nfilters
             Q_a_1 = Q_a.contiguous().view(batch_size*nfilters,self.size[0],self.size[1]) # 20480 x 7 x 7
             Q_b_1 = Q_b.contiguous().view(batch_size*nfilters,self.size[0],self.size[1]) # 20480 x 7 x 7
             Q_a_1 = Q_a_1.view(batch_size*nfilters,-1).unsqueeze(2).expand(batch_size*nfilters,self.size_pow[0],self.size_pow[1]) # 20480 x 49 x 49

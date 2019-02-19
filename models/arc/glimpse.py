@@ -142,17 +142,16 @@ class GlimpseWindow:
         glimpses = images
         # support for 1-3 channel images.
         if len(glimpses.shape)==4:
-            num_channels = glimpses.shape[1]
-            all_glimpses = []
-            for c in range(num_channels):
-                glimpses_c = torch.bmm(F_h.transpose(1, 2), glimpses[:,c,:,:])
-                glimpses_c = torch.bmm(glimpses_c, F_w)
-                all_glimpses.append(glimpses_c)
-            glimpses = torch.stack(all_glimpses).transpose(0,1)  # (B, c, glimpse_h, glimpse_w)
-            glimpses.contiguous()
+            F_h = F_h.transpose(1, 2).unsqueeze(1).repeat(1,channels,1,1).contiguous() 
+            F_h = F_h.view(batch_size*channels,F_h.shape[2],F_h.shape[3])
+            F_w = F_w.unsqueeze(1).repeat(1,channels,1,1).contiguous()
+            F_w = F_w.view(batch_size*channels,F_w.shape[2],F_w.shape[3])
+            glimpses = glimpses.contiguous().view(batch_size*channels,image_h,image_w)
+            glimpses = torch.bmm(F_h, glimpses)
+            glimpses = torch.bmm(glimpses, F_w)
+            glimpses = glimpses.view(batch_size, channels, self.glimpse_h, self.glimpse_w) # (B, c, glimpse_h, glimpse_w)
         else:
             glimpses = torch.bmm(F_h.transpose(1, 2), glimpses)
-            #glimpses = torch.bmm(F_h.transpose(1, 2), glimpses)
             glimpses = torch.bmm(glimpses, F_w) # (B, glimpse_h, glimpse_w)
 
         return glimpses

@@ -18,7 +18,7 @@ else:
     dataroot = '/datatmp/users/aberenguel/convarc'
 
 lst_parameters_change = [
-    [
+    [   # 0
         ('datasetName', 'omniglot'),
         ('dataroot', os.path.join(dataroot,'omniglot')),
         ('one_shot_n_way', 5),
@@ -49,7 +49,7 @@ lst_parameters_change = [
         ('arc_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/arc_optimizer.pt7'),
         ('naive_full_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive/context_optimizer.pt7')
     ],
-    [
+    [   # 1
         ('datasetName', 'omniglot'),
         ('dataroot', os.path.join(dataroot,'omniglot')),
         ('one_shot_n_way', 5),
@@ -78,7 +78,7 @@ lst_parameters_change = [
         ('arc_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive_standard/arc_optimizer.pt7'),
         ('naive_full_optimizer_path', pathResults + 'os/lstm_channel_1_carc_naive_standard/context_optimizer.pt7'),
     ],
-    [
+    [   # 2
         ('datasetName', 'miniImagenet'),
         ('dataroot', os.path.join(dataroot,'mini_imagenet')),
         ('one_shot_n_way', 5),
@@ -115,7 +115,7 @@ lst_parameters_change = [
         ('coattn_load', pathResults + 'miniimagenet/coAttn.pt7'),
         ('coattn_save', pathResults + 'miniimagenet/coAttn.pt7'),
     ],
-    [
+    [   # 3
         ('datasetName', 'miniImagenet'),
         ('dataroot', os.path.join(dataroot,'mini_imagenet')),
         ('one_shot_n_way', 5),
@@ -145,43 +145,262 @@ lst_parameters_change = [
         ('arc_optimizer_path', pathResults + 'miniimagenet224/arc_optimizer.pt7'),
         ('naive_full_optimizer_path', pathResults + 'miniimagenet224/context_optimizer.pt7'),
     ],
-    [
+    [  # 4
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
         ('one_shot_n_way', 5),
         ('one_shot_n_shot', 1),
 
-        ('save', pathResults + 'banknote'),
-        ('nchannels', 3),
-        ('train_num_batches', 2),
+        ('save', pathResults + 'noCoAttnNaiveResnet50'),
+        ('batchSize', 20),
+        ('naive_batchSize', 20),
+        
+        ('train_num_batches', 50000),
+        ('val_freq', 1000),
+        ('naive_full_epochs', 20000),
+        ('naive_full_val_freq', 1000),
 
         ('apply_wrn', True),
-        ('wrn_save', pathResults + 'banknote/fcn.pt7'),
-        ('wrn_load', pathResults + 'banknote/fcn.pt7'),
+        ('wrn_name_type', 'ResNet50'),
+        ('wrn_save', pathResults + 'noCoAttnNaiveResnet50/fcn.pt7'),
+        ('wrn_load', pathResults + 'noCoAttnNaiveResnet50/fcn.pt7'),
         #('wrn_load', None),
 
         ('arc_nchannels', 1024),
         ('arc_attn_type', 'LSTM'),
-        ('arc_save', pathResults + 'banknote/ARCmodel.pt7'),
-        ('arc_load', pathResults + 'banknote/ARCmodel.pt7'),
+        ('arc_save', pathResults + 'noCoAttnNaiveResnet50/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'noCoAttnNaiveResnet50/ARCmodel.pt7'),
         #('arc_load', None),
         ('arc_resume', True),
-        
+
         ('naive_full_type', 'Naive'),
-        ('naive_full_save_path', pathResults + 'banknote/context.pt7'),
-        ('naive_full_load_path', pathResults + 'banknote/context.pt7'),
+        ('naive_full_save_path', pathResults + 'noCoAttnNaiveResnet50/context.pt7'),
+        ('naive_full_load_path', pathResults + 'noCoAttnNaiveResnet50/context.pt7'),
         ('naive_full_resume', True),
 
-        ('arc_optimizer_path', pathResults + 'banknote/arc_optimizer.pt7'),
-        ('naive_full_optimizer_path', pathResults + 'banknote/context_optimizer.pt7'),
+        ('arc_optimizer_path', pathResults + 'noCoAttnNaiveResnet50/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'noCoAttnNaiveResnet50/context_optimizer.pt7'),
+
+        ('use_coAttn', False),
+        ('coAttn_size', (14,14)),
+        ('coAttn_type', 'None'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'noCoAttnNaiveResnet50/coAttn.pt7'),
+        ('coattn_save', pathResults + 'noCoAttnNaiveResnet50/coAttn.pt7'),
+    ],
+    [  # 5
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'CoAttnNaiveResnet50'),
+        ('batchSize', 20),
+        ('naive_batchSize', 20),
+        
+        ('train_num_batches', 50000),
+        ('val_freq', 1000),
+        ('naive_full_epochs', 20000),
+        ('naive_full_val_freq', 1000),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'ResNet50'),
+        ('wrn_save', pathResults + 'CoAttnNaiveResnet50/fcn.pt7'),
+        ('wrn_load', pathResults + 'CoAttnNaiveResnet50/fcn.pt7'),
+        #('wrn_load', None),
+
+        ('arc_nchannels', 1024),
+        ('arc_save', pathResults + 'CoAttnNaiveResnet50/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'CoAttnNaiveResnet50/ARCmodel.pt7'),
+        #('arc_load', None),
+        ('arc_resume', True),
+
+        ('naive_full_type', 'Naive'),
+        ('naive_full_save_path', pathResults + 'CoAttnNaiveResnet50/context.pt7'),
+        ('naive_full_load_path', pathResults + 'CoAttnNaiveResnet50/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'CoAttnNaiveResnet50/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'CoAttnNaiveResnet50/context_optimizer.pt7'),
 
         ('use_coAttn', True),
         ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
-        ('coattn_load', pathResults + 'banknote/coAttn.pt7'),
-        ('coattn_save', pathResults + 'banknote/coAttn.pt7'),
+        ('coattn_load', pathResults + 'CoAttnNaiveResnet50/coAttn.pt7'),
+        ('coattn_save', pathResults + 'CoAttnNaiveResnet50/coAttn.pt7'),
     ],
+    [  # 6
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'noCoAttnNaiveMobilenetV2'),
+        ('batchSize', 20),
+        ('naive_batchSize', 20),
+        
+        ('train_num_batches', 50000),
+        ('val_freq', 1000),
+        ('naive_full_epochs', 20000),
+        ('naive_full_val_freq', 1000),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'Mobilenetv2'),
+        ('wrn_save', pathResults + 'noCoAttnNaiveMobilenetV2/fcn.pt7'),
+        ('wrn_load', pathResults + 'noCoAttnNaiveMobilenetV2/fcn.pt7'),
+        #('wrn_load', None),
+
+        ('arc_nchannels', 320),
+        ('arc_attn_type', 'LSTM'),
+        ('arc_save', pathResults + 'noCoAttnNaiveMobilenetV2/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'noCoAttnNaiveMobilenetV2/ARCmodel.pt7'),
+        #('arc_load', None),
+        ('arc_resume', True),
+
+        ('naive_full_type', 'Naive'),
+        ('naive_full_save_path', pathResults + 'noCoAttnNaiveMobilenetV2/context.pt7'),
+        ('naive_full_load_path', pathResults + 'noCoAttnNaiveMobilenetV2/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'noCoAttnNaiveMobilenetV2/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'noCoAttnNaiveMobilenetV2/context_optimizer.pt7'),
+
+        ('use_coAttn', False),
+        ('coAttn_size', (7,7)),
+        ('coAttn_type', 'None'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'noCoAttnNaiveMobilenetV2/coAttn.pt7'),
+        ('coattn_save', pathResults + 'noCoAttnNaiveMobilenetV2/coAttn.pt7'),
+    ],
+    [  # 7
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'CoAttnNaiveMobilenetV2'),
+        ('batchSize', 20),
+        ('naive_batchSize', 20),
+        
+        ('train_num_batches', 50000),
+        ('val_freq', 1000),
+        ('naive_full_epochs', 20000),
+        ('naive_full_val_freq', 1000),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'Mobilenetv2'),
+        ('wrn_save', pathResults + 'CoAttnNaiveMobilenetV2/fcn.pt7'),
+        ('wrn_load', pathResults + 'CoAttnNaiveMobilenetV2/fcn.pt7'),
+        #('wrn_load', None),
+
+        ('arc_nchannels', 320),
+        ('arc_save', pathResults + 'CoAttnNaiveMobilenetV2/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'CoAttnNaiveMobilenetV2/ARCmodel.pt7'),
+        #('arc_load', None),
+        ('arc_resume', True),
+
+        ('naive_full_type', 'Naive'),
+        ('naive_full_save_path', pathResults + 'CoAttnNaiveMobilenetV2/context.pt7'),
+        ('naive_full_load_path', pathResults + 'CoAttnNaiveMobilenetV2/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'CoAttnNaiveMobilenetV2/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'CoAttnNaiveMobilenetV2/context_optimizer.pt7'),
+
+        ('use_coAttn', True),
+        ('coAttn_size', (7,7)),
+        ('coAttn_type', 'None'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'CoAttnNaiveMobilenetV2/coAttn.pt7'),
+        ('coattn_save', pathResults + 'CoAttnNaiveMobilenetV2/coAttn.pt7'),
+    ],
+    [  # 8
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'noCoAttnNaiveWRN'),
+        ('batchSize', 20),
+        ('naive_batchSize', 20),
+        
+        ('train_num_batches', 50000),
+        ('val_freq', 1000),
+        ('naive_full_epochs', 20000),
+        ('naive_full_val_freq', 1000),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'WideResidualNetworkImagenet'),
+        ('wrn_save', pathResults + 'noCoAttnNaiveWRN/fcn.pt7'),
+        ('wrn_load', pathResults + 'noCoAttnNaiveWRN/fcn.pt7'),
+        #('wrn_load', None),
+
+        ('arc_nchannels', 1024),
+        ('arc_attn_type', 'LSTM'),
+        ('arc_save', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
+        #('arc_load', None),
+        ('arc_resume', True),
+
+        ('naive_full_type', 'Naive'),
+        ('naive_full_save_path', pathResults + 'noCoAttnNaiveWRN/context.pt7'),
+        ('naive_full_load_path', pathResults + 'noCoAttnNaiveWRN/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'noCoAttnNaiveWRN/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'noCoAttnNaiveWRN/context_optimizer.pt7'),
+
+        ('use_coAttn', False),
+        ('coAttn_size', (14,14)),
+        ('coAttn_type', 'None'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'noCoAttnNaiveWRN/coAttn.pt7'),
+        ('coattn_save', pathResults + 'noCoAttnNaiveWRN/coAttn.pt7'),
+    ],
+    [  # 9
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'CoAttnNaiveWRN'),
+        ('batchSize', 20),
+        ('naive_batchSize', 20),
+        
+        ('train_num_batches', 50000),
+        ('val_freq', 1000),
+        ('naive_full_epochs', 20000),
+        ('naive_full_val_freq', 1000),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'WideResidualNetworkImagenet'),
+        ('wrn_save', pathResults + 'CoAttnNaiveWRN/fcn.pt7'),
+        ('wrn_load', pathResults + 'CoAttnNaiveWRN/fcn.pt7'),
+        #('wrn_load', None),
+
+        ('arc_nchannels', 320),
+        ('arc_save', pathResults + 'CoAttnNaiveWRN/ARCmodel.pt7'),
+        ('arc_load', pathResults + 'CoAttnNaiveWRN/ARCmodel.pt7'),
+        #('arc_load', None),
+        ('arc_resume', True),
+
+        ('naive_full_type', 'Naive'),
+        ('naive_full_save_path', pathResults + 'CoAttnNaiveWRN/context.pt7'),
+        ('naive_full_load_path', pathResults + 'CoAttnNaiveWRN/context.pt7'),
+        ('naive_full_resume', True),
+
+        ('arc_optimizer_path', pathResults + 'CoAttnNaiveWRN/arc_optimizer.pt7'),
+        ('naive_full_optimizer_path', pathResults + 'CoAttnNaiveWRN/context_optimizer.pt7'),
+
+        ('use_coAttn', True),
+        ('coAttn_size', (14,14)),
+        ('coAttn_type', 'None'),
+        ('coAttn_p', 2),
+        ('coattn_load', pathResults + 'CoAttnNaiveWRN/coAttn.pt7'),
+        ('coattn_save', pathResults + 'CoAttnNaiveWRN/coAttn.pt7'),
+    ],
+
 ]
 
 
@@ -198,6 +417,9 @@ class Options():
 
         # General settings
         parser = argparse.ArgumentParser(description='Wide Residual Networks')
+
+        parser.add_argument('--train_settings', type=int, default=0, help='num of option setting to test.')
+
         parser.add_argument('--train_num_batches', type=int, default=1500000, help='train epochs')
         parser.add_argument('--val_freq', type=int, default=1, help='validation frequency')
         parser.add_argument('--val_num_batches', type=int, default=2, help='validation num batches')

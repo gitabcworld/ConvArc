@@ -10,7 +10,7 @@ class HoGFeature(FeatureBase):
     def __init__(self):
         super(HoGFeature, self).__init__()
         #self.clf = svm.LinearSVC()
-        self.clf = svm.SVC(probability=True)
+        self.clf = svm.SVC(probability=True, gamma='scale')
 
     def extract(self, x):
         fd, hog_image = hog(x, orientations=8, pixels_per_cell=(16, 16),

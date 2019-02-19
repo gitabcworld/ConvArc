@@ -123,8 +123,48 @@ def train(index = 4):
     test_features = np.stack(test_features)
     test_labels = [item for sublist in test_labels for item in sublist]
     preds = objFeatures.predict(test_features)
+    test_features_set1 = test_features
+    test_labels_set1 = test_labels
+    preds_set1 = preds
 
-    show_results(test_labels,preds[:,0],'HoG')
+    show_results(test_labels,preds[:,0],'HoG set1')
+
+    ## Get the set2 and try
+    opt.setType='set2'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+    elif opt.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=None,
+                                        train_std=None)
+    elif opt.datasetName == 'banknote':
+        dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=None,
+                                        train_std=None)
+    else:
+        pass
+    
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
+    ## EXTRACT FEATURES TEST
+    test_features = []
+    test_labels = []
+    for batch_idx, (data, labels) in enumerate(tqdm(test_loader)):
+        # transform batch of data and label tensors to numpy
+        data = data.numpy().transpose(0,2,3,1)
+        labels = labels.numpy().tolist()
+        for i in range(len(data)):
+            features = objFeatures.extract(data[i])
+            test_features.append(features)
+        test_labels.append(labels)
+
+    ## PREDICT
+    test_features = np.stack(test_features)
+    test_labels = [item for sublist in test_labels for item in sublist]
+    preds = objFeatures.predict(test_features)
+    
+    test_features_set2 = test_features
+    test_labels_set2 = test_labels
+    preds_set2 = preds
+    
+    show_results(test_labels,preds[:,0],'HoG set2')
 
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
@@ -133,6 +173,8 @@ def train(index = 4):
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
     #'''
     
+    
+
 
 def main():
     train()

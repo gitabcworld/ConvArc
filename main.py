@@ -68,12 +68,15 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-def train(index = 4):
+def train(index = None):
 
     # change parameters
     opt = Options().parse()
     #opt = Options().parse() if opt is None else opt
-    opt = tranform_options(index, opt)
+    if index is None:
+        opt = tranform_options(opt.train_settings, opt)
+    else:
+        opt = tranform_options(index, opt)
     # use cuda?
     opt.cuda = torch.cuda.is_available()
 
