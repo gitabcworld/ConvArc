@@ -421,10 +421,10 @@ class Options():
         parser.add_argument('--train_settings', type=int, default=0, help='num of option setting to test.')
 
         parser.add_argument('--train_num_batches', type=int, default=1500000, help='train epochs')
-        parser.add_argument('--val_freq', type=int, default=1, help='validation frequency')
-        parser.add_argument('--val_num_batches', type=int, default=2, help='validation num batches')
-        parser.add_argument('--test_num_batches', type=int, default=5, help='test num batches')
-        parser.add_argument('--batchSize', type=int, default=2, help='input batch size')
+        parser.add_argument('--val_freq', type=int, default=1000, help='validation frequency')
+        parser.add_argument('--val_num_batches', type=int, default=250, help='validation num batches')
+        parser.add_argument('--test_num_batches', type=int, default=500, help='test num batches')
+        parser.add_argument('--batchSize', type=int, default=20, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
         parser.add_argument('--nthread', default=7, type=int)
@@ -500,7 +500,7 @@ class Options():
         parser.add_argument('--arc_nchannels', type=int, default=3, help='num inputs channels to discriminator')
         parser.add_argument('--arc_glimpseSize', type=int, default=4, help='the height / width of glimpse seen by ARC')
         parser.add_argument('--arc_numStates', type=int, default=512, help='number of hidden states in ARC controller')
-        parser.add_argument('--arc_numGlimpses',type=int, default=4,
+        parser.add_argument('--arc_numGlimpses',type=int, default=8,
                             help='the number glimpses of each image in pair seen by ARC')
         parser.add_argument('--arc_lr', type=float, default=1e-4, help='learning rate, default=0.0001')
         parser.add_argument('--arc_lr_patience', type=int, default=500000, help='num epochs to check lr stagnation.')
@@ -526,8 +526,8 @@ class Options():
                             help='Num of LSTM layers from the full context model.')
         parser.add_argument('--naive_full_lr', default=3e-4, type=float, help='learning rate, default=0.0001')
         parser.add_argument('--naive_full_lr_patience', default=50000, type=int, help='num epochs to check lr stagnation.')
-        parser.add_argument('--naive_full_epochs', default=2, type=int, help='num epochs training naive/full context')
-        parser.add_argument('--naive_full_val_freq', default=1, type=int, help='n epochs for evaluation dataset '
+        parser.add_argument('--naive_full_epochs', default=50000, type=int, help='num epochs training naive/full context')
+        parser.add_argument('--naive_full_val_freq', default=1000, type=int, help='n epochs for evaluation dataset '
                                                                          'during training')
         # Optimizers
         parser.add_argument('--arc_optimizer_path', default=None, help='arc optimizer path to load/save')
