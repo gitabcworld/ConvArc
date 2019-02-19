@@ -183,7 +183,7 @@ def train(index = None):
     # Load the Co-Attn module
     coAttn = None
     if opt.use_coAttn:
-        coAttn = CoAttn(size = opt.coAttn_size, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
+        coAttn = CoAttn(size = opt.coAttn_size, num_filters=opt.arc_nchannels, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
         if opt.coattn_load is not None and os.path.exists(opt.coattn_load):
             if torch.cuda.is_available():
                 coAttn.load_state_dict(torch.load(opt.coattn_load))
