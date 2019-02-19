@@ -336,7 +336,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'noCoAttnNaiveWRN/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 1024),
+        ('arc_nchannels', 2048),
         ('arc_attn_type', 'LSTM'),
         ('arc_save', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
         ('arc_load', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
@@ -352,7 +352,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'noCoAttnNaiveWRN/context_optimizer.pt7'),
 
         ('use_coAttn', False),
-        ('coAttn_size', (14,14)),
+        ('coAttn_size', (7,7)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'noCoAttnNaiveWRN/coAttn.pt7'),
@@ -379,7 +379,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'CoAttnNaiveWRN/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 320),
+        ('arc_nchannels', 2048),
         ('arc_save', pathResults + 'CoAttnNaiveWRN/ARCmodel.pt7'),
         ('arc_load', pathResults + 'CoAttnNaiveWRN/ARCmodel.pt7'),
         #('arc_load', None),
@@ -394,7 +394,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'CoAttnNaiveWRN/context_optimizer.pt7'),
 
         ('use_coAttn', True),
-        ('coAttn_size', (14,14)),
+        ('coAttn_size', (7,7)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'CoAttnNaiveWRN/coAttn.pt7'),
