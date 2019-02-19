@@ -19,6 +19,7 @@ from wrn.wideResNet_50_2 import WideResNet_50_2
 from wrn.wideResNet import WideResNet
 from customResnet50 import CustomResNet50
 from mobilenetv2 import mobilenetv2
+from peleeNet import peleeNet
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 cudnn.benchmark = True
@@ -693,7 +694,50 @@ class WideResidualNetworkImagenetClassification(ConvCNN_Base):
 ######################################################################
 ######################################################################
 
+# Specialized Class. Wide Residual Networks.
 
+class PeleeNet(ConvCNN_Base):
+
+    def __init__(self, opt):
+
+        super(PeleeNet, self).__init__(opt)
+
+        # Initialize network
+        self.model = peleeNet(pretrained=True)
+
+    def forward(self, x):
+        return self.model.features(x)
+        # ablation: self.model.features[0](x).shape : B, 32, 112, 112
+        # ablation: self.model.features[1](self.model.features[0](x)).shape : B, 16, 112, 112
+
+    class Factory:
+        def create(self,opt): return PeleeNet(opt)
+
+######################################################################
+######################################################################
+######################################################################
+
+class PeleeNetClassification(ConvCNN_Base):
+
+    def __init__(self, opt):
+
+        super(PeleeNetClassification, self).__init__(opt)
+
+        # Initialize network
+        self.model = peleeNet(pretrained=True)
+        self.model.classifier = nn.Linear(704,2, bias=True)
+
+    def forward(self, x):
+        return self.model(x)
+
+    class Factory:
+        def create(self,opt): return PeleeNetClassification(opt)
+
+
+
+######################################################################
+######################################################################
+######################################################################
 
 
 # Generate all name of the factorization classes
