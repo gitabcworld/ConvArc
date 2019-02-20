@@ -143,9 +143,29 @@ class Mobilenetv2(ConvCNN_Base):
         self.model = mobilenetv2(pretrained=True)
 
     def forward(self, x):
-        return self.model.features(x)
-        # ablation: self.model.features[0](x).shape : B, 32, 112, 112
-        # ablation: self.model.features[1](self.model.features[0](x)).shape : B, 16, 112, 112
+        for i in range(14):
+            x = self.model.features[i](x) # torch.Size([40, 96, 14, 14])
+        return x
+        # return self.model.features(x)  # returns B x 320 x 7 x 7
+    
+        # 0 torch.Size([40, 32, 112, 112])
+        # 1 torch.Size([40, 16, 112, 112])
+        # 2 torch.Size([40, 24, 56, 56])
+        # 3 torch.Size([40, 24, 56, 56])
+        # 4 torch.Size([40, 32, 28, 28])
+        # 5 torch.Size([40, 32, 28, 28])
+        # 6 torch.Size([40, 32, 28, 28])
+        # 7 torch.Size([40, 64, 14, 14])
+        # 8 torch.Size([40, 64, 14, 14])
+        # 9 torch.Size([40, 64, 14, 14])
+        # 10 torch.Size([40, 64, 14, 14])
+        # 11 torch.Size([40, 96, 14, 14])
+        # 12 torch.Size([40, 96, 14, 14])
+        # 13 torch.Size([40, 96, 14, 14])
+        # 14 torch.Size([40, 160, 7, 7])
+        # 15 torch.Size([40, 160, 7, 7])
+        # 16 torch.Size([40, 160, 7, 7])
+        # 17 torch.Size([40, 320, 7, 7])
 
     class Factory:
         def create(self,opt): return Mobilenetv2(opt)
@@ -706,9 +726,12 @@ class PeleeNet(ConvCNN_Base):
         self.model = peleeNet(pretrained=True)
 
     def forward(self, x):
-        return self.model.features(x)
-        # ablation: self.model.features[0](x).shape : B, 32, 112, 112
-        # ablation: self.model.features[1](self.model.features[0](x)).shape : B, 16, 112, 112
+        for i in range(9):
+            x = self.model.features[i](x) 
+        return x # returns B x 512 x 14 x 14
+    
+        #def forward(self, x):
+        #    return self.model.features(x) # returns # B x 704 x 7 x 7
 
     class Factory:
         def create(self,opt): return PeleeNet(opt)

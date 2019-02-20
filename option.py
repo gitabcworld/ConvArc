@@ -251,7 +251,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'noCoAttnNaiveMobilenetV2/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 320),
+        ('arc_nchannels', 96),
         ('arc_attn_type', 'LSTM'),
         ('arc_save', pathResults + 'noCoAttnNaiveMobilenetV2/ARCmodel.pt7'),
         ('arc_load', pathResults + 'noCoAttnNaiveMobilenetV2/ARCmodel.pt7'),
@@ -267,7 +267,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'noCoAttnNaiveMobilenetV2/context_optimizer.pt7'),
 
         ('use_coAttn', False),
-        ('coAttn_size', (7,7)),
+        ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'noCoAttnNaiveMobilenetV2/coAttn.pt7'),
@@ -294,7 +294,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'CoAttnNaiveMobilenetV2/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 320),
+        ('arc_nchannels', 96),
         ('arc_save', pathResults + 'CoAttnNaiveMobilenetV2/ARCmodel.pt7'),
         ('arc_load', pathResults + 'CoAttnNaiveMobilenetV2/ARCmodel.pt7'),
         #('arc_load', None),
@@ -309,7 +309,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'CoAttnNaiveMobilenetV2/context_optimizer.pt7'),
 
         ('use_coAttn', True),
-        ('coAttn_size', (7,7)),
+        ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'CoAttnNaiveMobilenetV2/coAttn.pt7'),
@@ -336,7 +336,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'noCoAttnNaiveWRN/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 2048),
+        ('arc_nchannels', 1024),
         ('arc_attn_type', 'LSTM'),
         ('arc_save', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
         ('arc_load', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
@@ -352,7 +352,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'noCoAttnNaiveWRN/context_optimizer.pt7'),
 
         ('use_coAttn', False),
-        ('coAttn_size', (7,7)),
+        ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'noCoAttnNaiveWRN/coAttn.pt7'),
@@ -379,7 +379,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'CoAttnNaiveWRN/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 2048),
+        ('arc_nchannels', 1024),
         ('arc_save', pathResults + 'CoAttnNaiveWRN/ARCmodel.pt7'),
         ('arc_load', pathResults + 'CoAttnNaiveWRN/ARCmodel.pt7'),
         #('arc_load', None),
@@ -394,7 +394,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'CoAttnNaiveWRN/context_optimizer.pt7'),
 
         ('use_coAttn', True),
-        ('coAttn_size', (7,7)),
+        ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'CoAttnNaiveWRN/coAttn.pt7'),
@@ -421,7 +421,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'noCoAttnNaivePeleeNet/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 704),
+        ('arc_nchannels', 512),
         ('arc_save', pathResults + 'noCoAttnNaivePeleeNet/ARCmodel.pt7'),
         ('arc_load', pathResults + 'noCoAttnNaivePeleeNet/ARCmodel.pt7'),
         #('arc_load', None),
@@ -436,7 +436,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'noCoAttnNaivePeleeNet/context_optimizer.pt7'),
 
         ('use_coAttn', False),
-        ('coAttn_size', (7,7)),
+        ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'noCoAttnNaivePeleeNet/coAttn.pt7'),
@@ -463,7 +463,7 @@ lst_parameters_change = [
         ('wrn_load', pathResults + 'CoAttnNaivePeleeNet/fcn.pt7'),
         #('wrn_load', None),
 
-        ('arc_nchannels', 704),
+        ('arc_nchannels', 512),
         ('arc_save', pathResults + 'CoAttnNaivePeleeNet/ARCmodel.pt7'),
         ('arc_load', pathResults + 'CoAttnNaivePeleeNet/ARCmodel.pt7'),
         #('arc_load', None),
@@ -478,7 +478,7 @@ lst_parameters_change = [
         ('naive_full_optimizer_path', pathResults + 'CoAttnNaivePeleeNet/context_optimizer.pt7'),
 
         ('use_coAttn', True),
-        ('coAttn_size', (7,7)),
+        ('coAttn_size', (14,14)),
         ('coAttn_type', 'None'),
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'CoAttnNaivePeleeNet/coAttn.pt7'),
@@ -556,7 +556,7 @@ class Options():
         parser.add_argument('--wrn_width', default=2, help='width of wide Residual Networks.')
         parser.add_argument('--wrn_ngpu', default=1, type=int, help='number of GPUs to use for training.')
         parser.add_argument('--wrn_full', default=False, type=bool, help='apply all groups in Wide Residual Networks.')
-        parser.add_argument('--wrn_groups', default=3, type=int, help='values=[0,1,2,3] Num of groups in WRN.')
+        parser.add_argument('--wrn_groups', default=2, type=int, help='values=[0,1,2,3] Num of groups in WRN.')
         parser.add_argument('--wrn_optim_method', default='SGD', type=str, help='optimizer SGD/ADAM.')
         parser.add_argument('--wrn_lr', default=1e-2, type=float, help='learning rate, default=0.0001')
         parser.add_argument('--wrn_epochs', default=3000, type=int, help='num epochs training wrn')

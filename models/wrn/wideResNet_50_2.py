@@ -88,7 +88,7 @@ class WideResNet_50_2(nn.Module):
             o = group(o, self.params, 'group1', 2, blocks[1])
         if self.num_groups >= 2:
             o = group(o, self.params, 'group2', 2, blocks[2])
-        if self.num_groups >= 2:
+        if self.num_groups >= 3:
             o = group(o, self.params, 'group3', 2, blocks[3])
         if self.num_classes is not None:
             o = F.avg_pool2d(o, o.shape[2], 1, 0)
