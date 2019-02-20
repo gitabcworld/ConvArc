@@ -280,7 +280,7 @@ lst_parameters_change = [
         ('one_shot_n_shot', 1),
 
         ('save', pathResults + 'CoAttnNaiveMobilenetV2'),
-        ('batchSize', 2),
+        ('batchSize', 20),
         ('naive_batchSize', 20),
         
         ('train_num_batches', 50000),
