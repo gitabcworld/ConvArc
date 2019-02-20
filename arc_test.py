@@ -37,7 +37,7 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     # Load the Co-Attn module
     coAttn = None
     if opt.use_coAttn:
-        coAttn = CoAttn(size = opt.coAttn_size, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
+        coAttn = CoAttn(size = opt.coAttn_size, num_filters=opt.arc_nchannels, typeActivation = opt.coAttn_type, p = opt.coAttn_p)
         if torch.cuda.is_available():
             coAttn.load_state_dict(torch.load(opt.coattn_load))
         else:
