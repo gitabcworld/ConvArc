@@ -442,7 +442,7 @@ lst_parameters_change = [
         ('coattn_load', pathResults + 'noCoAttnNaivePeleeNet/coAttn.pt7'),
         ('coattn_save', pathResults + 'noCoAttnNaivePeleeNet/coAttn.pt7'),
     ],
-        [  # 11
+    [  # 11
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
         ('one_shot_n_way', 5),
@@ -483,6 +483,30 @@ lst_parameters_change = [
         ('coAttn_p', 2),
         ('coattn_load', pathResults + 'CoAttnNaivePeleeNet/coAttn.pt7'),
         ('coattn_save', pathResults + 'CoAttnNaivePeleeNet/coAttn.pt7'),
+    ],
+    [  # 12
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Triplet_PeleeNet'),
+        ('batchSize', 20),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 1000),
+        ('val_num_batches', 250),
+        ('test_num_batches', 500),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'PeleeNetClassification'),
+        ('wrn_save', pathResults + 'Triplet_PeleeNet/fcn.pt7'),
+        ('wrn_load', pathResults + 'Triplet_PeleeNet/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Triplet_PeleeNet/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
     ],
 ]
 

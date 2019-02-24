@@ -13,7 +13,7 @@ from models.customResnet50 import CustomResNet50
 import pdb
 
 from option import Options
-from dataset.banknote_pytorch import FullBanknotePairs, FullBanknote, FullBanknoteOneShot
+from dataset.banknote_pytorch import FullBanknotePairs, FullBanknote, FullBanknoteOneShot, FullBanknoteTriplets
 
 torch.utils.data.dataloader.default_collate = (lambda default_collate = torch.utils.data.dataloader.default_collate: \
                                                     lambda batch: batch if all(map(torch.is_tensor, batch)) \
@@ -125,7 +125,7 @@ class banknoteDataLoader():
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0],
                                             size = self.opt.imageSize,  
                                             transform=train_transform, target_transform=None)
-            elif self.type == FullBanknotePairs:
+            elif self.type == FullBanknotePairs or self.type == FullBanknoteTriplets:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0], 
                                             size = self.opt.imageSize, numTrials=self.opt.batchSize,
                                             transform=train_transform, target_transform=None)
@@ -150,7 +150,7 @@ class banknoteDataLoader():
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1], 
                                             size = self.opt.imageSize,  
                                             transform=eval_test_transform, target_transform=None)
-            elif self.type == FullBanknotePairs:
+            elif self.type == FullBanknotePairs or self.type == FullBanknoteTriplets:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1],
                                             size = self.opt.imageSize, numTrials=self.opt.batchSize,
                                             transform=eval_test_transform, target_transform=None)
@@ -173,7 +173,7 @@ class banknoteDataLoader():
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
                                             size = self.opt.imageSize,  
                                             transform=eval_test_transform, target_transform=None)
-            elif self.type == FullBanknotePairs:
+            elif self.type == FullBanknotePairs or self.type == FullBanknoteTriplets:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
                                             size = self.opt.imageSize, numTrials=self.opt.batchSize,
                                             transform=eval_test_transform, target_transform=None)

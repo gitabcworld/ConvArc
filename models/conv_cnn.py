@@ -116,13 +116,31 @@ class ResNet50Classificaton(ConvCNN_Base):
         # two class problem (genuine-counterfeit)
         num_classes = 2
         # Initialize network
-        self.model = self.resnet18 = models.resnet50(pretrained=True)
+        self.model = models.resnet50(pretrained=True)
         #block_expansion = 1 # Resnet 18,34
         block_expansion = 4 # Resnet 50,101,152
         self.model.fc = nn.Linear(512 * block_expansion, num_classes)
 
     def forward(self, x):
         return self.model(x)
+    
+    def forward_features(self,x):
+        x = self.model.conv1(x)
+        x = self.model.bn1(x)
+        x = self.model.relu(x)
+        x = self.model.maxpool(x)
+
+        x = self.model.layer1(x)
+        x = self.model.layer2(x)
+        x = self.model.layer3(x)
+        x = self.model.layer4(x)
+
+        x = self.model.avgpool(x)
+        x = x.view(x.size(0), -1)
+        return x
+    
+    def forward_classifier(self,x):
+        return self.model.fc(x)
 
     class Factory:
         def create(self,opt): return ResNet50Classificaton(opt)
@@ -186,6 +204,17 @@ class Mobilenetv2Classification(ConvCNN_Base):
 
     def forward(self, x):
         return self.model(x)
+
+    def forward_features(self,x):
+        x = self.model.features(x)
+        x = self.model.conv(x)
+        x = self.model.avgpool(x)
+        x = x.view(x.size(0), -1)
+        return x
+    
+    def forward_classifier(self,x):
+        return self.model.classifier(x)
+
 
     class Factory:
         def create(self,opt): return Mobilenetv2Classification(opt)
@@ -707,6 +736,22 @@ class WideResidualNetworkImagenetClassification(ConvCNN_Base):
     def forward(self, x):
         return self.model.forward(x)
 
+    def forward_features(self, x):
+        old_state_num_classes = self.model.num_classes
+        # Set the num classes to None
+        self.model.num_classes = None
+        x = self.model.forward(x)
+        self.model.num_classes = old_state_num_classes
+        return x
+
+    def forward_classifier(self, x):
+        # Execute only the classifier
+        x = F.avg_pool2d(x, x.shape[2], 1, 0)
+        x = x.view(x.size(0), -1)
+        x = F.linear(x, self.model.params['fc_weight'], self.model.params['fc_bias'])
+        return x
+
+
     class Factory:
         def create(self,opt): return WideResidualNetworkImagenetClassification(opt)
 
@@ -752,6 +797,19 @@ class PeleeNetClassification(ConvCNN_Base):
 
     def forward(self, x):
         return self.model(x)
+
+    def forward_features(self, x):
+        x = self.model.features(x)
+        x = F.avg_pool2d(x, kernel_size=(x.size(2), x.size(3))).view(x.size(0), -1)
+        if self.model.drop_rate > 0:
+            x = F.dropout(x, p=self.model.drop_rate, training=self.model.training)
+        return x
+
+    def forward_classifier(self, x):
+        # Execute only the classifier
+        x = self.model.classifier(x)
+        return x
+
 
     class Factory:
         def create(self,opt): return PeleeNetClassification(opt)

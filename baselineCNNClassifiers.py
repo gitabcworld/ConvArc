@@ -54,7 +54,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-def train(index = 4):
+def train(index = None):
 
     # change parameters
     opt = Options().parse()
@@ -194,11 +194,28 @@ def train(index = 4):
 
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
-    print ('[%s] ... Testing' % multiprocessing.current_process().name)
+    print ('[%s] ... Testing Set1' % multiprocessing.current_process().name)
     test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
     #'''
 
+    ## Get the set2 and try
+    print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)
+    opt.setType='set2'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+    elif opt.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=None,
+                                        train_std=None)
+    elif opt.datasetName == 'banknote':
+        dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=None,
+                                        train_std=None)
+    else:
+        pass
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
+    print ('[%s] ... Testing Set2' % multiprocessing.current_process().name)
+    test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+    print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
 def main():
     train()

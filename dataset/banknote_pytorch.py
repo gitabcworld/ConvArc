@@ -424,6 +424,92 @@ class FullBanknotePairs(BanknoteBase):
         return self.nImages
 
 
+class FullBanknoteTriplets(BanknoteBase):
+
+    def __init__(self, setType, root, train='train', size = None, numTrials = 1500,
+                     transform=None, target_transform=None):
+        BanknoteBase.__init__(self, setType, root, train, size,
+                                    transform, target_transform)
+        self.numTrials = numTrials
+
+    def generate_triplet(self):
+        if np.random.rand(1) > 0.5: # Generate a triplet that the negative is counterfeit
+            modelsWithCounterfeit = list(self.counterfeitModels.keys())
+            model_counterfeit = np.random.choice(modelsWithCounterfeit, 1)[0]
+            idx_positive_class_genuine = np.array(range(len(self.data[model_counterfeit]['labels'])))[np.array(self.data[model_counterfeit]['labels'])==1]
+            idx_positive_class_counterfeit = np.array(range(len(self.data[model_counterfeit]['labels'])))[np.array(self.data[model_counterfeit]['labels'])==0]
+            data_idx = [(model_counterfeit,np.random.choice(idx_positive_class_genuine,1)[0]), # positive
+                        (model_counterfeit,np.random.choice(idx_positive_class_genuine,1)[0]), # anchor
+                        (model_counterfeit,np.random.choice(idx_positive_class_counterfeit,1)[0])] # negative
+        else:   # Generate a triplet where the negative comes from a different class.
+            modelsWithGenuine = list(self.data.keys())
+            models_selected = np.random.choice(modelsWithGenuine, 2, replace=False)
+            idx_class1_genuine = np.array(range(len(self.data[models_selected[0]]['labels'])))[np.array(self.data[models_selected[0]]['labels'])==1]
+            idx_class2_genuine = np.array(range(len(self.data[models_selected[1]]['labels'])))[np.array(self.data[models_selected[1]]['labels'])==1]
+            data_idx = [(models_selected[0], np.random.choice(idx_class1_genuine,1)[0]), # positive
+                        (models_selected[0], np.random.choice(idx_class1_genuine,1)[0]), # anchor
+                        (models_selected[1], np.random.choice(idx_class2_genuine,1)[0])] # negative
+        return data_idx
+
+    def __getitem__(self, index):
+
+        (model1,idx1),(model2,idx2),(model3,idx3) = self.generate_triplet()
+        path1 = self.data[model1]['inputs'][idx1]
+        path1 = path1[0] if type(path1) == np.ndarray else path1
+        path2 = self.data[model2]['inputs'][idx2]
+        path2 = path2[0] if type(path2) == np.ndarray else path2
+        path3 = self.data[model3]['inputs'][idx3]
+        path3 = path3[0] if type(path3) == np.ndarray else path3
+        target1 = self.data[model1]['labels'][idx1]
+        target1 = target1[0] if type(target1) == np.ndarray else target1
+        target2 = self.data[model2]['labels'][idx2]
+        target2 = target2[0] if type(target2) == np.ndarray else target2
+        target3 = self.data[model3]['labels'][idx3]
+        target3 = target3[0] if type(target3) == np.ndarray else target3
+
+        # Positive img. 
+        img1 = self.load_img(path=path1, info_dpi= self.data[model1]['sizes'][idx1] , size=self.size)
+        img1 = pil_image.fromarray(np.uint8(img1))
+        
+        # Anchor img.
+        img2 = self.load_img(path=path2, info_dpi= self.data[model2]['sizes'][idx2] , size=self.size)
+        img2 = pil_image.fromarray(np.uint8(img2))        
+
+        # Negative img.
+        img3 = self.load_img(path=path3, info_dpi= self.data[model3]['sizes'][idx3] , size=self.size)
+        img3 = pil_image.fromarray(np.uint8(img3))        
+
+        if self.transform is not None:
+            # Make the same transformation
+            rand_number = int(np.random.uniform()*1000)
+            self.makeDeterministicTransforms(seed=rand_number)
+            img1 = self.transform(img1)
+            self.makeDeterministicTransforms(seed=rand_number)
+            img2 = self.transform(img2)
+            self.makeDeterministicTransforms(seed=rand_number)
+            img3 = self.transform(img3)
+            self.resetDeterministicTransforms()
+            # Case the FCN is done inside the DataLoader
+            if len(img1.shape)>3:
+                img1 = img1[0]
+                img2 = img2[0]
+                img3 = img3[3]
+
+        if self.target_transform is not None:
+            target1 = self.target_transform(target1)
+            target2 = self.target_transform(target2)
+            target3 = self.target_transform(target3)
+
+        ret_data = torch.stack((img1,img2,img3))
+        labels = (model1, target1, model2, target2, model3, target3)
+
+        return ret_data, labels
+
+    def __len__(self):
+        return self.numTrials
+
+
+
 class FullBanknoteOneShot(BanknoteBase):
 
     def __init__(self, setType, root, train='train',
