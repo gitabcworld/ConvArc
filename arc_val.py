@@ -43,7 +43,9 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
     val_loss_epoch = []
     start_time = datetime.now()
     while val_epoch < opt.val_num_batches:
-        val_epoch += 1
+
+        val_loader.dataset.set_path_tmp_epoch_iteration(epoch=epoch,iteration=val_epoch)
+
         if opt.apply_wrn:
             val_acc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                             discriminator=discriminator,
@@ -55,6 +57,12 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
                                             data_loader=val_loader, coAttn=coAttn)
         val_acc_epoch.append(np.mean(val_acc))
         val_loss_epoch.append(np.mean(val_loss))
+
+        # remove data repetition
+        val_loader.dataset.remove_path_tmp_epoch(epoch=epoch,iteration=val_epoch)
+
+        val_epoch += 1
+
     time_elapsed = datetime.now() - start_time
     val_acc_epoch = np.mean(val_acc_epoch)
     val_loss_epoch = np.mean(val_loss_epoch)
@@ -85,6 +93,9 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         best_validation_loss = val_loss_epoch
         best_accuracy = val_acc_epoch
         is_model_saved = True
+
+    # remove the data from the epoch
+    val_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
     return val_acc_epoch, val_loss_epoch, is_model_saved
 

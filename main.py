@@ -59,7 +59,7 @@ import context_val
 import context_test
 
 import multiprocessing
-
+import ntpath
 import cv2
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -68,15 +68,182 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 #os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-def train(index = None):
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
 
-    # change parameters
-    opt = Options().parse()
-    #opt = Options().parse() if opt is None else opt
-    if index is None:
-        opt = tranform_options(opt.train_settings, opt)
+def data_generation(opt):
+
+    # use cuda?
+    opt.cuda = torch.cuda.is_available()
+    cudnn.benchmark = True # set True to speedup
+
+    # Load mean/std if exists
+    train_mean = None
+    train_std = None
+    if os.path.exists(os.path.join(opt.save, 'mean.npy')):
+        train_mean = np.load(os.path.join(opt.save, 'mean.npy'))
+        train_std = np.load(os.path.join(opt.save, 'std.npy'))
+
+    # Load Dataset
+    opt.setType='set1'
+    dataLoader = banknoteDataLoader(type=FullBanknotePairs, opt=opt, fcn=None, train_mean=train_mean,
+                                    train_std=train_std)
+
+    # Use the same seed to split the train - val - test
+    if os.path.exists(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy')):
+        rnd_seed = np.load(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy'))
+    else:    
+        rnd_seed = np.random.randint(0, 100000)
+        np.save(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy'), rnd_seed)
+
+    # Get the DataLoaders from train - val - test
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed)
+
+    train_mean = dataLoader.train_mean
+    train_std = dataLoader.train_std
+    if not os.path.exists(os.path.join(opt.save, 'mean.npy')):
+        np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
+        np.save(os.path.join(opt.save, 'std.npy'), train_std)
+    
+    epoch = 0
+    if opt.arc_resume == True or opt.arc_load is None:    
+        try:
+            while epoch < opt.train_num_batches:
+
+                # wait to check if it is neede more data
+                lst_epochs = train_loader.dataset.getFolderEpochList()
+                if len(lst_epochs) > 50:
+                    time.sleep(10)
+                
+                # In case there is more than one generator.
+                # get the last folder epoch executed and update the epoch accordingly
+                if len(lst_epochs)>0:
+                    epoch = np.array([path_leaf(str).split('_')[-1] for str in lst_epochs if 'train' in str]).astype(np.int).max()
+                
+                epoch += 1
+
+                ## set information of the epoch in the dataloader
+                repetitions = 1
+                start_time = datetime.now()
+                for repetition in range(repetitions):
+                    train_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
+                    for batch_idx, (data, label) in enumerate(train_loader):
+                        noop = 0
+                time_elapsed = datetime.now() - start_time
+                print ("[train]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+
+                if epoch % opt.val_freq == 0:
+
+                    repetitions = opt.val_num_batches
+                    start_time = datetime.now()
+                    for repetition in range(repetitions):
+                        val_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
+                        for batch_idx, (data, label) in enumerate(val_loader):
+                            noop = 0
+                    time_elapsed = datetime.now() - start_time
+                    print ("[val]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+
+                    repetitions = opt.test_num_batches
+                    start_time = datetime.now()
+                    for repetition in range(repetitions):
+                        test_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
+                        for batch_idx, (data, label) in enumerate(test_loader):
+                            noop = 0
+                    time_elapsed = datetime.now() - start_time
+                    print ("[test]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+                
+                epoch += 1
+
+            print ("[%s] ... generating data done" % multiprocessing.current_process().name)
+
+        except KeyboardInterrupt:
+            pass
+
+    print ('###########################################')
+    print ('.... Starting Context Data Generation ....')
+    print ('###########################################')
+
+    # Set the new batchSize as in the ARC code.
+    opt.__dict__['batchSize'] = opt.naive_batchSize
+    # Change the path_tmp_data to point to one_shot
+    opt.path_tmp_data = opt.path_tmp_data.replace('/data/','/data_one_shot/')
+
+    # Load the dataset
+    opt.setType='set1'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenetOneShot, opt=opt, fcn=None)
+    elif opt.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=OmniglotOneShot, opt=opt, fcn=None, train_mean=train_mean,
+                                      train_std=train_std)
+    elif opt.datasetName == 'banknote':
+        dataLoader = banknoteDataLoader(type=FullBanknoteOneShot, opt=opt, fcn=None, 
+                                            train_mean=train_mean, train_std=train_std)
     else:
-        opt = tranform_options(index, opt)
+        pass
+
+    # Get the DataLoaders from train - val - test
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed)
+
+    epoch = 0
+    try:
+        while epoch < opt.naive_full_epochs:
+
+            # wait to check if it is neede more data
+            lst_epochs = train_loader.dataset.getFolderEpochList()
+            if len(lst_epochs) > 50:
+                time.sleep(10)
+            
+            # In case there is more than one generator.
+            # get the last folder epoch executed and update the epoch accordingly
+            if len(lst_epochs)>0:
+                epoch = np.array([path_leaf(str).split('_')[-1] for str in lst_epochs if 'train' in str]).astype(np.int).max()
+            
+            epoch += 1
+
+            ## set information of the epoch in the dataloader
+            repetitions = 1
+            start_time = datetime.now()
+            for repetition in range(repetitions):
+                train_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
+                for batch_idx, (data, label) in enumerate(train_loader):
+                    noop = 0
+            time_elapsed = datetime.now() - start_time
+            print ("[train]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+
+            if epoch % opt.naive_full_val_freq == 0:
+
+                repetitions = opt.val_num_batches
+                start_time = datetime.now()
+                for repetition in range(repetitions):
+                    val_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
+                    for batch_idx, (data, label) in enumerate(val_loader):
+                        noop = 0
+                time_elapsed = datetime.now() - start_time
+                print ("[val]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+
+                repetitions = opt.test_num_batches
+                start_time = datetime.now()
+                for repetition in range(repetitions):
+                    test_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
+                    for batch_idx, (data, label) in enumerate(test_loader):
+                        noop = 0
+                time_elapsed = datetime.now() - start_time
+                print ("[test]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+            
+            epoch += 1
+
+        print ("[%s] ... generating data done" % multiprocessing.current_process().name)
+
+    except KeyboardInterrupt:
+        pass
+
+    ###################################
+
+
+
+def server_processing(opt):
+
     # use cuda?
     opt.cuda = torch.cuda.is_available()
 
@@ -257,8 +424,13 @@ def train(index = None):
 
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
+
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
+    # for the final testing set the data loader to generator
+    test_loader.dataset.mode = 'generator'
+    test_loader.dataset.remove_path_tmp_epoch(epoch)
     test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+    test_loader.dataset.mode = 'processor'
     #'''
 
     ###########################################
@@ -413,6 +585,21 @@ def train(index = None):
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
     test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn=fcn, coAttn=coAttn)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
+
+
+
+def train(index = None):
+
+    # change parameters
+    opt = Options().parse()
+    #opt = Options().parse() if opt is None else opt
+    opt = tranform_options(index, opt)
+    if opt.mode == 'generator':
+        print('Starting generator...')
+        data_generation(opt)
+    else:
+        print('Starting processor...')
+        server_processing(opt)  
 
 def main():
     train()

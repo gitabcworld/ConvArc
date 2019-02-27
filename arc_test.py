@@ -51,7 +51,9 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     test_epoch = 0
     test_acc_epoch = []
     while test_epoch < opt.test_num_batches:
-        test_epoch += 1
+
+        test_loader.dataset.set_path_tmp_epoch_iteration(epoch=epoch,iteration=test_epoch)
+
         if opt.apply_wrn:
             test_acc, test_loss = epoch_fn(opt=opt, loss_fn=None,
                                                discriminator=discriminator,
@@ -62,6 +64,12 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
                                                discriminator=discriminator,
                                                data_loader=test_loader, coAttn=coAttn)
         test_acc_epoch.append(np.mean(test_acc))
+
+        test_loader.dataset.remove_path_tmp_epoch(epoch=epoch,iteration=test_epoch)
+
+        test_epoch += 1
+
+    test_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
     time_elapsed = datetime.now() - start_time
     test_acc_epoch = np.mean(test_acc_epoch)

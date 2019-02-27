@@ -159,6 +159,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'noCoAttnNaiveResnet50/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'ResNet50'),
@@ -202,6 +203,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'CoAttnNaiveResnet50/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'ResNet50'),
@@ -244,6 +246,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'noCoAttnNaiveMobilenetV2/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'Mobilenetv2'),
@@ -287,6 +290,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'CoAttnNaiveMobilenetV2/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'Mobilenetv2'),
@@ -329,6 +333,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'noCoAttnNaiveWRN/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'WideResidualNetworkImagenet'),
@@ -342,6 +347,7 @@ lst_parameters_change = [
         ('arc_load', pathResults + 'noCoAttnNaiveWRN/ARCmodel.pt7'),
         #('arc_load', None),
         ('arc_resume', True),
+        #('arc_resume', False),
 
         ('naive_full_type', 'Naive'),
         ('naive_full_save_path', pathResults + 'noCoAttnNaiveWRN/context.pt7'),
@@ -372,6 +378,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'WideResidualNetworkImagenet/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'WideResidualNetworkImagenet'),
@@ -414,6 +421,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'noCoAttnNaivePeleeNet/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'PeleeNet'),
@@ -456,6 +464,7 @@ lst_parameters_change = [
         ('val_freq', 1000),
         ('naive_full_epochs', 20000),
         ('naive_full_val_freq', 1000),
+        ('path_tmp_data', pathResults + 'CoAttnNaivePeleeNet/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'PeleeNet'),
@@ -493,10 +502,14 @@ lst_parameters_change = [
         ('save', pathResults + 'Triplet_PeleeNet'),
         ('batchSize', 20),
 
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
+
         ('train_num_batches', 10000),
         ('val_freq', 1000),
         ('val_num_batches', 250),
         ('test_num_batches', 500),
+        ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
 
         ('apply_wrn', True),
         ('wrn_name_type', 'PeleeNetClassification'),
@@ -508,10 +521,40 @@ lst_parameters_change = [
 
         ('use_coAttn', False),
     ],
+    [  # 13
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Siamese_PeleeNet'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 1000),
+        ('val_num_batches', 250),
+        ('test_num_batches', 500),
+        ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'PeleeNetClassification'),
+        ('wrn_save', pathResults + 'Siamese_PeleeNet/fcn.pt7'),
+        ('wrn_load', pathResults + 'Siamese_PeleeNet/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Siamese_PeleeNet/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
 ]
 
 
 def tranform_options(index, options):
+    if index is None:
+        index = options.train_settings
     params = lst_parameters_change[index]
     # New parameters
     for name_params, val_params in params:
@@ -529,12 +572,12 @@ class Options():
 
         parser.add_argument('--train_num_batches', type=int, default=1500000, help='train epochs')
         parser.add_argument('--val_freq', type=int, default=1000, help='validation frequency')
-        parser.add_argument('--val_num_batches', type=int, default=250, help='validation num batches')
-        parser.add_argument('--test_num_batches', type=int, default=500, help='test num batches')
+        parser.add_argument('--val_num_batches', type=int, default=2, help='validation num batches')
+        parser.add_argument('--test_num_batches', type=int, default=5, help='test num batches')
         parser.add_argument('--batchSize', type=int, default=20, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
-        parser.add_argument('--nthread', default=7, type=int)
+        parser.add_argument('--nthread', default=4, type=int)
         parser.add_argument('--dropout', default=0.1, type=float, help='Dropout for training. Done in the input'
                                                                        'in the case of ARC and in the residual block'
                                                                        'in the case of CARC.')
@@ -550,6 +593,9 @@ class Options():
         parser.add_argument('--partitionType', default='30_10_10', type=str,
                             help='default: 30_10_10')
         parser.add_argument('--reduced_dataset', default=False, type=bool)
+        parser.add_argument('--mode', default='generator', type=str)
+        parser.add_argument('--path_tmp_data', default=pathResults + '/data', type=str)
+
         # Dataset specific banknote
         parser.add_argument('--datasetBanknoteOneShotSameClass', default=False, type=bool, help='Only uses one class to do the OneShot')
 

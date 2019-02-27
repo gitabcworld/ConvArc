@@ -31,6 +31,8 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
         if opt.cuda:
             coAttn.cuda()
 
+    train_loader.dataset.set_path_tmp_epoch_iteration(epoch=epoch,iteration=0)
+
     if opt.apply_wrn:
         train_acc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,
                                                         discriminator=discriminator,
@@ -52,6 +54,10 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
     logger.log_value('arc_train_acc', train_acc_epoch)
 
     assert np.isnan(train_loss_epoch) == False, 'ERROR. Found NAN in train_ARC.'
+
+    # Remove data from the epoch
+    train_loader.dataset.remove_path_tmp_epoch(epoch=epoch,iteration=0)
+    train_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
     # Reduce learning rate when a metric has stopped improving
     logger.log_value('train_lr', [param_group['lr'] for param_group in optimizer.param_groups][0])

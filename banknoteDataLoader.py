@@ -15,9 +15,9 @@ import pdb
 from option import Options
 from dataset.banknote_pytorch import FullBanknotePairs, FullBanknote, FullBanknoteOneShot, FullBanknoteTriplets
 
-torch.utils.data.dataloader.default_collate = (lambda default_collate = torch.utils.data.dataloader.default_collate: \
-                                                    lambda batch: batch if all(map(torch.is_tensor, batch)) \
-                                                    and any([tensor.size() != batch[0].size() for tensor in batch]) else default_collate(batch))()
+#torch.utils.data.dataloader.default_collate = (lambda default_collate = torch.utils.data.dataloader.default_collate: \
+#                                                    lambda batch: batch if all(map(torch.is_tensor, batch)) \
+#                                                    and any([tensor.size() != batch[0].size() for tensor in batch]) else default_collate(batch))()
 
 class banknoteDataLoader():
     def __init__(self,type=FullBanknotePairs, opt=Options().parse(), fcn = None, train_mean=None, train_std=None):
@@ -76,7 +76,8 @@ class banknoteDataLoader():
             train_loader_mean_std = torch.utils.data.DataLoader(
                 FullBanknote(setType=self.opt.setType, root=self.opt.dataroot, train='train', size = self.opt.imageSize,
                                     transform=train_transform, target_transform=None),
-                batch_size=self.opt.batchSize, shuffle=True, collate_fn = torch.utils.data.dataloader.default_collate, **kwargs)
+                #batch_size=self.opt.batchSize, shuffle=True, collate_fn = torch.utils.data.dataloader.default_collate, **kwargs)
+                batch_size=self.opt.batchSize, shuffle=True, **kwargs)
         
 
         print('Calculate mean and std for training set....')
@@ -115,8 +116,12 @@ class banknoteDataLoader():
             self.train_mean = train_mean
             self.train_std = train_std
 
-        kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
-        #kwargs = {}
+        #kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
+        if self.opt.cuda:
+            kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True}    
+        else:
+            kwargs = {'num_workers': self.opt.nthread}
+            #kwargs = {}
 
         train_transform = transforms.Compose(self.getlstTransforms(train = 'train'))
 
@@ -128,11 +133,13 @@ class banknoteDataLoader():
             elif self.type == FullBanknotePairs or self.type == FullBanknoteTriplets:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0], 
                                             size = self.opt.imageSize, numTrials=self.opt.batchSize,
+                                            mode = self.opt.mode, path_tmp_data = self.opt.path_tmp_data,
                                             transform=train_transform, target_transform=None)
             elif self.type == FullBanknoteOneShot:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[0], 
                                             size = self.opt.imageSize,  
                                             transform=train_transform, target_transform=None,
+                                            mode = self.opt.mode, path_tmp_data = self.opt.path_tmp_data,
                                             sameClass = self.opt.datasetBanknoteOneShotSameClass,
                                             n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                             numTrials=self.opt.batchSize)
@@ -153,11 +160,13 @@ class banknoteDataLoader():
             elif self.type == FullBanknotePairs or self.type == FullBanknoteTriplets:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1],
                                             size = self.opt.imageSize, numTrials=self.opt.batchSize,
+                                            mode = self.opt.mode, path_tmp_data = self.opt.path_tmp_data,
                                             transform=eval_test_transform, target_transform=None)
             elif self.type == FullBanknoteOneShot:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[1],
                                             size = self.opt.imageSize,  
                                             transform=train_transform, target_transform=None,
+                                            mode = self.opt.mode, path_tmp_data = self.opt.path_tmp_data,
                                             sameClass = self.opt.datasetBanknoteOneShotSameClass,
                                             n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                             numTrials=self.opt.batchSize)
@@ -176,11 +185,13 @@ class banknoteDataLoader():
             elif self.type == FullBanknotePairs or self.type == FullBanknoteTriplets:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
                                             size = self.opt.imageSize, numTrials=self.opt.batchSize,
+                                            mode = self.opt.mode, path_tmp_data = self.opt.path_tmp_data,
                                             transform=eval_test_transform, target_transform=None)
             elif self.type == FullBanknoteOneShot:
                 datasetParams = self.type(setType=self.opt.setType, root=self.opt.dataroot, train=dataPartition[2],
                                             size = self.opt.imageSize,  
                                             transform=train_transform, target_transform=None,
+                                            mode = self.opt.mode, path_tmp_data = self.opt.path_tmp_data,
                                             sameClass = self.opt.datasetBanknoteOneShotSameClass,
                                             n_way = self.opt.one_shot_n_way, n_shot = self.opt.one_shot_n_shot,
                                             numTrials=self.opt.batchSize)

@@ -19,10 +19,15 @@ import torchvision.transforms as transforms
 import torch
 from PIL import Image as pil_image
 import pdb
+import h5py
+import yaml
+import time
+import shutil
 
 class BanknoteBase(data.Dataset):
 
     def __init__(self, setType='set1', root='./banknote', train='train', size = None, 
+                mode = 'generator', path_tmp_data = os.path.join(os.path.dirname(os.path.abspath(__file__)),'../tmp_data/'),
                 transform=None, target_transform=None):
 
         self.root = root
@@ -32,6 +37,15 @@ class BanknoteBase(data.Dataset):
         self.size = size
         self.setType = setType
         partition = 0
+
+        # create the structure for generator / processor 
+        self.mode = mode
+        self.path_temp = path_tmp_data
+        self.path_temp = os.path.join(self.path_temp,train)
+        if not os.path.exists(self.path_temp):
+            os.makedirs(self.path_temp)
+        self.path_temp_epoch = os.path.join(self.path_temp,'epoch_0')
+        ##
 
         path_info_file_partition = os.path.join(self.root,'tmp/data_minres_400_partition_'+ str(partition) + '_' + setType + '.yaml')
         # check if exists already the dataset in YAML format
@@ -255,6 +269,25 @@ class BanknoteBase(data.Dataset):
         np.random.seed(None)
         random.seed(None)
 
+    def getFolderEpochList(self):
+        d = self.path_temp
+        return [os.path.join(d, o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
+
+    def set_path_tmp_epoch_iteration(self, epoch, iteration):
+        self.path_temp_epoch = os.path.join(self.path_temp,'epoch_'+str(epoch))
+        self.path_temp_epoch = os.path.join(self.path_temp_epoch,'iteration_'+str(iteration))
+        if self.mode == 'generator':
+            if not os.path.exists(self.path_temp_epoch):
+                os.makedirs(self.path_temp_epoch)
+
+    def remove_path_tmp_epoch(self, epoch, iteration=None):
+        self.path_temp_epoch = os.path.join(self.path_temp,'epoch_'+str(epoch))
+        if not(iteration is None):
+            self.path_temp_epoch = os.path.join(self.path_temp_epoch,'iteration_'+str(iteration))
+        if os.path.isdir(self.path_temp_epoch):
+	        shutil.rmtree(self.path_temp_epoch)
+
+
     def __getitem__(self, index):
         pass
 
@@ -264,8 +297,11 @@ class BanknoteBase(data.Dataset):
 class FullBanknote(BanknoteBase):
 
     def __init__(self, setType, root, train='train',  size = None,
-                     transform=None, target_transform=None):
-        BanknoteBase.__init__(self, setType, root, train, size, transform, target_transform)
+                    mode = 'generator', path_tmp_data = os.path.join(os.path.dirname(os.path.abspath(__file__)),'../tmp_data/'),
+                    transform=None, target_transform=None):
+        BanknoteBase.__init__(self, setType, root, train, size, 
+                                mode, path_tmp_data,
+                                transform, target_transform)
         
     def __getitem__(self, index):
 
@@ -313,8 +349,10 @@ params:
 class FullBanknotePairs(BanknoteBase):
 
     def __init__(self, setType, root, train='train', size = None, numTrials = 1500,
-                     transform=None, target_transform=None):
+                        mode = 'generator', path_tmp_data = os.path.join(os.path.dirname(os.path.abspath(__file__)),'../tmp_data/'),
+                        transform=None, target_transform=None):
         BanknoteBase.__init__(self, setType, root, train, size,
+                                    mode, path_tmp_data,
                                     transform, target_transform)
         self.numTrials = numTrials
         self.percentagePairs = [0.5,0.25,0.25]
@@ -375,45 +413,101 @@ class FullBanknotePairs(BanknoteBase):
 
     def __getitem__(self, index):
 
-        #for index in range(self.nImages):
-        #    print('index: %d.' % index)
-        (model1,idx1),(model2,idx2) = self.data_idx[index]
-        path1 = self.data[model1]['inputs'][idx1]
-        path1 = path1[0] if type(path1) == np.ndarray else path1
-        path2 = self.data[model2]['inputs'][idx2]
-        path2 = path2[0] if type(path2) == np.ndarray else path2
-        target1 = self.data[model1]['labels'][idx1]
-        target1 = target1[0] if type(target1) == np.ndarray else target1
-        target2 = self.data[model2]['labels'][idx2]
-        target2 = target2[0] if type(target2) == np.ndarray else target2
+        # load images and create a hdf5 package file and a txt file for syncronization.
+        path_sync = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_synchro.yaml')
+        path_data = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_data.hdf5')
+        path_labels = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_labels.yaml')
 
-        # If we have paths in self.data then load the image
-        img1 = self.load_img(path=path1, info_dpi= self.data[model1]['sizes'][idx1] , size=self.size)
-        img1 = pil_image.fromarray(np.uint8(img1))
-        
-        # If we have paths in self.data then load the image
-        img2 = self.load_img(path=path2, info_dpi= self.data[model2]['sizes'][idx2] , size=self.size)
-        img2 = pil_image.fromarray(np.uint8(img2))        
+        if self.mode == 'generator':
 
-        if self.transform is not None:
-            # Make the same transformation
-            rand_number = int(np.random.uniform()*1000)
-            self.makeDeterministicTransforms(seed=rand_number)
-            img1 = self.transform(img1)
-            self.makeDeterministicTransforms(seed=rand_number)
-            img2 = self.transform(img2)
-            self.resetDeterministicTransforms()
-            # Case the FCN is done inside the DataLoader
-            if len(img1.shape)>3:
-                img1 = img1[0]
-                img2 = img2[0]
+            # wait until the file has been deleted
+            #while os.path.exists(path_sync):
+            #    time.sleep(0.5)
 
-        if self.target_transform is not None:
-            target1 = self.target_transform(target1)
-            target2 = self.target_transform(target2)
+            #for index in range(self.nImages):
+            #    print('index: %d.' % index)
+            (model1,idx1),(model2,idx2) = self.data_idx[index]
+            path1 = self.data[model1]['inputs'][idx1]
+            path1 = path1[0] if type(path1) == np.ndarray else path1
+            path2 = self.data[model2]['inputs'][idx2]
+            path2 = path2[0] if type(path2) == np.ndarray else path2
+            target1 = self.data[model1]['labels'][idx1]
+            target1 = target1[0] if type(target1) == np.ndarray else target1
+            target2 = self.data[model2]['labels'][idx2]
+            target2 = target2[0] if type(target2) == np.ndarray else target2
 
-        ret_data = torch.stack((img1,img2))
-        labels = (model1, target1, model2, target2)
+            # If we have paths in self.data then load the image
+            img1 = self.load_img(path=path1, info_dpi= self.data[model1]['sizes'][idx1] , size=self.size)
+            img1 = pil_image.fromarray(np.uint8(img1))
+            
+            # If we have paths in self.data then load the image
+            img2 = self.load_img(path=path2, info_dpi= self.data[model2]['sizes'][idx2] , size=self.size)
+            img2 = pil_image.fromarray(np.uint8(img2))        
+
+            if self.transform is not None:
+                # Make the same transformation
+                rand_number = int(np.random.uniform()*1000)
+                self.makeDeterministicTransforms(seed=rand_number)
+                img1 = self.transform(img1)
+                self.makeDeterministicTransforms(seed=rand_number)
+                img2 = self.transform(img2)
+                self.resetDeterministicTransforms()
+                # Case the FCN is done inside the DataLoader
+                if len(img1.shape)>3:
+                    img1 = img1[0]
+                    img2 = img2[0]
+
+            if self.target_transform is not None:
+                target1 = self.target_transform(target1)
+                target2 = self.target_transform(target2)
+
+            ret_data = torch.stack((img1,img2))
+            labels = (model1, target1, model2, target2)
+
+            # Save the data information
+            hf = h5py.File(path_data,'w')
+            hf.create_dataset('batch_' + str(index), data=ret_data.numpy())
+            hf.close()
+            # Save the label information
+            with open(path_labels, 'w') as outfile:
+                labels_dict = {}
+                labels_dict['model1'] = model1
+                labels_dict['target1'] = target1
+                labels_dict['model2'] = model2
+                labels_dict['target2'] = target2
+                yaml.dump(labels_dict, outfile, default_flow_style=False)
+            # save the control synchronization file
+            with open(path_sync, 'w') as outfile:
+                noop_dict = {}
+                noop_dict['info'] = 'ready'
+                yaml.dump(noop_dict, outfile, default_flow_style=False)
+
+        if self.mode == 'processor':
+
+            while not os.path.exists(path_sync):
+                time.sleep(0.5)
+
+            if os.path.isfile(path_data):
+                hf = h5py.File(path_data, 'r')
+                data = hf.get('batch_' + str(index))
+                ret_data = torch.from_numpy(np.array(data))
+                hf.close()
+            else:
+                raise ValueError("%s isn't a file!" % path_data)
+            
+            if os.path.isfile(path_labels):
+                y = yaml.load(open(path_labels))
+                labels = (y['model1'], y['target1'], y['model2'], y['target2'])
+                model1, target1, model2, target2 = labels
+            else:
+                raise ValueError("%s isn't a file!" % path_labels)
+
+            # Remove the files
+            os.remove(path_sync)
+            os.remove(path_data)
+            os.remove(path_labels)
+
+
         isSimilar = False
         if model1 == model2 and target1 == target2:
             isSimilar = True
@@ -426,9 +520,11 @@ class FullBanknotePairs(BanknoteBase):
 
 class FullBanknoteTriplets(BanknoteBase):
 
-    def __init__(self, setType, root, train='train', size = None, numTrials = 1500,
+    def __init__(self, setType, root, train='train', size = None, numTrials = 1500, 
+                     mode = 'generator', path_tmp_data = os.path.join(os.path.dirname(os.path.abspath(__file__)),'../tmp_data/'),
                      transform=None, target_transform=None):
-        BanknoteBase.__init__(self, setType, root, train, size,
+        BanknoteBase.__init__(self, setType, root, train, size, 
+                                    mode, path_tmp_data,
                                     transform, target_transform)
         self.numTrials = numTrials
 
@@ -453,55 +549,109 @@ class FullBanknoteTriplets(BanknoteBase):
 
     def __getitem__(self, index):
 
-        (model1,idx1),(model2,idx2),(model3,idx3) = self.generate_triplet()
-        path1 = self.data[model1]['inputs'][idx1]
-        path1 = path1[0] if type(path1) == np.ndarray else path1
-        path2 = self.data[model2]['inputs'][idx2]
-        path2 = path2[0] if type(path2) == np.ndarray else path2
-        path3 = self.data[model3]['inputs'][idx3]
-        path3 = path3[0] if type(path3) == np.ndarray else path3
-        target1 = self.data[model1]['labels'][idx1]
-        target1 = target1[0] if type(target1) == np.ndarray else target1
-        target2 = self.data[model2]['labels'][idx2]
-        target2 = target2[0] if type(target2) == np.ndarray else target2
-        target3 = self.data[model3]['labels'][idx3]
-        target3 = target3[0] if type(target3) == np.ndarray else target3
+        # load images and create a hdf5 package file and a txt file for syncronization.
+        path_sync = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_synchro.yaml')
+        path_data = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_data.hdf5')
+        path_labels = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_labels.yaml')
 
-        # Positive img. 
-        img1 = self.load_img(path=path1, info_dpi= self.data[model1]['sizes'][idx1] , size=self.size)
-        img1 = pil_image.fromarray(np.uint8(img1))
+        if self.mode == 'generator':
+
+            # wait until the file has been deleted
+            #while os.path.exists(path_sync):
+            #    time.sleep(0.5)
+
+            (model1,idx1),(model2,idx2),(model3,idx3) = self.generate_triplet()
+            path1 = self.data[model1]['inputs'][idx1]
+            path1 = path1[0] if type(path1) == np.ndarray else path1
+            path2 = self.data[model2]['inputs'][idx2]
+            path2 = path2[0] if type(path2) == np.ndarray else path2
+            path3 = self.data[model3]['inputs'][idx3]
+            path3 = path3[0] if type(path3) == np.ndarray else path3
+            target1 = self.data[model1]['labels'][idx1]
+            target1 = target1[0] if type(target1) == np.ndarray else target1
+            target2 = self.data[model2]['labels'][idx2]
+            target2 = target2[0] if type(target2) == np.ndarray else target2
+            target3 = self.data[model3]['labels'][idx3]
+            target3 = target3[0] if type(target3) == np.ndarray else target3
+
+            # Positive img. 
+            img1 = self.load_img(path=path1, info_dpi= self.data[model1]['sizes'][idx1] , size=self.size)
+            img1 = pil_image.fromarray(np.uint8(img1))
+            
+            # Anchor img.
+            img2 = self.load_img(path=path2, info_dpi= self.data[model2]['sizes'][idx2] , size=self.size)
+            img2 = pil_image.fromarray(np.uint8(img2))        
+
+            # Negative img.
+            img3 = self.load_img(path=path3, info_dpi= self.data[model3]['sizes'][idx3] , size=self.size)
+            img3 = pil_image.fromarray(np.uint8(img3))        
+
+            if self.transform is not None:
+                # Make the same transformation
+                rand_number = int(np.random.uniform()*1000)
+                self.makeDeterministicTransforms(seed=rand_number)
+                img1 = self.transform(img1)
+                self.makeDeterministicTransforms(seed=rand_number)
+                img2 = self.transform(img2)
+                self.makeDeterministicTransforms(seed=rand_number)
+                img3 = self.transform(img3)
+                self.resetDeterministicTransforms()
+                # Case the FCN is done inside the DataLoader
+                if len(img1.shape)>3:
+                    img1 = img1[0]
+                    img2 = img2[0]
+                    img3 = img3[3]
+
+            if self.target_transform is not None:
+                target1 = self.target_transform(target1)
+                target2 = self.target_transform(target2)
+                target3 = self.target_transform(target3)
+
+            ret_data = torch.stack((img1,img2,img3))
+            labels = (model1, target1, model2, target2, model3, target3) 
+
+            # Save the data information
+            hf = h5py.File(path_data,'w')
+            hf.create_dataset('batch_' + str(index), data=ret_data.numpy())
+            hf.close()
+            # Save the label information
+            with open(path_labels, 'w') as outfile:
+                labels_dict = {}
+                labels_dict['model1'] = model1
+                labels_dict['target1'] = target1
+                labels_dict['model2'] = model2
+                labels_dict['target2'] = target2
+                labels_dict['model3'] = model2
+                labels_dict['target3'] = target3
+                yaml.dump(labels_dict, outfile, default_flow_style=False)
+            # save the control synchronization file
+            with open(path_sync, 'w') as outfile:
+                noop_dict = {}
+                noop_dict['info'] = 'ready'
+                yaml.dump(noop_dict, outfile, default_flow_style=False)
         
-        # Anchor img.
-        img2 = self.load_img(path=path2, info_dpi= self.data[model2]['sizes'][idx2] , size=self.size)
-        img2 = pil_image.fromarray(np.uint8(img2))        
+        if self.mode == 'processor':
+            while not os.path.exists(path_sync):
+                time.sleep(0.5)
 
-        # Negative img.
-        img3 = self.load_img(path=path3, info_dpi= self.data[model3]['sizes'][idx3] , size=self.size)
-        img3 = pil_image.fromarray(np.uint8(img3))        
+            if os.path.isfile(path_data):
+                hf = h5py.File(path_data, 'r')
+                data = hf.get('batch_' + str(index))
+                ret_data = torch.from_numpy(np.array(data))
+                hf.close()
+            else:
+                raise ValueError("%s isn't a file!" % path_data)
+            
+            if os.path.isfile(path_labels):
+                y = yaml.load(open(path_labels))
+                labels = (y['model1'], y['target1'], y['model2'], y['target2'], y['model3'], y['target3'])
+            else:
+                raise ValueError("%s isn't a file!" % path_labels)
 
-        if self.transform is not None:
-            # Make the same transformation
-            rand_number = int(np.random.uniform()*1000)
-            self.makeDeterministicTransforms(seed=rand_number)
-            img1 = self.transform(img1)
-            self.makeDeterministicTransforms(seed=rand_number)
-            img2 = self.transform(img2)
-            self.makeDeterministicTransforms(seed=rand_number)
-            img3 = self.transform(img3)
-            self.resetDeterministicTransforms()
-            # Case the FCN is done inside the DataLoader
-            if len(img1.shape)>3:
-                img1 = img1[0]
-                img2 = img2[0]
-                img3 = img3[3]
-
-        if self.target_transform is not None:
-            target1 = self.target_transform(target1)
-            target2 = self.target_transform(target2)
-            target3 = self.target_transform(target3)
-
-        ret_data = torch.stack((img1,img2,img3))
-        labels = (model1, target1, model2, target2, model3, target3)
+            # Remove the files
+            os.remove(path_sync)
+            os.remove(path_data)
+            os.remove(path_labels)
 
         return ret_data, labels
 
@@ -515,12 +665,14 @@ class FullBanknoteOneShot(BanknoteBase):
     def __init__(self, setType, root, train='train',
                  size=None, # normally size = 84
                  transform=None, target_transform=None,
+                 mode = 'generator', path_tmp_data = os.path.join(os.path.dirname(os.path.abspath(__file__)),'../tmp_data/'),
                  sameClass = False, # If Same Class there will be only positive and negative examples of the same Class
                  n_way = 20,
                  n_shot = 1,
                  numTrials = 32):
 
         BanknoteBase.__init__(self, setType, root, train, size,
+                                    mode, path_tmp_data,
                                     transform, target_transform)
         
         self.n_way = n_way
@@ -530,140 +682,191 @@ class FullBanknoteOneShot(BanknoteBase):
 
     def __getitem__(self, index):
 
-        # set the choice function to random
-        np.random.seed(None)
+        # load images and create a hdf5 package file and a txt file for syncronization.
+        path_sync = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_synchro.yaml')
+        path_data = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_data.hdf5')
+        path_labels = os.path.join(self.path_temp_epoch,'batch_'+str(index)+'_labels.yaml')
 
-        # Only classes with counterfeit samples can be selected for the positive class.
-        classes_positive = list(self.counterfeitModels.keys())
+        if self.mode == 'generator':
 
-        # Get n_shot positive examples. 
-        positive_class = np.random.choice(classes_positive,1)[0]
-        # Get indices of positive images from the positive class.
-        idx_positive_class_genuine = np.array(range(len(self.data[positive_class]['labels'])))[np.array(self.data[positive_class]['labels'])==1]
-        idx_positive_class_counterfeit = np.array(range(len(self.data[positive_class]['labels'])))[np.array(self.data[positive_class]['labels'])==0]
+            # wait until the file has been deleted
+            #while os.path.exists(path_sync):
+            #    time.sleep(0.5)
 
-        # all classes can be negative, remove the positive class.
-        classes_negative = list(self.data.keys())
-        if positive_class in classes_negative:
-            classes_negative.remove(positive_class)
-        classes_negative = np.random.choice(classes_negative,self.n_way-1)
+            # set the choice function to random
+            np.random.seed(None)
 
-        # Num of samples
-        indexes_perm = np.random.permutation((self.n_way) * self.n_shot)
+            # Only classes with counterfeit samples can be selected for the positive class.
+            classes_positive = list(self.counterfeitModels.keys())
 
-        # list with the indices and tuples
-        list_idxs = [[] for i in range((self.n_way*self.n_shot)+1)]
+            # Get n_shot positive examples. 
+            positive_class = np.random.choice(classes_positive,1)[0]
+            # Get indices of positive images from the positive class.
+            idx_positive_class_genuine = np.array(range(len(self.data[positive_class]['labels'])))[np.array(self.data[positive_class]['labels'])==1]
+            idx_positive_class_counterfeit = np.array(range(len(self.data[positive_class]['labels'])))[np.array(self.data[positive_class]['labels'])==0]
 
-        # all n_way elements genuine and add n_shot counterfeits. 
-        if self.sameClass:
-            counter_added_elements = 0
-            idxs = np.random.choice(idx_positive_class_genuine,((self.n_way-1)*self.n_shot)+1)
-            for idx in idxs[:-1]:
-                list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
-                                                                            self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx],
-                                                                            self.data[positive_class]['sizes'][idx]]
-                counter_added_elements = counter_added_elements + 1                                                 
-            
-            # Add the reference positive class
-            list_idxs[-1] = [positive_class,
-                                self.data[positive_class]['inputs'][idxs[-1]],
-                                self.data[positive_class]['labels'][idxs[-1]],
-                                self.data[positive_class]['sizes'][idxs[-1]]]
+            # all classes can be negative, remove the positive class.
+            classes_negative = list(self.data.keys())
+            if positive_class in classes_negative:
+                classes_negative.remove(positive_class)
+            classes_negative = np.random.choice(classes_negative,self.n_way-1)
 
-            # Add the negative image
-            idxs = np.random.choice(idx_positive_class_counterfeit,self.n_shot)
-            for idx in idxs[:-1]:
-                list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
-                                                                            self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx],
-                                                                            self.data[positive_class]['sizes'][idx]]
-                counter_added_elements = counter_added_elements + 1                                                 
+            # Num of samples
+            indexes_perm = np.random.permutation((self.n_way) * self.n_shot)
 
-        # the elements are from the other classes + genuine and the probability=0.5 of having one counterfeit.
-        else:
-            probability_counterfeit = 0.5
-            replace_negative_class_with_counterfeit = random.random() < probability_counterfeit
-            # we replace some other class with the same positive class, but we will take it into account and only load
-            # counterfeits.
-            if replace_negative_class_with_counterfeit:
-                classes_negative[np.random.choice(range(len(classes_negative)),1)[0]] = positive_class
+            # list with the indices and tuples
+            list_idxs = [[] for i in range((self.n_way*self.n_shot)+1)]
 
-            counter_added_elements = 0
-            # Add first the negative classes
-            for i in range(len(classes_negative)):
-                # Find if it is a counterfeit from the same positive class
-                if classes_negative[i] == positive_class:
-                    idxs = np.random.choice(idx_positive_class_counterfeit,self.n_shot)
-                    for idx in idxs:
-                        list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
-                                                                            self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx],
-                                                                            self.data[positive_class]['sizes'][idx]]
-                        counter_added_elements = counter_added_elements + 1
-                else:
-                    idxs = np.random.choice(range(len(self.data[classes_negative[i]]['inputs'])),self.n_shot)
-                    for idx in idxs:
-                        list_idxs[indexes_perm[counter_added_elements]] = [classes_negative[i],
-                                                                            self.data[classes_negative[i]]['inputs'][idx],
-                                                                            self.data[classes_negative[i]]['labels'][idx],
-                                                                            self.data[classes_negative[i]]['sizes'][idx]]
-                        counter_added_elements = counter_added_elements + 1
-
-            # Add now the positive class 
-            idxs = np.random.choice(idx_positive_class_genuine,self.n_shot+1)
-            for idx in idxs[:-1]:
-                list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
-                                                                            self.data[positive_class]['inputs'][idx],
-                                                                            self.data[positive_class]['labels'][idx],
-                                                                            self.data[positive_class]['sizes'][idx]]
-                counter_added_elements = counter_added_elements + 1
-
-            # Add positive class to compare with
-            list_idxs[-1] = [positive_class,
+            # all n_way elements genuine and add n_shot counterfeits. 
+            if self.sameClass:
+                counter_added_elements = 0
+                idxs = np.random.choice(idx_positive_class_genuine,((self.n_way-1)*self.n_shot)+1)
+                for idx in idxs[:-1]:
+                    list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
+                                                                                self.data[positive_class]['inputs'][idx],
+                                                                                self.data[positive_class]['labels'][idx],
+                                                                                self.data[positive_class]['sizes'][idx]]
+                    counter_added_elements = counter_added_elements + 1                                                 
+                
+                # Add the reference positive class
+                list_idxs[-1] = [positive_class,
                                     self.data[positive_class]['inputs'][idxs[-1]],
                                     self.data[positive_class]['labels'][idxs[-1]],
                                     self.data[positive_class]['sizes'][idxs[-1]]]
 
+                # Add the negative image
+                idxs = np.random.choice(idx_positive_class_counterfeit,self.n_shot)
+                for idx in idxs[:-1]:
+                    list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
+                                                                                self.data[positive_class]['inputs'][idx],
+                                                                                self.data[positive_class]['labels'][idx],
+                                                                                self.data[positive_class]['sizes'][idx]]
+                    counter_added_elements = counter_added_elements + 1                                                 
 
-        # Iterate over the selected samples and load the images
-        data = []
-        labels_model = []
-        labels_genuine_counterfeit = []
-        # for the positive class we want the same cropping and transformation. 
-        # save first a random seed.
-        rand_seed = int(np.random.uniform()*1000)
-            
-        for elem in list_idxs:
-            # load image
-            if type(elem[1]).__name__ == 'str':
-                img1 = self.load_img(path=elem[1], info_dpi= elem[3], size=self.size)
-                img1 = pil_image.fromarray(np.uint8(img1))
+            # the elements are from the other classes + genuine and the probability=0.5 of having one counterfeit.
             else:
-                img1 = elem[1]
-            
-            # if is the positive class crop the same zone and apply the same transforms
-            if elem[0] == positive_class:
-                self.makeDeterministicTransforms(seed=rand_seed)
-            # apply transforms
-            img1 = self.transform(img1)
-            if elem[0] == positive_class:
-                self.resetDeterministicTransforms()
+                probability_counterfeit = 0.5
+                replace_negative_class_with_counterfeit = random.random() < probability_counterfeit
+                # we replace some other class with the same positive class, but we will take it into account and only load
+                # counterfeits.
+                if replace_negative_class_with_counterfeit:
+                    classes_negative[np.random.choice(range(len(classes_negative)),1)[0]] = positive_class
 
-            # Case the FCN is done inside the DataLoader
-            if len(img1.shape)>3:
-                img1 = img1[0]
-            data.append(img1)
-            # Encode labels
-            if elem[2] == 1:
-                labels_model.append(self.encode_labels[elem[0]])
+                counter_added_elements = 0
+                # Add first the negative classes
+                for i in range(len(classes_negative)):
+                    # Find if it is a counterfeit from the same positive class
+                    if classes_negative[i] == positive_class:
+                        idxs = np.random.choice(idx_positive_class_counterfeit,self.n_shot)
+                        for idx in idxs:
+                            list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
+                                                                                self.data[positive_class]['inputs'][idx],
+                                                                                self.data[positive_class]['labels'][idx],
+                                                                                self.data[positive_class]['sizes'][idx]]
+                            counter_added_elements = counter_added_elements + 1
+                    else:
+                        idxs = np.random.choice(range(len(self.data[classes_negative[i]]['inputs'])),self.n_shot)
+                        for idx in idxs:
+                            list_idxs[indexes_perm[counter_added_elements]] = [classes_negative[i],
+                                                                                self.data[classes_negative[i]]['inputs'][idx],
+                                                                                self.data[classes_negative[i]]['labels'][idx],
+                                                                                self.data[classes_negative[i]]['sizes'][idx]]
+                            counter_added_elements = counter_added_elements + 1
+
+                # Add now the positive class 
+                idxs = np.random.choice(idx_positive_class_genuine,self.n_shot+1)
+                for idx in idxs[:-1]:
+                    list_idxs[indexes_perm[counter_added_elements]] = [positive_class,
+                                                                                self.data[positive_class]['inputs'][idx],
+                                                                                self.data[positive_class]['labels'][idx],
+                                                                                self.data[positive_class]['sizes'][idx]]
+                    counter_added_elements = counter_added_elements + 1
+
+                # Add positive class to compare with
+                list_idxs[-1] = [positive_class,
+                                        self.data[positive_class]['inputs'][idxs[-1]],
+                                        self.data[positive_class]['labels'][idxs[-1]],
+                                        self.data[positive_class]['sizes'][idxs[-1]]]
+
+
+            # Iterate over the selected samples and load the images
+            data = []
+            labels_model = []
+            labels_genuine_counterfeit = []
+            # for the positive class we want the same cropping and transformation. 
+            # save first a random seed.
+            rand_seed = int(np.random.uniform()*1000)
+                
+            for elem in list_idxs:
+                # load image
+                if type(elem[1]).__name__ == 'str':
+                    img1 = self.load_img(path=elem[1], info_dpi= elem[3], size=self.size)
+                    img1 = pil_image.fromarray(np.uint8(img1))
+                else:
+                    img1 = elem[1]
+                
+                # if is the positive class crop the same zone and apply the same transforms
+                if elem[0] == positive_class:
+                    self.makeDeterministicTransforms(seed=rand_seed)
+                # apply transforms
+                img1 = self.transform(img1)
+                if elem[0] == positive_class:
+                    self.resetDeterministicTransforms()
+
+                # Case the FCN is done inside the DataLoader
+                if len(img1.shape)>3:
+                    img1 = img1[0]
+                data.append(img1)
+                # Encode labels
+                if elem[2] == 1:
+                    labels_model.append(self.encode_labels[elem[0]])
+                else:
+                    labels_model.append(-1*self.encode_labels[elem[0]])
+                labels_genuine_counterfeit.append(elem[2])
+
+            data = torch.stack(data)
+            labels = torch.from_numpy(np.array(labels_model))
+
+            # Save the data information
+            hf = h5py.File(path_data,'w')
+            hf.create_dataset('batch_' + str(index), data=data.numpy())
+            hf.close()
+            # Save the label information
+            hf = h5py.File(path_labels,'w')
+            hf.create_dataset('batch_' + str(index), data=labels.numpy())
+            hf.close()
+            # save the control synchronization file
+            with open(path_sync, 'w') as outfile:
+                noop_dict = {}
+                noop_dict['info'] = 'ready'
+                yaml.dump(noop_dict, outfile, default_flow_style=False)
+
+        if self.mode == 'processor':
+
+            while not os.path.exists(path_sync):
+                time.sleep(0.5)
+
+            if os.path.isfile(path_data):
+                hf = h5py.File(path_data, 'r')
+                data = hf.get('batch_' + str(index))
+                data = torch.from_numpy(np.array(data))
+                hf.close()
             else:
-                labels_model.append(-1*self.encode_labels[elem[0]])
-            labels_genuine_counterfeit.append(elem[2])
+                raise ValueError("%s isn't a file!" % path_data)
+            
+            if os.path.isfile(path_labels):
+                hf = h5py.File(path_labels, 'r')
+                labels = hf.get('batch_' + str(index))
+                labels = torch.from_numpy(np.array(labels))
+                hf.close()
+            else:
+                raise ValueError("%s isn't a file!" % path_labels)
 
-        data = torch.stack(data)
-        labels = torch.from_numpy(np.array(labels_model))
-        
+            # Remove the files
+            os.remove(path_sync)
+            os.remove(path_data)
+            os.remove(path_labels)
+
         '''
         import cv2
         [cv2.imwrite('/home/aberenguel/tmp/cedar/im_' + str(i) + '.png',
