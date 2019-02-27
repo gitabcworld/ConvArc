@@ -432,6 +432,10 @@ def server_processing(opt):
     opt.val_num_batches = 1
     opt.test_num_batches = 1
 
+    # set the mode of the dataset to generator_processor
+    # which generates and processes the images without saving them.
+    opt.mode = 'generator_processor'
+
     # Load Dataset
     opt.setType='set1'
     dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=fcn, train_mean=train_mean,
@@ -470,6 +474,9 @@ def train(index = None):
     if opt.mode == 'generator':
         print('Starting generator...')
         data_generation(opt)
+    elif opt.mode == 'generator_processor':
+        print('Starting generator - processor no save images...')
+        server_processing(opt)  
     else:
         print('Starting processor...')
         server_processing(opt)        

@@ -195,9 +195,14 @@ def train(index = None):
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ('[%s] ... Testing Set1' % multiprocessing.current_process().name)
+    test_loader.dataset.mode = 'generator_processor'
     test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
     #'''
+
+    # set the mode of the dataset to generator_processor
+    # which generates and processes the images without saving them.
+    opt.mode = 'generator_processor'
 
     ## Get the set2 and try
     print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)

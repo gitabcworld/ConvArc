@@ -30,7 +30,7 @@ from features.HoGFeature import HoGFeature
 # statistics
 from util.show_results import show_results
 
-def train(index = 4):
+def train(index = None):
 
     # change parameters
     opt = Options().parse()
@@ -38,6 +38,9 @@ def train(index = 4):
     opt = tranform_options(index, opt)
     opt.cuda = False
 
+    # set the mode of the dataset to generator_processor
+    # which generates and processes the images without saving them.
+    opt.mode = 'generator_processor'
 
     # Load Dataset
     opt.setType='set1'

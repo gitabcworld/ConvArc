@@ -427,10 +427,9 @@ def server_processing(opt):
 
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
     # for the final testing set the data loader to generator
-    test_loader.dataset.mode = 'generator'
+    test_loader.dataset.mode = 'generator_processor'
     test_loader.dataset.remove_path_tmp_epoch(epoch)
     test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
-    test_loader.dataset.mode = 'processor'
     #'''
 
     ###########################################
@@ -583,6 +582,7 @@ def server_processing(opt):
 
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
     print ('[%s] ... Testing' % multiprocessing.current_process().name)
+    test_loader.dataset.mode = 'generator_processor'
     test_acc_epoch = context_test.context_test(epoch, do_epoch_fn, opt, test_loader, discriminator, context_fn, logger, fcn=fcn, coAttn=coAttn)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
@@ -597,6 +597,9 @@ def train(index = None):
     if opt.mode == 'generator':
         print('Starting generator...')
         data_generation(opt)
+    elif opt.mode == 'generator_processor':
+        print('Starting generator - processor no save images...')
+        server_processing(opt)  
     else:
         print('Starting processor...')
         server_processing(opt)  
