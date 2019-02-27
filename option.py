@@ -14,8 +14,10 @@ import os
 pathResults = os.path.dirname(os.path.abspath(__file__)) + '/results/'
 if os.path.exists('D:/PhD/code/datasets/convarc'):
     dataroot = 'D:/PhD/code/datasets/convarc'
-else:
+elif os.path.exists('/datatmp/users/aberenguel/convarc'):
     dataroot = '/datatmp/users/aberenguel/convarc'
+else:
+    dataroot = '/home/icar/datasets/convarc'
 
 lst_parameters_change = [
     [   # 0
