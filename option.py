@@ -244,9 +244,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaiveMobilenetV2/data/'),
 
@@ -288,9 +288,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaiveMobilenetV2/data/'),
 
@@ -331,9 +331,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaiveWRN/data/'),
 
@@ -376,9 +376,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'WideResidualNetworkImagenet/data/'),
 
@@ -419,9 +419,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaivePeleeNet/data/'),
 
@@ -462,9 +462,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaivePeleeNet/data/'),
 
@@ -509,8 +509,8 @@ lst_parameters_change = [
 
         ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('val_num_batches', 250),
-        ('test_num_batches', 500),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
 
         ('apply_wrn', True),
@@ -537,8 +537,8 @@ lst_parameters_change = [
 
         ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('val_num_batches', 250),
-        ('test_num_batches', 500),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
 
         ('apply_wrn', True),
@@ -559,25 +559,25 @@ lst_parameters_change = [
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
 
-        ('save', pathResults + 'class_SIFT'),
+        ('save', pathResults + 'class_LBP'),
         ('batchSize', 20),
 
         #('mode', 'processor'),
-        ('path_tmp_data', pathResults + 'class_SIFT/data/'),
+        ('path_tmp_data', pathResults + 'class_LBP/data/'),
 
-        ('train_num_batches', 100),
+        ('train_num_batches', 10),
         ('val_freq', 1000),
         ('val_num_batches', 10),
         ('test_num_batches', 10),
-        ('path_tmp_data', pathResults + 'class_SIFT/data/'),
+        ('path_tmp_data', pathResults + 'class_LBP/data/'),
 
         ('apply_wrn', True),
-        ('wrn_name_type', 'SIFTFeature'),
-        ('wrn_save', pathResults + 'class_SIFT/fcn.pt7'),
-        ('wrn_load', pathResults + 'class_SIFT/fcn.pt7'),
+        ('wrn_name_type', 'LBPFeature'),
+        ('wrn_save', pathResults + 'class_LBP/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_LBP/fcn.pt7'),
         #('wrn_load', None),
         
-        ('arc_optimizer_path', pathResults + 'class_SIFT/arc_optimizer.pt7'),
+        ('arc_optimizer_path', pathResults + 'class_LBP/arc_optimizer.pt7'),
 
         ('use_coAttn', False),
     ],

@@ -113,8 +113,8 @@ def data_generation(opt):
 
                 # wait to check if it is neede more data
                 lst_epochs = train_loader.dataset.getFolderEpochList()
-                if len(lst_epochs) > 50:
-                    time.sleep(10)
+                if len(lst_epochs) > 5:
+                    time.sleep(1)
                 
                 # In case there is more than one generator.
                 # get the last folder epoch executed and update the epoch accordingly

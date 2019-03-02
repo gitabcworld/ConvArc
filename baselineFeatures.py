@@ -28,6 +28,9 @@ from dataset.banknote_pytorch import FullBanknote
 from features.HoGFeature import HoGFeature
 from features.UCIFeature import UCIFeature
 from features.SIFTFeature import SIFTFeature
+from features.LBPFeature import LBPFeature
+from features.HaralickFeature import HaralickFeature
+from features.BhavaniFeature import BahavaniFeature
 
 # statistics
 from util.show_results import show_results
