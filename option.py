@@ -157,9 +157,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaiveResnet50/data/'),
 
@@ -201,9 +201,9 @@ lst_parameters_change = [
         ('batchSize', 20),
         ('naive_batchSize', 20),
         
-        ('train_num_batches', 50000),
+        ('train_num_batches', 10000),
         ('val_freq', 1000),
-        ('naive_full_epochs', 20000),
+        ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaiveResnet50/data/'),
 
@@ -609,8 +609,8 @@ class Options():
 
         parser.add_argument('--train_num_batches', type=int, default=1500000, help='train epochs')
         parser.add_argument('--val_freq', type=int, default=1000, help='validation frequency')
-        parser.add_argument('--val_num_batches', type=int, default=2, help='validation num batches')
-        parser.add_argument('--test_num_batches', type=int, default=5, help='test num batches')
+        parser.add_argument('--val_num_batches', type=int, default=250, help='validation num batches')
+        parser.add_argument('--test_num_batches', type=int, default=500, help='test num batches')
         parser.add_argument('--batchSize', type=int, default=20, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
