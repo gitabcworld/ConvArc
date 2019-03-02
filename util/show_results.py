@@ -21,23 +21,24 @@ def show_results(y_test, prob_test, name, show=True, output_folder='', maxFNR=0.
     #fig = plt.figure()
 
     # show ROC
-    plt.figure(221)
-    plt.plot(fpr, tpr, linewidth=2)
-    plt.ylim(0, 1)
-    plt.xlim(0, 1)
-    plt.xlabel('FPR')
-    plt.ylabel('TPR')
-    plt.title(name + ' - ROC curve, AUC = %f' % (auc))
+    if show:
+        plt.figure(221)
+        plt.plot(fpr, tpr, linewidth=2)
+        plt.ylim(0, 1)
+        plt.xlim(0, 1)
+        plt.xlabel('FPR')
+        plt.ylabel('TPR')
+        plt.title(name + ' - ROC curve, AUC = %f' % (auc))
 
-    # show FPR-FNR vs threshold curves
-    plt.figure(222)
-    fnr_line, = plt.plot(thresholds, fnr * 100, linewidth=2, color='blue')
-    fpr_line, = plt.plot(thresholds, fpr * 100, linewidth=2, color='red', linestyle='--')
-    plt.legend([fnr_line, fpr_line], ['False Negative Rate (FNR)', 'False Positive Rate (FPR)'])
-    plt.ylim(0, 100.001)
-    plt.xlim(np.min(prob_test), np.max(prob_test))
-    plt.title(name + ' - EER = %0.1f%% at t=%0.2f' % (100 * (eer[0] + eer[1]) / 2, eer[2]))
-    plt.show()
+        # show FPR-FNR vs threshold curves
+        plt.figure(222)
+        fnr_line, = plt.plot(thresholds, fnr * 100, linewidth=2, color='blue')
+        fpr_line, = plt.plot(thresholds, fpr * 100, linewidth=2, color='red', linestyle='--')
+        plt.legend([fnr_line, fpr_line], ['False Negative Rate (FNR)', 'False Positive Rate (FPR)'])
+        plt.ylim(0, 100.001)
+        plt.xlim(np.min(prob_test), np.max(prob_test))
+        plt.title(name + ' - EER = %0.1f%% at t=%0.2f' % (100 * (eer[0] + eer[1]) / 2, eer[2]))
+        plt.show()
 
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
 

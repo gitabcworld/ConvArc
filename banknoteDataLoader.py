@@ -44,7 +44,8 @@ class banknoteDataLoader():
             if self.opt.imageSize is None:
                 lst_transforms.append(transforms.RandomCrop(size=224))
         if not(train == 'train'):
-            lst_transforms.append(transforms.CenterCrop(size=224))
+            #lst_transforms.append(transforms.CenterCrop(size=224)) # fixed zone
+            lst_transforms.append(transforms.RandomCrop(size=224))  # random zone
 
         lst_transforms.append(transforms.ToTensor())
 
@@ -176,7 +177,7 @@ class banknoteDataLoader():
 
             val_loader = torch.utils.data.DataLoader(
                 datasetParams,
-                batch_size=self.opt.batchSize, shuffle=False, **kwargs)
+                batch_size=self.opt.batchSize, shuffle=True, **kwargs)
         else:
             val_loader = None
 
@@ -202,7 +203,7 @@ class banknoteDataLoader():
 
             test_loader = torch.utils.data.DataLoader(
                 datasetParams,
-                batch_size=self.opt.batchSize, shuffle=False, **kwargs)
+                batch_size=self.opt.batchSize, shuffle=True, **kwargs)
         else:
             test_loader = None
 

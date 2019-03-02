@@ -26,11 +26,15 @@ from dataset.banknote_pytorch import FullBanknote
 
 # Features
 from features.HoGFeature import HoGFeature
+from features.UCIFeature import UCIFeature
+from features.SIFTFeature import SIFTFeature
 
 # statistics
 from util.show_results import show_results
 
-def train(index = None):
+from classifiers.xgboost import XGBoostClassifier
+
+def train(index = 14):
 
     # change parameters
     opt = Options().parse()
@@ -63,8 +67,8 @@ def train(index = None):
         np.save(os.path.join(opt.save, 'dataloader_rnd_seed_arc.npy'), rnd_seed)
 
     # Get the DataLoaders from train - val - test
-    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed)
-
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed,dataPartition = ['train+val',None,'test'])
+    
     if opt.name is None:
         # if no name is given, we generate a name from the parameters.
         # only those parameters are taken, which if changed break torch.load compatibility.
@@ -89,48 +93,65 @@ def train(index = None):
     logger = Logger(models_path)
 
     # create object features
-    nameFeatures = 'HoGFeature'
+    #nameFeatures = 'HoGFeature'
+    #nameFeatures = 'UCIFeature'
+    nameFeatures = opt.wrn_name_type
     objFeatures = eval(nameFeatures + '()')
+
+    objClassifier = XGBoostClassifier()
 
     train_features = []
     train_labels = []
     
-    ## EXTRACT FEATURES TRAIN
-    for batch_idx, (data, labels) in enumerate(tqdm(train_loader)):
-        # transform batch of data and label tensors to numpy
-        data = data.numpy().transpose(0,2,3,1)
-        labels = labels.numpy().tolist()
-        for i in range(len(data)):
-            features = objFeatures.extract(data[i])
-            train_features.append(features)
-        train_labels.append(labels)
+    # if the training features exists go to testing
+    if not(os.path.exists(os.path.join(opt.save,'train_features.npy')) and os.path.exists(os.path.join(opt.save,'train_labels.npy'))):
+
+        ## EXTRACT FEATURES TRAIN
+        for i in range(opt.train_num_batches):
+            for batch_idx, (data, labels) in enumerate(tqdm(train_loader)):
+                # transform batch of data and label tensors to numpy
+                data = data.numpy().transpose(0,2,3,1)
+                labels = labels.numpy().tolist()
+                for i in range(len(data)):
+                    features = objFeatures.extract(data[i])
+                    train_features.append(features)
+                train_labels.append(labels)
+        
+        # save the features
+        train_features = np.stack(train_features)
+        train_labels = [item for sublist in train_labels for item in sublist]
+        np.save(os.path.join(opt.save,'train_features.npy'),train_features)
+        np.save(os.path.join(opt.save,'train_labels.npy'),train_labels)
+    else:
+        train_features = np.load(os.path.join(opt.save,'train_features.npy'))
+        train_labels = np.load(os.path.join(opt.save,'train_labels.npy'))
 
     ## TRAIN
-    train_features = np.stack(train_features)
-    train_labels = [item for sublist in train_labels for item in sublist]
-    objFeatures.train(train_features,train_labels)
+    objClassifier.train(train_features,train_labels)
+    objClassifier.save(opt.save)
 
     ## EXTRACT FEATURES TEST
-    test_features = []
-    test_labels = []
-    for batch_idx, (data, labels) in enumerate(tqdm(test_loader)):
-        # transform batch of data and label tensors to numpy
-        data = data.numpy().transpose(0,2,3,1)
-        labels = labels.numpy().tolist()
-        for i in range(len(data)):
-            features = objFeatures.extract(data[i])
-            test_features.append(features)
-        test_labels.append(labels)
+    for j in range(opt.test_num_batches):
+        test_features = []
+        test_labels = []
+        for batch_idx, (data, labels) in enumerate(tqdm(test_loader)):
+            # transform batch of data and label tensors to numpy
+            data = data.numpy().transpose(0,2,3,1)
+            labels = labels.numpy().tolist()
+            for i in range(len(data)):
+                features = objFeatures.extract(data[i])
+                test_features.append(features)
+            test_labels.append(labels)
 
-    ## PREDICT
-    test_features = np.stack(test_features)
-    test_labels = [item for sublist in test_labels for item in sublist]
-    preds = objFeatures.predict(test_features)
-    test_features_set1 = test_features
-    test_labels_set1 = test_labels
-    preds_set1 = preds
+        ## PREDICT
+        test_features = np.stack(test_features)
+        test_labels = [item for sublist in test_labels for item in sublist]
+        preds = objClassifier.predict(test_features)
+        test_features_set1 = test_features
+        test_labels_set1 = test_labels
+        preds_set1 = preds
 
-    show_results(test_labels,preds[:,0],'HoG set1')
+        show_results(test_labels,preds,'TEST SET 1. Iter: ' + str(j),show=False)
 
     ## Get the set2 and try
     opt.setType='set2'
@@ -147,27 +168,28 @@ def train(index = None):
     
     train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
     ## EXTRACT FEATURES TEST
-    test_features = []
-    test_labels = []
-    for batch_idx, (data, labels) in enumerate(tqdm(test_loader)):
-        # transform batch of data and label tensors to numpy
-        data = data.numpy().transpose(0,2,3,1)
-        labels = labels.numpy().tolist()
-        for i in range(len(data)):
-            features = objFeatures.extract(data[i])
-            test_features.append(features)
-        test_labels.append(labels)
+    for j in range(opt.test_num_batches):
+        test_features = []
+        test_labels = []
+        for batch_idx, (data, labels) in enumerate(tqdm(test_loader)):
+            # transform batch of data and label tensors to numpy
+            data = data.numpy().transpose(0,2,3,1)
+            labels = labels.numpy().tolist()
+            for i in range(len(data)):
+                features = objFeatures.extract(data[i])
+                test_features.append(features)
+            test_labels.append(labels)
 
-    ## PREDICT
-    test_features = np.stack(test_features)
-    test_labels = [item for sublist in test_labels for item in sublist]
-    preds = objFeatures.predict(test_features)
-    
-    test_features_set2 = test_features
-    test_labels_set2 = test_labels
-    preds_set2 = preds
-    
-    show_results(test_labels,preds[:,0],'HoG set2')
+        ## PREDICT
+        test_features = np.stack(test_features)
+        test_labels = [item for sublist in test_labels for item in sublist]
+        preds = objClassifier.predict(test_features)
+        
+        test_features_set2 = test_features
+        test_labels_set2 = test_labels
+        preds_set2 = preds
+        
+        show_results(test_labels,preds,'TEST SET 2. Iter: ' + str(j),show=False)
 
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.

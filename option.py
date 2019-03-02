@@ -551,6 +551,41 @@ lst_parameters_change = [
 
         ('use_coAttn', False),
     ],
+
+    ###############################################################################
+    #####################            CLASSIFICATION            ####################
+    ###############################################################################
+    [  # 14
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+
+        ('save', pathResults + 'class_SIFT'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'class_SIFT/data/'),
+
+        ('train_num_batches', 100),
+        ('val_freq', 1000),
+        ('val_num_batches', 10),
+        ('test_num_batches', 10),
+        ('path_tmp_data', pathResults + 'class_SIFT/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'SIFTFeature'),
+        ('wrn_save', pathResults + 'class_SIFT/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_SIFT/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'class_SIFT/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    
+
+    ###############################################################################
+    ###############################################################################
+
 ]
 
 
