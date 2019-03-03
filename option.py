@@ -158,7 +158,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaiveResnet50/data/'),
@@ -202,7 +202,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaiveResnet50/data/'),
@@ -245,7 +245,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaiveMobilenetV2/data/'),
@@ -289,7 +289,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaiveMobilenetV2/data/'),
@@ -332,7 +332,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaiveWRN/data/'),
@@ -377,7 +377,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'WideResidualNetworkImagenet/data/'),
@@ -420,7 +420,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaivePeleeNet/data/'),
@@ -463,7 +463,7 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaivePeleeNet/data/'),
@@ -496,60 +496,10 @@ lst_parameters_change = [
         ('coattn_save', pathResults + 'CoAttnNaivePeleeNet/coAttn.pt7'),
     ],
     [  # 12
-        ('datasetName', 'banknote'),
-        ('dataroot', os.path.join(dataroot,'banknote')),
-        ('one_shot_n_way', 5),
-        ('one_shot_n_shot', 1),
-
-        ('save', pathResults + 'Triplet_PeleeNet'),
-        ('batchSize', 20),
-
-        #('mode', 'processor'),
-        ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
-
-        ('train_num_batches', 10000),
-        ('val_freq', 1000),
-        ('val_num_batches', 100),
-        ('test_num_batches', 100),
-        ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
-
-        ('apply_wrn', True),
-        ('wrn_name_type', 'PeleeNetClassification'),
-        ('wrn_save', pathResults + 'Triplet_PeleeNet/fcn.pt7'),
-        ('wrn_load', pathResults + 'Triplet_PeleeNet/fcn.pt7'),
-        #('wrn_load', None),
-        
-        ('arc_optimizer_path', pathResults + 'Triplet_PeleeNet/arc_optimizer.pt7'),
-
-        ('use_coAttn', False),
+        ## EMPTY SLOT
     ],
     [  # 13
-        ('datasetName', 'banknote'),
-        ('dataroot', os.path.join(dataroot,'banknote')),
-        ('one_shot_n_way', 5),
-        ('one_shot_n_shot', 1),
-
-        ('save', pathResults + 'Siamese_PeleeNet'),
-        ('batchSize', 20),
-
-        #('mode', 'generator_processor'),
-        ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
-
-        ('train_num_batches', 10000),
-        ('val_freq', 100),
-        ('val_num_batches', 100),
-        ('test_num_batches', 100),
-        ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
-
-        ('apply_wrn', True),
-        ('wrn_name_type', 'PeleeNetClassification'),
-        ('wrn_save', pathResults + 'Siamese_PeleeNet/fcn.pt7'),
-        ('wrn_load', pathResults + 'Siamese_PeleeNet/fcn.pt7'),
-        #('wrn_load', None),
-        
-        ('arc_optimizer_path', pathResults + 'Siamese_PeleeNet/arc_optimizer.pt7'),
-
-        ('use_coAttn', False),
+        #### EMPTY SLOT
     ],
 
     ###############################################################################
@@ -659,6 +609,185 @@ lst_parameters_change = [
 
         ('use_coAttn', False),
     ],
+
+    ###############################################################################
+    #####################            SIAMESE                    ####################
+    ###############################################################################
+    [  # 18
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Siamese_ResNet50'),
+        ('batchSize', 20),
+
+        #('mode', 'generator_processor'),
+        ('path_tmp_data', pathResults + 'Siamese_ResNet50/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 100),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'Siamese_ResNet50/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'ResNet50Classificaton'),
+        ('wrn_save', pathResults + 'Siamese_ResNet50/fcn.pt7'),
+        ('wrn_load', pathResults + 'Siamese_ResNet50/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Siamese_ResNet50/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    [  # 19
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Siamese_MobileNetv2'),
+        ('batchSize', 20),
+
+        #('mode', 'generator_processor'),
+        ('path_tmp_data', pathResults + 'Siamese_MobileNetv2/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 100),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'Siamese_MobileNetv2/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'Mobilenetv2Classification'),
+        ('wrn_save', pathResults + 'Siamese_MobileNetv2/fcn.pt7'),
+        ('wrn_load', pathResults + 'Siamese_MobileNetv2/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Siamese_MobileNetv2/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    [  # 20
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Siamese_PeleeNet'),
+        ('batchSize', 20),
+
+        #('mode', 'generator_processor'),
+        ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 100),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'PeleeNetClassification'),
+        ('wrn_save', pathResults + 'Siamese_PeleeNet/fcn.pt7'),
+        ('wrn_load', pathResults + 'Siamese_PeleeNet/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Siamese_PeleeNet/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+
+    ###############################################################################
+    #####################            TRIPLENET                 ####################
+    ###############################################################################
+    [  # 21
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Triplet_ResNet50'),
+        ('batchSize', 20),
+
+        #('mode', 'generator_processor'),
+        ('path_tmp_data', pathResults + 'Triplet_ResNet50/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 100),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'Triplet_ResNet50/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'ResNet50Classificaton'),
+        ('wrn_save', pathResults + 'Triplet_ResNet50/fcn.pt7'),
+        ('wrn_load', pathResults + 'Triplet_ResNet50/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Triplet_ResNet50/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    [  # 22
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Triplet_MobileNetv2'),
+        ('batchSize', 20),
+
+        #('mode', 'generator_processor'),
+        ('path_tmp_data', pathResults + 'Triplet_MobileNetv2/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 100),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'Triplet_MobileNetv2/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'Mobilenetv2Classification'),
+        ('wrn_save', pathResults + 'Triplet_MobileNetv2/fcn.pt7'),
+        ('wrn_load', pathResults + 'Triplet_MobileNetv2/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Triplet_MobileNetv2/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    [  # 23
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+        ('one_shot_n_way', 5),
+        ('one_shot_n_shot', 1),
+
+        ('save', pathResults + 'Triplet_PeleeNet'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 100),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'Triplet_PeleeNet/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'PeleeNetClassification'),
+        ('wrn_save', pathResults + 'Triplet_PeleeNet/fcn.pt7'),
+        ('wrn_load', pathResults + 'Triplet_PeleeNet/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'Triplet_PeleeNet/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+
+
+
     ###############################################################################
     ###############################################################################
 
