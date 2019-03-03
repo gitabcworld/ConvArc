@@ -302,6 +302,24 @@ def server_processing(opt):
         np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
         np.save(os.path.join(opt.save, 'std.npy'), train_std)
 
+    # free memory
+    del dataLoader
+
+    print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)
+    opt.setType='set2'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader2 = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+    elif opt.datasetName == 'omniglot':
+        dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
+                                        train_std=train_std)
+    elif opt.datasetName == 'banknote':
+        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
+                                        train_std=train_std)
+    else:
+        pass
+    _, _, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
+    del dataLoader2
+
     if opt.cuda:
         models.use_cuda = True
 
@@ -398,18 +416,27 @@ def server_processing(opt):
             while epoch < opt.train_num_batches:
                 epoch += 1
 
-                train_acc_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
+                train_auc_epoch, train_auc_std_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
                                                                         discriminator, logger, optimizer=optimizer,
                                                                         loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
                 # Reduce learning rate when a metric has stopped improving
                 scheduler.step(train_loss_epoch)
                 if epoch % opt.val_freq == 0:
-                    val_acc_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
+                    val_auc_epoch, val_auc_std_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
                                                                                     discriminator, logger,
                                                                                     optimizer=optimizer,
                                                                                     loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
                     if is_model_saved:
-                        test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+                        print('Testing SET1')
+                        test_loader.dataset.mode = 'generator_processor'
+                        test_loader.dataset.remove_path_tmp_epoch(epoch)
+                        test_auc_epoch, test_auc_std_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+                        print('Testing SET2')
+                        test_loader2.dataset.mode = 'generator_processor'
+                        test_loader2.dataset.remove_path_tmp_epoch(epoch)
+                        test_auc_epoch, test_auc_std_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader2, discriminator, logger)
+
+
 
                 logger.step()
 
@@ -434,23 +461,10 @@ def server_processing(opt):
     #'''
 
     ## Get the set2 and try
-    print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)
-    opt.setType='set2'
-    if opt.datasetName == 'miniImagenet':
-        dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
-    elif opt.datasetName == 'omniglot':
-        dataLoader = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
-                                        train_std=train_std)
-    elif opt.datasetName == 'banknote':
-        dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
-                                        train_std=train_std)
-    else:
-        pass
-    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
-    test_loader.dataset.mode = 'generator_processor'
-    test_loader.dataset.remove_path_tmp_epoch(epoch)
+    test_loader2.dataset.mode = 'generator_processor'
+    test_loader2.dataset.remove_path_tmp_epoch(epoch)
     print ('[%s] ... Testing Set2' % multiprocessing.current_process().name)
-    test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+    test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader2, discriminator, logger)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
 
