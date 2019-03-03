@@ -581,7 +581,7 @@ lst_parameters_change = [
 
         ('use_coAttn', False),
     ],
-    [  # 14
+    [  # 15
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
 
@@ -607,7 +607,7 @@ lst_parameters_change = [
 
         ('use_coAttn', False),
     ],
-    [  # 15
+    [  # 16
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
 
@@ -633,7 +633,7 @@ lst_parameters_change = [
 
         ('use_coAttn', False),
     ],
-    [  # 16
+    [  # 17
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
 
