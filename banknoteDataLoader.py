@@ -49,7 +49,7 @@ class banknoteDataLoader():
 
         lst_transforms.append(transforms.ToTensor())
 
-        if not(self.train_mean == None) and not(self.train_std == None):
+        if not(self.train_mean is None) and not(self.train_std is None):
             lst_transforms.append(transforms.Normalize(torch.from_numpy(self.train_mean),torch.from_numpy(self.train_std)))
 
         if self.opt.fcn_applyOnDataLoader:
@@ -69,6 +69,8 @@ class banknoteDataLoader():
         
         lst_transforms.append(transforms.ColorJitter(brightness=0.4,contrast=0.4,saturation=0.4))
         lst_transforms.append(transforms.RandomAffine(degrees=(0,10), translate=(0.1, 0.1), scale=(0.8, 1.2)))
+        if self.opt.imageSize is None:
+                lst_transforms.append(transforms.RandomCrop(size=224))
         lst_transforms.append(transforms.ToTensor())
         train_transform = transforms.Compose(lst_transforms)
 
@@ -113,7 +115,8 @@ class banknoteDataLoader():
 
     def get(self, dataPartition = ['train','val','test'] ,rnd_seed = 42):
 
-        if self.train_mean is None and self.train_std is None and not(self.opt.imageSize is None):
+        #if self.train_mean is None and self.train_std is None and not(self.opt.imageSize is None):
+        if self.train_mean is None and self.train_std is None:
             train_mean, train_std = self.get_mean_std()
             self.train_mean = train_mean
             self.train_std = train_std

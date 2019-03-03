@@ -113,6 +113,25 @@ def train(index = None):
         np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
         np.save(os.path.join(opt.save, 'std.npy'), train_std)
 
+    # Delete memory
+    del dataLoader
+
+    # Load Set2.
+    opt.setType='set2'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader2 = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=fcn)
+    elif opt.datasetName == 'omniglot':
+        dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=fcn,train_mean=train_mean,
+                                        train_std=train_std)
+    elif opt.datasetName == 'banknote':
+        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=fcn, train_mean=train_mean,
+                                        train_std=train_std)
+    else:
+        pass
+    # Get the DataLoaders from train - val - test
+    train_loader2, val_loader2, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed)
+    del dataLoader2
+
     if opt.cuda:
         models.use_cuda = True
 
@@ -168,24 +187,27 @@ def train(index = None):
             while epoch < opt.train_num_batches:
                 epoch += 1
 
-                train_acc_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
+                train_auc_epoch, train_auc_std_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
                                                                         discriminator, logger, optimizer=optimizer,
                                                                         loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
                 # Reduce learning rate when a metric has stopped improving
                 scheduler.step(train_loss_epoch)
                 if epoch % opt.val_freq == 0:
-                    val_acc_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
+                    val_auc_epoch, val_auc_std_epoch, val_loss_epoch, is_model_saved = arc_val.arc_val(epoch, do_epoch_fn, opt, val_loader,
                                                                                     discriminator, logger,
                                                                                     optimizer=optimizer,
                                                                                     loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
                     if is_model_saved:
-                        test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+                        print('++++++++++++TESTING FOR SET1++++++++++++++')
+                        test_auc_epoch, test_auc_std_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+                        print('++++++++++++FINISHED TESTING FOR SET1. AUC: %f, AUC_STD: %f ++++++++++++++' % (test_auc_epoch,test_auc_std_epoch))
+
 
                 logger.step()
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
-            print ("[%s], best validation accuracy: %.2f, best validation loss: %.5f" % (
-                multiprocessing.current_process().name, arc_val.best_accuracy, arc_val.best_validation_loss))
+            print ("[%s], best validation auc: %.2f, best validation loss: %.5f" % (
+                multiprocessing.current_process().name, arc_val.best_auc, arc_val.best_validation_loss))
             print ("[%s] ... exiting training regime " % multiprocessing.current_process().name)
 
         except KeyboardInterrupt:

@@ -42,6 +42,8 @@ import multiprocessing
 import cv2
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from sklearn.metrics import ranking
+
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
@@ -73,11 +75,14 @@ class ContrastiveLoss(torch.nn.Module):
 
 def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
     
-    acc_epoch = []
+    #acc_epoch = []
+    auc_epoch = []
+    auc_std_epoch = []
     loss_epoch = []
     n_repetitions = 0
     while n_repetitions < repetitions:
-        acc_batch = []
+        #acc_batch = []
+        auc_batch = []
         loss_batch = []
 
         # generate new pairs
@@ -133,9 +138,13 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
             probs = torch.exp(logsoft_feats2)
             max_index = probs.max(dim = 1)[1]
             acc = (max_index == targets.long()).sum().float()/len(targets)
-            acc_batch.append(acc.item())
+            #acc_batch.append(acc.item())
+            auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), probs.cpu().data.numpy()[:,1], average=None, sample_weight=None)            
+            auc_batch.append(auc)
 
-        acc_epoch.append(np.mean(acc_batch))
+        #acc_epoch.append(np.mean(acc_batch))
+        auc_epoch.append(np.mean(auc_batch))
+        auc_std_epoch.append(np.std(auc_batch))
         loss_epoch.append(np.mean(loss_batch))
         # remove data repetition
         data_loader.dataset.remove_path_tmp_epoch(epoch,n_repetitions)
@@ -145,10 +154,15 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
     # remove data epoch
     data_loader.dataset.remove_path_tmp_epoch(epoch)
 
-    acc_epoch = np.mean(acc_epoch)
+    #acc_epoch = np.mean(acc_epoch)
+    auc_epoch = np.mean(auc_epoch)
+    auc_std_epoch = np.mean(auc_std_epoch)
+    
     loss_epoch = np.mean(loss_epoch)
 
-    return acc_epoch, loss_epoch
+    #return acc_epoch, loss_epoch
+    return auc_epoch, auc_std_epoch, loss_epoch
+    
 
 def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
 
@@ -249,6 +263,7 @@ def data_generation(opt):
                 time_elapsed = datetime.now() - start_time
                 print ("[val]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
 
+                '''
                 repetitions = opt.test_num_batches
                 start_time = datetime.now()
                 for repetition in range(repetitions):
@@ -257,6 +272,7 @@ def data_generation(opt):
                         noop = 0
                 time_elapsed = datetime.now() - start_time
                 print ("[test]", "epoch: ", epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+                '''
 
         print ("[%s] ... generating data done" % multiprocessing.current_process().name)
 
@@ -320,6 +336,9 @@ def server_processing(opt):
         np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
         np.save(os.path.join(opt.save, 'std.npy'), train_std)
 
+    # Remove memory
+    del dataLoader
+
     if opt.name is None:
         # if no name is given, we generate a name from the parameters.
         # only those parameters are taken, which if changed break torch.load compatibility.
@@ -354,11 +373,28 @@ def server_processing(opt):
         else:
             optimizer.load_state_dict(torch.load(opt.arc_optimizer_path, map_location=torch.device('cpu')))
 
+    print('Loading set 2 ...')
+    opt.setType='set2'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader2 = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+    elif opt.datasetName == 'omniglot':
+        dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
+                                        train_std=train_std)
+    elif opt.datasetName == 'banknote':
+        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
+                                        train_std=train_std)
+    else:
+        pass
+    _, _, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
+    # Remove memory
+    del dataLoader2
+
+
     ###################################
     ## TRAINING ARC/CONVARC
     ###################################
     best_validation_loss = sys.float_info.max
-    best_accuracy = 0.0
+    best_auc = 0.0
     saving_threshold = 1.02
     epoch = 0
     if opt.arc_resume == True or opt.arc_load is None:
@@ -368,11 +404,12 @@ def server_processing(opt):
                 epoch += 1
                 fcn.train() # Set to train the network
                 start_time = datetime.now()
-                train_acc_epoch, train_loss_epoch = do_epoch(epoch=epoch, repetitions=1, opt=opt, data_loader = train_loader, fcn=fcn, 
+                train_auc_epoch, train_std_auc_epoch, train_loss_epoch = do_epoch(epoch=epoch, repetitions=1, opt=opt, data_loader = train_loader, fcn=fcn, 
                                                                 logger=logger, optimizer=optimizer)
                 time_elapsed = datetime.now() - start_time
-                print ("[train]", "epoch: ", epoch, ", loss: ", train_loss_epoch, ", accuracy: ", train_acc_epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
-                logger.log_value('train_acc', train_acc_epoch)
+                print ("[train]", "epoch: ", epoch, ", loss: ", train_loss_epoch, ", auc: ", train_auc_epoch, ",std_auc: ", train_std_auc_epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+                logger.log_value('train_auc', train_auc_epoch)
+                logger.log_value('train_auc_std', train_std_auc_epoch)
                 logger.log_value('train_loss', train_loss_epoch)
 
                 # Reduce learning rate when a metric has stopped improving
@@ -380,40 +417,54 @@ def server_processing(opt):
                 if epoch % opt.val_freq == 0:
                     fcn.eval() # set to test the network
                     start_time = datetime.now()
-                    val_acc_epoch, val_loss_epoch = do_epoch(epoch=epoch, repetitions=opt.val_num_batches, opt=opt, data_loader = val_loader, fcn=fcn, 
+                    val_auc_epoch, val_std_auc_epoch, val_loss_epoch = do_epoch(epoch=epoch, repetitions=opt.val_num_batches, opt=opt, data_loader = val_loader, fcn=fcn, 
                                                             logger=logger, optimizer=None)
                     time_elapsed = datetime.now() - start_time
                     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
                             "[VAL]", "epoch: ", epoch, ", loss: ", val_loss_epoch \
-                            , ", accuracy: ", val_acc_epoch, ", time: ", \
+                            , ", auc: ", val_auc_epoch, ", auc std: ", val_std_auc_epoch, ", time: ", \
                             time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-                    logger.log_value('val_acc', val_acc_epoch)
+                    logger.log_value('val_auc', val_auc_epoch)
+                    logger.log_value('val_auc_std', val_std_auc_epoch)
                     logger.log_value('val_loss', val_loss_epoch)
 
                     is_model_saved = False
                     #if best_validation_loss > (saving_threshold * val_loss_epoch):
-                    if best_accuracy < (saving_threshold * val_acc_epoch):
-                        print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
-                            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
+                    if best_auc < (saving_threshold * val_auc_epoch):
+                        print("[{}] Significantly improved validation loss from {} --> {}. auc from {} --> {}. Saving...".format(
+                            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_auc, val_auc_epoch))
                         # save classifier
                         torch.save(fcn.state_dict(),opt.wrn_save)
                         # Save optimizer
                         torch.save(optimizer.state_dict(), opt.arc_optimizer_path)
                         # Acc-loss values
                         best_validation_loss = val_loss_epoch
-                        best_accuracy = val_acc_epoch
+                        best_auc = val_auc_epoch
                         is_model_saved = True
 
                     if is_model_saved:
                         fcn.eval() # set to test the network
                         start_time = datetime.now()
-                        test_acc_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, 
+                        test_loader.dataset.mode = 'generator_processor'
+                        test_auc_epoch, test_std_auc_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, 
                                                         logger=logger, optimizer=None)
                         time_elapsed = datetime.now() - start_time
                         print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
-                            "[TEST]", "epoch: ", epoch, ", accuracy: ", test_acc_epoch, ", time: ", \
+                            "[TEST] SET1. ", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", time: ", \
                             time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-                        logger.log_value('test_acc', test_acc_epoch)
+                        logger.log_value('test_set1_auc', test_auc_epoch)
+                        logger.log_value('test_set1_auc_std', test_std_auc_epoch)
+
+                        start_time = datetime.now()
+                        test_loader2.dataset.mode = 'generator_processor'
+                        test_auc_epoch, test_std_auc_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader2, fcn=fcn, 
+                                                        logger=logger, optimizer=None)
+                        time_elapsed = datetime.now() - start_time
+                        print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
+                            "[TEST] SET2. ", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", time: ", \
+                            time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
+                        logger.log_value('test_set1_auc', test_auc_epoch)
+                        logger.log_value('test_set1_auc_std', test_std_auc_epoch)
 
                 # just in case there is a folder not removed, remove it
                 train_loader.dataset.remove_path_tmp_epoch(epoch)
@@ -423,8 +474,8 @@ def server_processing(opt):
                 logger.step()
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
-            print ("[%s], best validation accuracy: %.2f, best validation loss: %.5f" % (
-                multiprocessing.current_process().name, best_accuracy, best_validation_loss))
+            print ("[%s], best validation auc: %.2f, best validation loss: %.5f" % (
+                multiprocessing.current_process().name, best_auc, best_validation_loss))
             print ("[%s] ... exiting training regime " % multiprocessing.current_process().name)
 
         except KeyboardInterrupt:
@@ -492,7 +543,7 @@ def server_processing(opt):
 
 
 
-def train(index = None):
+def train(index = 13):
 
     # change parameters
     opt = Options().parse()

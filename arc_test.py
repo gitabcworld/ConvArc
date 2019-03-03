@@ -49,21 +49,21 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     start_time = datetime.now()
     print ('[%s] ... testing' % multiprocessing.current_process().name)
     test_epoch = 0
-    test_acc_epoch = []
+    test_auc_epoch = []
     while test_epoch < opt.test_num_batches:
 
         test_loader.dataset.set_path_tmp_epoch_iteration(epoch=epoch,iteration=test_epoch)
 
         if opt.apply_wrn:
-            test_acc, test_loss = epoch_fn(opt=opt, loss_fn=None,
+            test_auc, test_loss = epoch_fn(opt=opt, loss_fn=None,
                                                discriminator=discriminator,
                                                data_loader=test_loader,
                                                fcn=fcn, coAttn=coAttn )
         else:
-            test_acc, test_loss = epoch_fn(opt=opt, loss_fn=None,
+            test_auc, test_loss = epoch_fn(opt=opt, loss_fn=None,
                                                discriminator=discriminator,
                                                data_loader=test_loader, coAttn=coAttn)
-        test_acc_epoch.append(np.mean(test_acc))
+        test_auc_epoch.append(np.mean(test_auc))
 
         test_loader.dataset.remove_path_tmp_epoch(epoch=epoch,iteration=test_epoch)
 
@@ -72,9 +72,11 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     test_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
     time_elapsed = datetime.now() - start_time
-    test_acc_epoch = np.mean(test_acc_epoch)
+    test_auc_std_epoch = np.std(test_auc_epoch)
+    test_auc_epoch = np.mean(test_auc_epoch)
     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" +\
-                             "epoch: ", epoch, ", test ARC accuracy: ", test_acc_epoch, ", time: ", \
+                             "epoch: ", epoch, ", test ARC auc: ", test_auc_epoch, ", test ARC auc_std: ", test_auc_std_epoch, ", time: ", \
         time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-    logger.log_value('arc_test_acc', test_acc_epoch)
-    return test_acc_epoch
+    logger.log_value('arc_test_auc', test_auc_epoch)
+    logger.log_value('arc_test_auc_std', test_auc_std_epoch)
+    return test_auc_epoch, test_auc_std_epoch

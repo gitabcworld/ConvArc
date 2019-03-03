@@ -4,6 +4,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from torch.autograd import Variable
 import cv2
 from tqdm import tqdm
+from sklearn.metrics import ranking
 
 def compute_budget_loss(loss, updated_states, cost_per_sample = 0.001):
     """
@@ -46,7 +47,8 @@ def binary_accuracy(pred, target):
 
 def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
              optimizer=None, fcn=None, coAttn=None):
-    acc_epoch = []
+    #acc_epoch = []
+    auc_epoch = []
     loss_epoch = []
 
     activations_layers = []
@@ -117,14 +119,16 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
             loss_total.backward()
             optimizer.step()
 
-        acc_epoch.append(binary_accuracy(features.squeeze(),targets.int()))
+        #acc_epoch.append(binary_accuracy(features.squeeze(),targets.int()))
+        auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), features.squeeze().cpu().data.numpy(), average=None, sample_weight=None) 
+        auc_epoch.append(auc)
 
         # set a random seed for the next batch
         #data_loader.dataset.agumentation_seed = int(np.random.rand()*1000)
         #activations_layers.append(torch.mean(updated_states.view(updated_states.shape[0],-1),1).data.cpu().numpy())
     #print('Activations: %s' % str(list(np.mean(np.vstack(activations_layers),0))))
 
-    return acc_epoch, loss_epoch
+    return auc_epoch, loss_epoch
 
 def do_epoch_ARC_unroll(opt, loss_fn, discriminator, data_loader,
              optimizer=None, fcn=None):

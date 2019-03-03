@@ -6,13 +6,13 @@ import torch
 
 # Set global values so are being modified.
 best_validation_loss = sys.float_info.max
-best_accuracy = 0.0
+best_auc = 0.0
 saving_threshold = 1.02
 
 def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
                 optimizer=None, loss_fn=None, fcn=None, coAttn=None):
 
-    global best_validation_loss, best_accuracy, saving_threshold
+    global best_validation_loss, best_auc, saving_threshold
 
     # freeze the weights from the ARC and set it to eval.
     if not(discriminator is None):
@@ -39,7 +39,7 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
             coAttn.cuda()
 
     val_epoch = 0
-    val_acc_epoch = []
+    val_auc_epoch = []
     val_loss_epoch = []
     start_time = datetime.now()
     while val_epoch < opt.val_num_batches:
@@ -47,15 +47,15 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         val_loader.dataset.set_path_tmp_epoch_iteration(epoch=epoch,iteration=val_epoch)
 
         if opt.apply_wrn:
-            val_acc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
+            val_auc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                             discriminator=discriminator,
                                             data_loader=val_loader,
                                             fcn=fcn, coAttn=coAttn)
         else:
-            val_acc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
+            val_auc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                             discriminator=discriminator,
                                             data_loader=val_loader, coAttn=coAttn)
-        val_acc_epoch.append(np.mean(val_acc))
+        val_auc_epoch.append(np.mean(val_auc))
         val_loss_epoch.append(np.mean(val_loss))
 
         # remove data repetition
@@ -64,20 +64,22 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         val_epoch += 1
 
     time_elapsed = datetime.now() - start_time
-    val_acc_epoch = np.mean(val_acc_epoch)
+    val_auc_std_epoch = np.std(val_auc_epoch)
+    val_auc_epoch = np.mean(val_auc_epoch)
     val_loss_epoch = np.mean(val_loss_epoch)
     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
                              "epoch: ", epoch, ", validation loss: ", val_loss_epoch \
-        , ", validation accuracy: ", val_acc_epoch, ", time: ", \
+        , ", validation auc: ", val_auc_epoch, ", validation auc_std: ", val_auc_std_epoch, ", time: ", \
         time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
     logger.log_value('arc_val_loss', val_loss_epoch)
-    logger.log_value('arc_val_acc', val_acc_epoch)
+    logger.log_value('arc_val_auc', val_auc_epoch)
+    logger.log_value('arc_val_auc_std', val_auc_std_epoch)
 
     is_model_saved = False
     #if best_validation_loss > (saving_threshold * val_loss_epoch):
-    if best_accuracy < (saving_threshold * val_acc_epoch):
+    if best_auc < (saving_threshold * val_auc_epoch):
         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
-            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
+            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_auc_epoch))
         # save the fcn model
         if opt.apply_wrn:
             torch.save(fcn.state_dict(),opt.wrn_save)
@@ -91,12 +93,12 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
         torch.save(optimizer.state_dict(), opt.arc_optimizer_path)
         # Acc-loss values
         best_validation_loss = val_loss_epoch
-        best_accuracy = val_acc_epoch
+        best_auc = val_auc_epoch
         is_model_saved = True
 
     # remove the data from the epoch
     val_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
-    return val_acc_epoch, val_loss_epoch, is_model_saved
+    return val_auc_epoch, val_auc_std_epoch, val_loss_epoch, is_model_saved
 
 

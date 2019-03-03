@@ -532,7 +532,7 @@ lst_parameters_change = [
         ('save', pathResults + 'Siamese_PeleeNet'),
         ('batchSize', 20),
 
-        #('mode', 'processor'),
+        ('mode', 'generator_processor'),
         ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
 
         ('train_num_batches', 10000),
@@ -559,30 +559,106 @@ lst_parameters_change = [
         ('datasetName', 'banknote'),
         ('dataroot', os.path.join(dataroot,'banknote')),
 
-        ('save', pathResults + 'class_LBP'),
+        ('save', pathResults + 'class_Bahavani'),
         ('batchSize', 20),
 
         #('mode', 'processor'),
-        ('path_tmp_data', pathResults + 'class_LBP/data/'),
+        ('path_tmp_data', pathResults + 'class_Bahavani/data/'),
 
         ('train_num_batches', 10),
         ('val_freq', 1000),
         ('val_num_batches', 10),
         ('test_num_batches', 10),
-        ('path_tmp_data', pathResults + 'class_LBP/data/'),
+        ('path_tmp_data', pathResults + 'class_Bahavani/data/'),
 
         ('apply_wrn', True),
-        ('wrn_name_type', 'LBPFeature'),
-        ('wrn_save', pathResults + 'class_LBP/fcn.pt7'),
-        ('wrn_load', pathResults + 'class_LBP/fcn.pt7'),
+        ('wrn_name_type', 'BahavaniFeature'),
+        ('wrn_save', pathResults + 'class_Bahavani/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_Bahavani/fcn.pt7'),
         #('wrn_load', None),
         
-        ('arc_optimizer_path', pathResults + 'class_LBP/arc_optimizer.pt7'),
+        ('arc_optimizer_path', pathResults + 'class_Bahavani/arc_optimizer.pt7'),
 
         ('use_coAttn', False),
     ],
-    
+    [  # 14
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
 
+        ('save', pathResults + 'class_ResNet50'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'class_ResNet50/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 1000),
+        ('val_num_batches', 10),
+        ('test_num_batches', 10),
+        ('path_tmp_data', pathResults + 'class_ResNet50/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'ResNet50Classificaton'),
+        ('wrn_save', pathResults + 'class_ResNet50/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_ResNet50/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'class_ResNet50/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    [  # 15
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+
+        ('save', pathResults + 'class_PeleeNet'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'class_PeleeNet/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 1000),
+        ('val_num_batches', 10),
+        ('test_num_batches', 10),
+        ('path_tmp_data', pathResults + 'class_PeleeNet/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'PeleeNetClassification'),
+        ('wrn_save', pathResults + 'class_PeleeNet/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_PeleeNet/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'class_PeleeNet/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
+    [  # 16
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
+
+        ('save', pathResults + 'class_MobileNetv2'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'class_MobileNetv2/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 1000),
+        ('val_num_batches', 10),
+        ('test_num_batches', 10),
+        ('path_tmp_data', pathResults + 'class_MobileNetv2/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'Mobilenetv2Classification'),
+        ('wrn_save', pathResults + 'class_MobileNetv2/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_MobileNetv2/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'class_MobileNetv2/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
     ###############################################################################
     ###############################################################################
 

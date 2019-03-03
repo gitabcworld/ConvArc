@@ -439,11 +439,11 @@ def server_processing(opt):
     if opt.datasetName == 'miniImagenet':
         dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
     elif opt.datasetName == 'omniglot':
-        dataLoader = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=None,
-                                        train_std=None)
+        dataLoader = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
+                                        train_std=train_std)
     elif opt.datasetName == 'banknote':
-        dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=None,
-                                        train_std=None)
+        dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
+                                        train_std=train_std)
     else:
         pass
     train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])

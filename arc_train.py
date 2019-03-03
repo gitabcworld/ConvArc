@@ -34,24 +34,26 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
     train_loader.dataset.set_path_tmp_epoch_iteration(epoch=epoch,iteration=0)
 
     if opt.apply_wrn:
-        train_acc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,
+        train_auc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,
                                                         discriminator=discriminator,
                                                         data_loader=train_loader,
                                                         optimizer=optimizer, fcn=fcn, coAttn=coAttn )
     else:
-        train_acc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,
+        train_auc_epoch, train_loss_epoch = epoch_fn(opt=opt, loss_fn=loss_fn,
                                                         discriminator=discriminator,
                                                         data_loader=train_loader,
                                                         optimizer=optimizer, coAttn=coAttn)
     time_elapsed = datetime.now() - start_time
-    train_acc_epoch = np.mean(train_acc_epoch)
+    train_auc_std_epoch = np.std(train_auc_epoch)
+    train_auc_epoch = np.mean(train_auc_epoch)
     train_loss_epoch = np.mean(train_loss_epoch)
-    print ("[%s] epoch: %d, train loss: %f, train acc: %.2f, time: %02ds:%02dms" %
+    print ("[%s] epoch: %d, train loss: %f, train auc: %.2f, time: %02ds:%02dms" %
            (multiprocessing.current_process().name,
-            epoch, np.round(train_loss_epoch, 6), np.round(train_acc_epoch, 6),
+            epoch, np.round(train_loss_epoch, 6), np.round(train_auc_epoch, 6),
             time_elapsed.seconds, time_elapsed.microseconds / 1000))
     logger.log_value('arc_train_loss', train_loss_epoch)
-    logger.log_value('arc_train_acc', train_acc_epoch)
+    logger.log_value('arc_train_auc', train_auc_epoch)
+    logger.log_value('train_auc_std_epoch', train_auc_std_epoch)
 
     assert np.isnan(train_loss_epoch) == False, 'ERROR. Found NAN in train_ARC.'
 
@@ -61,4 +63,4 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
 
     # Reduce learning rate when a metric has stopped improving
     logger.log_value('train_lr', [param_group['lr'] for param_group in optimizer.param_groups][0])
-    return train_acc_epoch, train_loss_epoch
+    return train_auc_epoch, train_auc_std_epoch, train_loss_epoch
