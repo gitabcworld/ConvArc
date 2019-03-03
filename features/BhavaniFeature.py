@@ -20,6 +20,7 @@ class BahavaniFeature(FeatureBase):
         # concatenate the features
         
         # normalize the histogram
-        hist = hist.astype('float')
-        hist /= (hist.sum() + 1e-7)
-        return hist
+        feats = np.concatenate((feats1,feats2),axis=0)
+        feats = feats.astype('float')
+        feats /= (feats.sum() + 1e-7)
+        return feats

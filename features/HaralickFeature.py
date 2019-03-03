@@ -16,6 +16,6 @@ class HaralickFeature(FeatureBase):
     def extract(self, x):
         # convert to gray
         gray_image = cv2.cvtColor((x*255.).astype(np.uint8), cv2.COLOR_RGB2GRAY)
-        feats = mt.features.haralick(gray_image)
+        feats = (mt.features.haralick(gray_image)).flatten() # 4 x 13 feats = 52.
         return feats
     

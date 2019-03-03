@@ -199,6 +199,13 @@ class BanknoteBase(data.Dataset):
         counterfeitModels_tmp = {}
         data_tmp = {}
         
+        # UNCOMMENT TO SEE PARTITON STATISTICS
+        #for key in self.data.keys():
+        #    total = np.array([len(self.data[key]['labels'][datasetType]) for datasetType in ['train','val','test']]).sum()
+        #    for datasetType in ['train','val','test']:
+        #        print('[%s] Total imgs: %d. %s: %d. Counterfeit: %f' % (key,total, datasetType, len(self.data[key]['labels'][datasetType]),
+        #                (np.array(self.data[key]['labels'][datasetType])==0).astype(np.int).sum()/len(self.data[key]['labels'][datasetType])))
+
         for model in self.counterfeitModels:
             data_tmp[model] = {}
             data_tmp[model]['labels'] = []

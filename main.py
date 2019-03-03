@@ -425,12 +425,34 @@ def server_processing(opt):
     #''' UNCOMMENT!!!! TESTING NAIVE - FULLCONTEXT
     # LOAD AGAIN THE FCN AND ARC models. Freezing the weights.
 
-    print ('[%s] ... Testing' % multiprocessing.current_process().name)
+    print ('[%s] ... Testing SET1' % multiprocessing.current_process().name)
     # for the final testing set the data loader to generator
     test_loader.dataset.mode = 'generator_processor'
     test_loader.dataset.remove_path_tmp_epoch(epoch)
     test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+    print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
     #'''
+
+    ## Get the set2 and try
+    print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)
+    opt.setType='set2'
+    if opt.datasetName == 'miniImagenet':
+        dataLoader = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+    elif opt.datasetName == 'omniglot':
+        dataLoader = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=None,
+                                        train_std=None)
+    elif opt.datasetName == 'banknote':
+        dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=None,
+                                        train_std=None)
+    else:
+        pass
+    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
+    test_loader.dataset.mode = 'generator_processor'
+    test_loader.dataset.remove_path_tmp_epoch(epoch)
+    print ('[%s] ... Testing Set2' % multiprocessing.current_process().name)
+    test_acc_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
+    print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
+
 
     ###########################################
     ## Now Train the NAIVE of FULL CONTEXT model
