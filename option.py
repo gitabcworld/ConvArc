@@ -532,11 +532,11 @@ lst_parameters_change = [
         ('save', pathResults + 'Siamese_PeleeNet'),
         ('batchSize', 20),
 
-        ('mode', 'generator_processor'),
+        #('mode', 'generator_processor'),
         ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('val_num_batches', 100),
         ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
@@ -592,7 +592,7 @@ lst_parameters_change = [
         ('path_tmp_data', pathResults + 'class_ResNet50/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('val_num_batches', 10),
         ('test_num_batches', 10),
         ('path_tmp_data', pathResults + 'class_ResNet50/data/'),
@@ -618,7 +618,7 @@ lst_parameters_change = [
         ('path_tmp_data', pathResults + 'class_PeleeNet/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('val_num_batches', 10),
         ('test_num_batches', 10),
         ('path_tmp_data', pathResults + 'class_PeleeNet/data/'),
@@ -644,7 +644,7 @@ lst_parameters_change = [
         ('path_tmp_data', pathResults + 'class_MobileNetv2/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 1000),
+        ('val_freq', 100),
         ('val_num_batches', 10),
         ('test_num_batches', 10),
         ('path_tmp_data', pathResults + 'class_MobileNetv2/data/'),
