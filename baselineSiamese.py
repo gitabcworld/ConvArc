@@ -543,7 +543,7 @@ def server_processing(opt):
 
 
 
-def train(index = 13):
+def train(index = None):
 
     # change parameters
     opt = Options().parse()
