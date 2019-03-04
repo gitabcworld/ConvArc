@@ -79,7 +79,7 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
     #if best_validation_loss > (saving_threshold * val_loss_epoch):
     if best_auc < (saving_threshold * val_auc_epoch):
         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
-            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_auc_epoch))
+            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_auc, val_auc_epoch))
         # save the fcn model
         if opt.apply_wrn:
             torch.save(fcn.state_dict(),opt.wrn_save)

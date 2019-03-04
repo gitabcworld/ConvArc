@@ -308,12 +308,12 @@ def server_processing(opt):
     print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)
     opt.setType='set2'
     if opt.datasetName == 'miniImagenet':
-        dataLoader2 = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+        dataLoader2 = miniImagenetDataLoader(type=MiniImagenetPairs, opt=opt, fcn=None)
     elif opt.datasetName == 'omniglot':
-        dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
+        dataLoader2 = omniglotDataLoader(type=OmniglotPairs, opt=opt, fcn=None,train_mean=train_mean,
                                         train_std=train_std)
     elif opt.datasetName == 'banknote':
-        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
+        dataLoader2 = banknoteDataLoader(type=FullBanknotePairs, opt=opt, fcn=None, train_mean=train_mean,
                                         train_std=train_std)
     else:
         pass
@@ -442,7 +442,7 @@ def server_processing(opt):
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
             print ("[%s], best validation accuracy: %.2f, best validation loss: %.5f" % (
-                multiprocessing.current_process().name, arc_val.best_accuracy, arc_val.best_validation_loss))
+                multiprocessing.current_process().name, arc_val.best_auc, arc_val.best_validation_loss))
             print ("[%s] ... exiting training regime " % multiprocessing.current_process().name)
 
         except KeyboardInterrupt:

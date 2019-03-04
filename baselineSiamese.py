@@ -376,12 +376,12 @@ def server_processing(opt):
     print('Loading set 2 ...')
     opt.setType='set2'
     if opt.datasetName == 'miniImagenet':
-        dataLoader2 = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
+        dataLoader2 = miniImagenetDataLoader(type=MiniImagenetPairs, opt=opt, fcn=None)
     elif opt.datasetName == 'omniglot':
-        dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
+        dataLoader2 = omniglotDataLoader(type=OmniglotPairs, opt=opt, fcn=None,train_mean=train_mean,
                                         train_std=train_std)
     elif opt.datasetName == 'banknote':
-        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
+        dataLoader2 = banknoteDataLoader(type=FullBanknotePairs, opt=opt, fcn=None, train_mean=train_mean,
                                         train_std=train_std)
     else:
         pass
