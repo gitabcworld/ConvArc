@@ -206,13 +206,13 @@ class BanknoteBase(data.Dataset):
         #        print('[%s] Total imgs: %d. %s: %d. Counterfeit: %f' % (key,total, datasetType, len(self.data[key]['labels'][datasetType]),
         #                (np.array(self.data[key]['labels'][datasetType])==0).astype(np.int).sum()/len(self.data[key]['labels'][datasetType])))
 
-        for model in self.counterfeitModels:
+        for model in self.data.keys():
             data_tmp[model] = {}
             data_tmp[model]['labels'] = []
             data_tmp[model]['inputs'] = []
             data_tmp[model]['sizes'] = []
-            if model in self.counterfeitModels.keys():
-                counterfeitModels_tmp[model] = 0
+            #if model in self.counterfeitModels.keys():
+            #    counterfeitModels_tmp[model] = 0
             
             for datasetType in ['train','test','val']:
                 if not(self.train is None):
@@ -221,8 +221,8 @@ class BanknoteBase(data.Dataset):
                         data_tmp[model]['inputs'].append(self.data[model]['inputs'][datasetType])
                         data_tmp[model]['sizes'].append(self.data[model]['sizes'][datasetType])
                         
-                        if model in self.counterfeitModels.keys():
-                            counterfeitModels_tmp[model] += self.counterfeitModels[model][datasetType]
+                        #if model in self.counterfeitModels.keys():
+                        #    counterfeitModels_tmp[model] += self.counterfeitModels[model][datasetType]
 
             # flatten the lists if needed
             self.data[model]['labels'] = [item for sublist in data_tmp[model]['labels'] for item in sublist]
