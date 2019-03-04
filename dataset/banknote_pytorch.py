@@ -189,7 +189,7 @@ class BanknoteBase(data.Dataset):
         self.counterfeitModels = {}
         for model in self.data.keys():
             for datasetType in ['train','test','val']:
-                num_negative_imgs = np.array(self.data[model]['labels'][datasetType]==0).astype(np.int).sum()
+                num_negative_imgs = (np.array(self.data[model]['labels'][datasetType])==0).astype(np.int).sum()
                 if num_negative_imgs > 0:
                     if not (model in self.counterfeitModels.keys()):
                         self.counterfeitModels[model] = {}
