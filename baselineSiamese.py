@@ -166,10 +166,13 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
 
 def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
 
-    acc_epoch = []
+    #acc_epoch = []
+    auc_epoch = []
+    auc_std_epoch = []
     n_repetitions = 0
     while n_repetitions < repetitions:
-        acc_batch = []
+        #acc_batch = []
+        auc_batch = []
 
         for batch_idx, (data, label) in enumerate(tqdm(data_loader)):
             if opt.cuda:
@@ -183,14 +186,21 @@ def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
             logsoft_feats = torch.nn.LogSoftmax(dim=1)(fcn.forward_classifier(feats))
             probs = torch.exp(logsoft_feats)
             max_index = probs.max(dim = 1)[1]
-            acc = (max_index == targets.long()).sum().float()/len(targets)
-            acc_batch.append(acc.item())
+            #acc = (max_index == targets.long()).sum().float()/len(targets)
+            #acc_batch.append(acc.item())
+            auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), probs.cpu().data.numpy()[:,1], average=None, sample_weight=None)
+            auc_batch.append(auc)
 
-        acc_epoch.append(np.mean(acc_batch))
+        #acc_epoch.append(np.mean(acc_batch))
+        auc_epoch.append(np.mean(auc_batch))
+        auc_std_epoch.append(np.mean(auc_batch))
         n_repetitions += 1
 
-    acc_epoch = np.mean(acc_epoch)
-    return acc_epoch
+    #acc_epoch = np.mean(acc_epoch)
+    auc_epoch = np.mean(auc_epoch)
+    auc_std_epoch = np.std(auc_std_epoch)
+    #return acc_epoch
+    return auc_epoch, auc_std_epoch
 
 
 def data_generation(opt):
@@ -376,12 +386,12 @@ def server_processing(opt):
     print('Loading set 2 ...')
     opt.setType='set2'
     if opt.datasetName == 'miniImagenet':
-        dataLoader2 = miniImagenetDataLoader(type=MiniImagenetPairs, opt=opt, fcn=None)
+        dataLoader2 = miniImagenetDataLoader(type=MiniImagenet, opt=opt, fcn=None)
     elif opt.datasetName == 'omniglot':
-        dataLoader2 = omniglotDataLoader(type=OmniglotPairs, opt=opt, fcn=None,train_mean=train_mean,
+        dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
                                         train_std=train_std)
     elif opt.datasetName == 'banknote':
-        dataLoader2 = banknoteDataLoader(type=FullBanknotePairs, opt=opt, fcn=None, train_mean=train_mean,
+        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
                                         train_std=train_std)
     else:
         pass
@@ -457,8 +467,8 @@ def server_processing(opt):
 
                         start_time = datetime.now()
                         test_loader2.dataset.mode = 'generator_processor'
-                        test_auc_epoch, test_std_auc_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader2, fcn=fcn, 
-                                                        logger=logger, optimizer=None)
+                        test_auc_epoch, test_std_auc_epoch = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader2, fcn=fcn, 
+                                                        logger=logger)
                         time_elapsed = datetime.now() - start_time
                         print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
                             "[TEST] SET2. ", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", time: ", \
