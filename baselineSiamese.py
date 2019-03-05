@@ -76,7 +76,9 @@ class ContrastiveLoss(torch.nn.Module):
 
 
 def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
-    
+
+    all_probs = []
+    all_labels = []
     #acc_epoch = []
     auc_epoch = []
     auc_std_epoch = []
@@ -141,12 +143,17 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
             max_index = probs.max(dim = 1)[1]
             acc = (max_index == targets.long()).sum().float()/len(targets)
             #acc_batch.append(acc.item())
-            auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), probs.cpu().data.numpy()[:,1], average=None, sample_weight=None)            
-            auc_batch.append(auc)
+            #auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), probs.cpu().data.numpy()[:,1], average=None, sample_weight=None)            
+            #auc_batch.append(auc)
+            all_probs.append(probs.cpu().data.numpy()[:,1])
+            all_labels.append(targets.long().data.cpu().numpy())
 
+        auc = ranking.roc_auc_score([item for sublist in all_labels for item in sublist],
+                                      [item for sublist in all_probs for item in sublist], average=None, sample_weight=None)
+        auc_epoch.append(auc)
         #acc_epoch.append(np.mean(acc_batch))
-        auc_epoch.append(np.mean(auc_batch))
-        auc_std_epoch.append(np.std(auc_batch))
+        #auc_epoch.append(np.mean(auc_batch))
+        #auc_std_epoch.append(np.std(auc_batch))
         loss_epoch.append(np.mean(loss_batch))
         # remove data repetition
         data_loader.dataset.remove_path_tmp_epoch(epoch,n_repetitions)
@@ -157,18 +164,18 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
     data_loader.dataset.remove_path_tmp_epoch(epoch)
 
     #acc_epoch = np.mean(acc_epoch)
+    #auc_epoch = np.mean(auc_epoch)
+    #auc_std_epoch = np.mean(auc_std_epoch)
+    auc_std_epoch = np.std(auc_epoch)
     auc_epoch = np.mean(auc_epoch)
-    auc_std_epoch = np.mean(auc_std_epoch)
-    
     loss_epoch = np.mean(loss_epoch)
 
     #return acc_epoch, loss_epoch
     return auc_epoch, auc_std_epoch, loss_epoch
-    
+
 
 def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
 
-    #acc_epoch = []
     auc_epoch = []
     auc_std_epoch = []
     n_repetitions = 0
@@ -209,7 +216,7 @@ def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
     auc_std_epoch = np.std(auc_epoch)
     auc_epoch = np.mean(auc_epoch)
     #return acc_epoch
-    return auc_epoch, auc_std_epoch
+    return auc_epoch, auc_std_epoch, None
 
 
 def data_generation(opt):
@@ -400,7 +407,7 @@ def server_processing(opt):
         dataLoader2 = omniglotDataLoader(type=Omniglot, opt=opt, fcn=None,train_mean=train_mean,
                                         train_std=train_std)
     elif opt.datasetName == 'banknote':
-        dataLoader2 = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=train_mean,
+        dataLoader2 = banknoteDataLoader(type=FullBanknotePairs, opt=opt, fcn=None, train_mean=train_mean,
                                         train_std=train_std)
     else:
         pass
@@ -476,7 +483,7 @@ def server_processing(opt):
 
                         start_time = datetime.now()
                         test_loader2.dataset.mode = 'generator_processor'
-                        test_auc_epoch, test_std_auc_epoch = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader2, fcn=fcn, 
+                        test_auc_epoch, test_std_auc_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader2, fcn=fcn, 
                                                         logger=logger)
                         time_elapsed = datetime.now() - start_time
                         print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
