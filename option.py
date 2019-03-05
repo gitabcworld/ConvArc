@@ -420,7 +420,9 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 100),
+        ('val_freq', 500),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'noCoAttnNaivePeleeNet/data/'),
@@ -463,7 +465,10 @@ lst_parameters_change = [
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
-        ('val_freq', 100),
+        ('val_freq', 500),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+
         ('naive_full_epochs', 10000),
         ('naive_full_val_freq', 1000),
         ('path_tmp_data', pathResults + 'CoAttnNaivePeleeNet/data/'),
@@ -626,7 +631,7 @@ lst_parameters_change = [
         ('path_tmp_data', pathResults + 'Siamese_ResNet50/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 100),
+        ('val_freq', 500),
         ('val_num_batches', 100),
         ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'Siamese_ResNet50/data/'),
@@ -682,7 +687,7 @@ lst_parameters_change = [
         ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 100),
+        ('val_freq', 500),
         ('val_num_batches', 100),
         ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'Siamese_PeleeNet/data/'),
