@@ -44,6 +44,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from sklearn.metrics import ranking
 
+import pdb
+
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
@@ -170,6 +172,8 @@ def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
     auc_epoch = []
     auc_std_epoch = []
     n_repetitions = 0
+    all_probs = []
+    all_labels = []
     while n_repetitions < repetitions:
         #acc_batch = []
         auc_batch = []
@@ -188,17 +192,22 @@ def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
             max_index = probs.max(dim = 1)[1]
             #acc = (max_index == targets.long()).sum().float()/len(targets)
             #acc_batch.append(acc.item())
-            auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), probs.cpu().data.numpy()[:,1], average=None, sample_weight=None)
-            auc_batch.append(auc)
+            #auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), probs.cpu().data.numpy()[:,1], average=None, sample_weight=None)
+            #auc_batch.append(auc)
+            all_probs.append(probs.cpu().data.numpy()[:,1])
+            all_labels.append(targets.long().data.cpu().numpy())
 
         #acc_epoch.append(np.mean(acc_batch))
-        auc_epoch.append(np.mean(auc_batch))
-        auc_std_epoch.append(np.mean(auc_batch))
+        #pdb.set_trace()
+        auc = ranking.roc_auc_score([item for sublist in all_labels for item in sublist], 
+                                      [item for sublist in all_probs for item in sublist], average=None, sample_weight=None)
+        auc_epoch.append(auc)
+        #auc_std_epoch.append(np.mean(auc_batch))
         n_repetitions += 1
 
     #acc_epoch = np.mean(acc_epoch)
+    auc_std_epoch = np.std(auc_epoch)
     auc_epoch = np.mean(auc_epoch)
-    auc_std_epoch = np.std(auc_std_epoch)
     #return acc_epoch
     return auc_epoch, auc_std_epoch
 
