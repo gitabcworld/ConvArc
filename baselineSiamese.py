@@ -489,8 +489,8 @@ def server_processing(opt):
                         print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
                             "[TEST] SET2. ", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", time: ", \
                             time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-                        logger.log_value('test_set1_auc', test_auc_epoch)
-                        logger.log_value('test_set1_auc_std', test_std_auc_epoch)
+                        logger.log_value('test_set2_auc', test_auc_epoch)
+                        logger.log_value('test_set2_auc_std', test_std_auc_epoch)
 
                 # just in case there is a folder not removed, remove it
                 train_loader.dataset.remove_path_tmp_epoch(epoch)
@@ -535,10 +535,10 @@ def server_processing(opt):
     train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
     print ('[%s] ... Testing Set1' % multiprocessing.current_process().name)
     start_time = datetime.now()
-    test_acc_epoch = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, logger=logger)
+    test_auc_epoch, test_auc_std_epoch, _ = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, logger=logger)
     time_elapsed = datetime.now() - start_time
     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
-        "[TEST]", "epoch: ", epoch, ", accuracy: ", test_acc_epoch, ", time: ", \
+        "[TEST]", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", auc_std: ", test_auc_std_epoch, ", time: ", \
         time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
     #'''
@@ -559,9 +559,9 @@ def server_processing(opt):
     train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
     print ('[%s] ... Testing Set2' % multiprocessing.current_process().name)
     start_time = datetime.now()
-    test_acc_epoch = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, logger=logger)
+    test_auc_epoch, test_auc_std_epoch, _ = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, logger=logger)
     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
-        "[TEST]", "epoch: ", epoch, ", accuracy: ", test_acc_epoch, ", time: ", \
+        "[TEST]", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", auc_std: ", test_auc_std_epoch, ", time: ", \
         time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
