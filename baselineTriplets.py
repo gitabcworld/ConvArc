@@ -33,6 +33,8 @@ import pdb
 import cv2
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from sklearn.metrics import ranking
+
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
@@ -41,6 +43,9 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
     
     acc_epoch = []
     loss_epoch = []
+    all_probs = []
+    all_labels = []
+    auc_epoch = []
     n_repetitions = 0
     while n_repetitions < repetitions:
         acc_batch = []
@@ -133,9 +138,15 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
             probs = torch.exp(logsoft_feats)
             max_index = probs.max(dim = 1)[1]
             acc = (max_index == targets.long()).sum().float()/len(targets)
-            acc_batch.append(acc.item())
+            #acc_batch.append(acc.item())
 
-        acc_epoch.append(np.mean(acc_batch))
+            all_probs.append(probs.cpu().data.numpy()[:,1])
+            all_labels.append(targets.long().data.cpu().numpy())
+
+        auc = ranking.roc_auc_score([item for sublist in all_labels for item in sublist],
+                                      [item for sublist in all_probs for item in sublist], average=None, sample_weight=None)
+        auc_epoch.append(auc)
+        #acc_epoch.append(np.mean(acc_batch))
         loss_epoch.append(np.mean(loss_batch))
         # remove data repetition
         data_loader.dataset.remove_path_tmp_epoch(epoch,n_repetitions)
@@ -145,38 +156,13 @@ def do_epoch(epoch, repetitions, opt, data_loader, fcn, logger, optimizer=None):
     # remove data epoch
     data_loader.dataset.remove_path_tmp_epoch(epoch)
 
-    acc_epoch = np.mean(acc_epoch)
+    auc_std_epoch = np.std(auc_epoch)
+    auc_epoch = np.mean(auc_epoch)
+    #acc_epoch = np.mean(acc_epoch)
     loss_epoch = np.mean(loss_epoch)
 
-    return acc_epoch, loss_epoch
-
-def do_epoch_classification(epoch, repetitions, opt, data_loader, fcn, logger):
-
-    acc_epoch = []
-    n_repetitions = 0
-    while n_repetitions < repetitions:
-        acc_batch = []
-
-        for batch_idx, (data, label) in enumerate(tqdm(data_loader)):
-            if opt.cuda:
-                data = data.cuda()
-                label = label.cuda()
-            inputs = Variable(data, requires_grad=False)
-            targets = Variable(label, requires_grad=False)
-
-            feats = fcn.forward_features(inputs)
-            feats = feats / (feats.norm(p=2, dim=1, keepdim=True) + 1e-12).expand_as(feats)
-            logsoft_feats = torch.nn.LogSoftmax(dim=1)(fcn.forward_classifier(feats))
-            probs = torch.exp(logsoft_feats)
-            max_index = probs.max(dim = 1)[1]
-            acc = (max_index == targets.long()).sum().float()/len(targets)
-            acc_batch.append(acc.item())
-
-        acc_epoch.append(np.mean(acc_batch))
-        n_repetitions += 1
-
-    acc_epoch = np.mean(acc_epoch)
-    return acc_epoch
+    #return acc_epoch, loss_epoch
+    return auc_epoch, auc_std_epoch, loss_epoch
 
 
 def data_generation(opt):
@@ -345,11 +331,20 @@ def server_processing(opt):
         else:
             optimizer.load_state_dict(torch.load(opt.arc_optimizer_path, map_location=torch.device('cpu')))
 
+
+    print('Loading set 2 ...')
+    opt.setType='set2'
+    dataLoader2 = banknoteDataLoader(type=FullBanknoteTriplets, opt=opt, fcn=None, train_mean=train_mean,
+                                        train_std=train_std)
+    _, _, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
+    # Remove memory
+    del dataLoader2
+
     ###################################
     ## TRAINING ARC/CONVARC
     ###################################
     best_validation_loss = sys.float_info.max
-    best_accuracy = 0.0
+    best_auc = 0.0
     saving_threshold = 1.02
     epoch = 0
     if opt.arc_resume == True or opt.arc_load is None:
@@ -360,11 +355,12 @@ def server_processing(opt):
                 ## set information of the epoch in the dataloader
                 fcn.train() # Set to train the network
                 start_time = datetime.now()
-                train_acc_epoch, train_loss_epoch = do_epoch(epoch=epoch, repetitions=1, opt=opt, data_loader = train_loader, fcn=fcn, 
+                train_auc_epoch, train_auc_std_epoch, train_loss_epoch = do_epoch(epoch=epoch, repetitions=1, opt=opt, data_loader = train_loader, fcn=fcn, 
                                                                 logger=logger, optimizer=optimizer)
                 time_elapsed = datetime.now() - start_time
-                print ("[train]", "epoch: ", epoch, ", loss: ", train_loss_epoch, ", accuracy: ", train_acc_epoch, ", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
-                logger.log_value('train_acc', train_acc_epoch)
+                print ("[train]", "epoch: ", epoch, ", loss: ", train_loss_epoch, ", auc: ", train_auc_epoch, ", auc_std: ", train_auc_std_epoch,", time: ", time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000)
+                logger.log_value('train_auc', train_auc_epoch)
+                logger.log_value('train_auc_std', train_auc_std_epoch)
                 logger.log_value('train_loss', train_loss_epoch)
 
                 # Reduce learning rate when a metric has stopped improving
@@ -372,40 +368,53 @@ def server_processing(opt):
                 if epoch % opt.val_freq == 0:
                     fcn.eval() # set to test the network
                     start_time = datetime.now()
-                    val_acc_epoch, val_loss_epoch = do_epoch(epoch=epoch, repetitions=opt.val_num_batches, opt=opt, data_loader = val_loader, fcn=fcn, 
+                    val_auc_epoch, val_auc_std_epoch, val_loss_epoch = do_epoch(epoch=epoch, repetitions=opt.val_num_batches, opt=opt, data_loader = val_loader, fcn=fcn, 
                                                             logger=logger, optimizer=None)
                     time_elapsed = datetime.now() - start_time
                     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
                             "[VAL]", "epoch: ", epoch, ", loss: ", val_loss_epoch \
-                            , ", accuracy: ", val_acc_epoch, ", time: ", \
+                            , ", auc: ", val_auc_epoch, ", auc_std: ", val_auc_std_epoch, ", time: ", \
                             time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-                    logger.log_value('val_acc', val_acc_epoch)
+                    logger.log_value('val_auc', val_auc_epoch)
+                    logger.log_value('val_auc_std', val_auc_std_epoch)
                     logger.log_value('val_loss', val_loss_epoch)
 
                     is_model_saved = False
                     #if best_validation_loss > (saving_threshold * val_loss_epoch):
-                    if best_accuracy < (saving_threshold * val_acc_epoch):
+                    if best_auc < (saving_threshold * best_auc):
                         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
-                            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_accuracy, val_acc_epoch))
+                            multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_auc, best_auc))
                         # save classifier
                         torch.save(fcn.state_dict(),opt.wrn_save)
                         # Save optimizer
                         torch.save(optimizer.state_dict(), opt.arc_optimizer_path)
                         # Acc-loss values
                         best_validation_loss = val_loss_epoch
-                        best_accuracy = val_acc_epoch
+                        best_auc = best_auc
                         is_model_saved = True
 
                     if is_model_saved:
                         fcn.eval() # set to test the network
                         start_time = datetime.now()
-                        test_acc_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, 
+                        test_auc_epoch, test_auc_std_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, 
                                                         logger=logger, optimizer=None)
                         time_elapsed = datetime.now() - start_time
                         print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
-                            "[TEST]", "epoch: ", epoch, ", accuracy: ", test_acc_epoch, ", time: ", \
+                            "[TEST] SET1", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", auc_std: ", test_auc_std_epoch, ", time: ", \
                             time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-                        logger.log_value('test_acc', test_acc_epoch)
+                        logger.log_value('test_set1_auc', test_auc_epoch)
+                        logger.log_value('test_set1_auc_std', test_auc_epoch)
+
+                        start_time = datetime.now()
+                        test_loader2.dataset.mode = 'generator_processor'
+                        test_auc_epoch, test_auc_std_epoch, _ = do_epoch(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader2, fcn=fcn, 
+                                                        logger=logger)
+                        time_elapsed = datetime.now() - start_time
+                        print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
+                            "[TEST] SET2. ", "epoch: ", epoch, ", auc: ", test_auc_epoch, ", auc_std: ", test_auc_std_epoch, ", time: ", \
+                            time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
+                        logger.log_value('test_set2_auc', test_auc_epoch)
+                        logger.log_value('test_set2_auc_std', test_auc_std_epoch)
 
                 # just in case there is a folder not removed, remove it
                 train_loader.dataset.remove_path_tmp_epoch(epoch)
@@ -416,53 +425,13 @@ def server_processing(opt):
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
             print ("[%s], best validation accuracy: %.2f, best validation loss: %.5f" % (
-                multiprocessing.current_process().name, best_accuracy, best_validation_loss))
+                multiprocessing.current_process().name, best_auc, best_validation_loss))
             print ("[%s] ... exiting training regime " % multiprocessing.current_process().name)
 
         except KeyboardInterrupt:
             pass
     ###################################
 
-
-    # TODO: LOAD THE BEST MODEL
-    fcn.load_state_dict(torch.load(opt.wrn_load))
-    fcn.eval() # set to test the network
-
-    # Set the num val/test repetitions to 1
-    opt.val_num_batches = 1
-    opt.test_num_batches = 1
-
-    # set the mode of the dataset to generator_processor
-    # which generates and processes the images without saving them.
-    opt.mode = 'generator_processor'
-
-    # Load Dataset
-    opt.setType='set1'
-    dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=fcn, train_mean=train_mean,
-                                        train_std=train_std)
-    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
-    print ('[%s] ... Testing Set1' % multiprocessing.current_process().name)
-    start_time = datetime.now()
-    test_acc_epoch = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, logger=logger)
-    time_elapsed = datetime.now() - start_time
-    print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
-        "[TEST]", "epoch: ", epoch, ", accuracy: ", test_acc_epoch, ", time: ", \
-        time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
-    print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
-    #'''
-
-    ## Get the set2 and try
-    print ('[%s] ... Loading Set2' % multiprocessing.current_process().name)
-    opt.setType='set2'
-    dataLoader = banknoteDataLoader(type=FullBanknote, opt=opt, fcn=None, train_mean=None,
-                                        train_std=None)
-    train_loader, val_loader, test_loader = dataLoader.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
-    print ('[%s] ... Testing Set2' % multiprocessing.current_process().name)
-    start_time = datetime.now()
-    test_acc_epoch = do_epoch_classification(epoch=epoch, repetitions=opt.test_num_batches, opt=opt, data_loader = test_loader, fcn=fcn, logger=logger)
-    print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" + \
-        "[TEST]", "epoch: ", epoch, ", accuracy: ", test_acc_epoch, ", time: ", \
-        time_elapsed.seconds, "s:", time_elapsed.microseconds / 1000, "ms\n", "====" * 20)
     print ('[%s] ... FINISHED! ...' % multiprocessing.current_process().name)
 
 def train(index = None):
