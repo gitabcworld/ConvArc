@@ -573,9 +573,9 @@ lst_parameters_change = [
         ('path_tmp_data', pathResults + 'class_PeleeNet/data/'),
 
         ('train_num_batches', 10000),
-        ('val_freq', 100),
-        ('val_num_batches', 10),
-        ('test_num_batches', 10),
+        ('val_freq', 500),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'class_PeleeNet/data/'),
 
         ('apply_wrn', True),
