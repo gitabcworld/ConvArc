@@ -75,7 +75,7 @@ class banknoteDataLoader():
         train_transform = transforms.Compose(lst_transforms)
 
         kwargs = {'num_workers': self.opt.nthread, 'pin_memory': True} if self.opt.cuda else {}
-        if self.type == FullBanknotePairs or self.type == FullBanknote:
+        if self.type == FullBanknotePairs or self.type == FullBanknote or self.type == FullBanknoteTriplets:
             train_loader_mean_std = torch.utils.data.DataLoader(
                 FullBanknote(setType=self.opt.setType, root=self.opt.dataroot, train='train', size = self.opt.imageSize,
                                     mode = 'generator_processor', path_tmp_data = self.opt.path_tmp_data,

@@ -381,7 +381,7 @@ def server_processing(opt):
 
                     is_model_saved = False
                     #if best_validation_loss > (saving_threshold * val_loss_epoch):
-                    if best_auc < (saving_threshold * best_auc):
+                    if best_auc < (saving_threshold * val_auc_epoch):
                         print("[{}] Significantly improved validation loss from {} --> {}. accuracy from {} --> {}. Saving...".format(
                             multiprocessing.current_process().name, best_validation_loss, val_loss_epoch, best_auc, best_auc))
                         # save classifier
@@ -390,7 +390,7 @@ def server_processing(opt):
                         torch.save(optimizer.state_dict(), opt.arc_optimizer_path)
                         # Acc-loss values
                         best_validation_loss = val_loss_epoch
-                        best_auc = best_auc
+                        best_auc = val_auc_epoch
                         is_model_saved = True
 
                     if is_model_saved:
