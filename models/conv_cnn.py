@@ -815,6 +815,42 @@ class PeleeNetClassification(ConvCNN_Base):
         def create(self,opt): return PeleeNetClassification(opt)
 
 
+######################################################################
+######################################################################
+######################################################################
+
+class PeleeNetClassificationReduced(ConvCNN_Base):
+
+    def __init__(self, opt):
+
+        super(PeleeNetClassificationReduced, self).__init__(opt)
+
+        # Initialize network
+        self.model = peleeNet(pretrained=True)
+        # reduce the last two blocks of the net to have a output feature size of Bx512x14x14
+        self.model.features = nn.Sequential(*list(self.model.features.children())[:-2])
+        self.model.classifier = nn.Linear(512,2, bias=True)
+
+    def forward(self, x):
+        return self.model(x)
+
+    def forward_features(self, x):
+        for i in range(9):
+            x = self.model.features[i](x) # returns B x 512 x 14 x 14
+        x = F.avg_pool2d(x, kernel_size=(x.size(2), x.size(3))).view(x.size(0), -1)
+        if self.model.drop_rate > 0:
+            x = F.dropout(x, p=self.model.drop_rate, training=self.model.training)
+        return x
+
+    def forward_classifier(self, x):
+        # Execute only the classifier
+        x = self.model.classifier(x)
+        return x
+
+
+    class Factory:
+        def create(self,opt): return PeleeNetClassificationReduced(opt)
+
 
 ######################################################################
 ######################################################################

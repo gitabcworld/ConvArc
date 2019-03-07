@@ -791,7 +791,35 @@ lst_parameters_change = [
         ('use_coAttn', False),
     ],
 
+    ###############################################################################
+    #####################       CLASSIFICATION REDUCED         ####################
+    ###############################################################################
+    [  # 24
+        ('datasetName', 'banknote'),
+        ('dataroot', os.path.join(dataroot,'banknote')),
 
+        ('save', pathResults + 'class_PeleeNet_reduced'),
+        ('batchSize', 20),
+
+        #('mode', 'processor'),
+        ('path_tmp_data', pathResults + 'class_PeleeNet_reduced/data/'),
+
+        ('train_num_batches', 10000),
+        ('val_freq', 500),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
+        ('path_tmp_data', pathResults + 'class_PeleeNet_reduced/data/'),
+
+        ('apply_wrn', True),
+        ('wrn_name_type', 'PeleeNetClassificationReduced'),
+        ('wrn_save', pathResults + 'class_PeleeNet_reduced/fcn.pt7'),
+        ('wrn_load', pathResults + 'class_PeleeNet_reduced/fcn.pt7'),
+        #('wrn_load', None),
+        
+        ('arc_optimizer_path', pathResults + 'class_PeleeNet_reduced/arc_optimizer.pt7'),
+
+        ('use_coAttn', False),
+    ],
 
     ###############################################################################
     ###############################################################################
