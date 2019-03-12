@@ -80,7 +80,6 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     test_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
     time_elapsed = datetime.now() - start_time
-    #pdb.set_trace()
     test_auc_std_epoch = np.std(test_auc_epoch)
     test_auc_epoch = np.mean(test_auc_epoch)
     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" +\
