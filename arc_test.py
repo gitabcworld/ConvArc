@@ -4,6 +4,8 @@ from datetime import datetime
 from models.conv_cnn import ConvCNNFactory
 from models.coAttn import CoAttn
 import multiprocessing
+from sklearn.metrics import ranking
+import pdb
 
 def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
 
@@ -63,6 +65,12 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
             test_auc, test_loss = epoch_fn(opt=opt, loss_fn=None,
                                                discriminator=discriminator,
                                                data_loader=test_loader, coAttn=coAttn)
+        
+        if isinstance(test_auc, tuple):
+             features = [item for sublist in test_auc[0] for item in sublist]
+             labels = [item for sublist in test_auc[1] for item in sublist]
+             test_auc = ranking.roc_auc_score(labels, features, average=None, sample_weight=None)
+        
         test_auc_epoch.append(np.mean(test_auc))
 
         test_loader.dataset.remove_path_tmp_epoch(epoch=epoch,iteration=test_epoch)
@@ -72,6 +80,7 @@ def arc_test(epoch, epoch_fn, opt, test_loader, discriminator, logger):
     test_loader.dataset.remove_path_tmp_epoch(epoch=epoch)
 
     time_elapsed = datetime.now() - start_time
+    #pdb.set_trace()
     test_auc_std_epoch = np.std(test_auc_epoch)
     test_auc_epoch = np.mean(test_auc_epoch)
     print ("====" * 20, "\n", "[" + multiprocessing.current_process().name + "]" +\

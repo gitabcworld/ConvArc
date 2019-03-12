@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import cv2
 from tqdm import tqdm
 from sklearn.metrics import ranking
+import pdb
 
 def compute_budget_loss(loss, updated_states, cost_per_sample = 0.001):
     """
@@ -50,6 +51,9 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
     #acc_epoch = []
     auc_epoch = []
     loss_epoch = []
+    feats_epoch = []
+    labels_epoch = []
+
 
     activations_layers = []
 
@@ -120,15 +124,18 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
             optimizer.step()
 
         #acc_epoch.append(binary_accuracy(features.squeeze(),targets.int()))
-        auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), features.squeeze().cpu().data.numpy(), average=None, sample_weight=None) 
-        auc_epoch.append(auc)
+        #auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), features.squeeze().cpu().data.numpy(), average=None, sample_weight=None) 
+        #auc_epoch.append(auc)
+        feats_epoch.append(features.squeeze().cpu().data.numpy())
+        labels_epoch.append(targets.long().data.cpu().numpy())
 
         # set a random seed for the next batch
         #data_loader.dataset.agumentation_seed = int(np.random.rand()*1000)
         #activations_layers.append(torch.mean(updated_states.view(updated_states.shape[0],-1),1).data.cpu().numpy())
     #print('Activations: %s' % str(list(np.mean(np.vstack(activations_layers),0))))
 
-    return auc_epoch, loss_epoch
+    #return auc_epoch, loss_epoch
+    return (feats_epoch,labels_epoch), loss_epoch
 
 def do_epoch_ARC_unroll(opt, loss_fn, discriminator, data_loader,
              optimizer=None, fcn=None):
@@ -268,8 +275,11 @@ def do_epoch_naive_full(opt, discriminator, data_loader, model_fn,
 
 def do_epoch_classification(opt, loss_fn, discriminator, data_loader,
                                 optimizer=None, fcn=None, coAttn=None):
-    acc_epoch = []
+    #acc_epoch = []
+    auc_epoch = []
     loss_epoch = []
+    feats_epoch = []
+    labels_epoch = []
 
     correct = 0
     total = 0
@@ -314,6 +324,12 @@ def do_epoch_classification(opt, loss_fn, discriminator, data_loader,
         _, predicted = torch.max(torch.nn.Softmax(dim=1)(features), 1)
         total += targets.size(0)
         correct += (predicted == targets).sum().item()
-        acc_epoch.append((predicted == targets).sum().item() / targets.size(0))
+        #acc_epoch.append((predicted == targets).sum().item() / targets.size(0))
+        #auc = ranking.roc_auc_score(targets.long().data.cpu().numpy(), features[:,1].squeeze().cpu().data.numpy(), average=None, sample_weight=None) 
+        #auc_epoch.append(auc)
+        feats_epoch.append(features[:,1].squeeze().cpu().data.numpy())
+        labels_epoch.append(targets.long().data.cpu().numpy())
 
-    return acc_epoch, loss_epoch
+
+    #return auc_epoch, loss_epoch
+    return (feats_epoch,labels_epoch), loss_epoch
