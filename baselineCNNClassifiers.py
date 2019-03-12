@@ -129,7 +129,8 @@ def train(index = None):
     else:
         pass
     # Get the DataLoaders from train - val - test
-    train_loader2, val_loader2, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed)
+    #train_loader2, val_loader2, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed)
+    train_loader2, val_loader2, test_loader2 = dataLoader2.get(rnd_seed=rnd_seed, dataPartition = [None,None,'train+val+test'])
     del dataLoader2
 
     if opt.cuda:
@@ -186,7 +187,6 @@ def train(index = None):
         try:
             while epoch < opt.train_num_batches:
                 epoch += 1
-
                 train_auc_epoch, train_auc_std_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
                                                                         discriminator, logger, optimizer=optimizer,
                                                                         loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
@@ -201,6 +201,10 @@ def train(index = None):
                         print('++++++++++++TESTING FOR SET1++++++++++++++')
                         test_auc_epoch, test_auc_std_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader, discriminator, logger)
                         print('++++++++++++FINISHED TESTING FOR SET1. AUC: %f, AUC_STD: %f ++++++++++++++' % (test_auc_epoch,test_auc_std_epoch))
+
+                        print ('[%s] ... Testing Set2' % multiprocessing.current_process().name)
+                        test_auc_epoch, test_auc_std_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader2, discriminator, logger)
+                        print('++++++++++++FINISHED TESTING FOR SET2. AUC: %f, AUC_STD: %f ++++++++++++++' % (test_auc_epoch,test_auc_std_epoch))
 
 
                 logger.step()

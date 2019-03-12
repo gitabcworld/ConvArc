@@ -270,6 +270,8 @@ def do_epoch_classification(opt, loss_fn, discriminator, data_loader,
                                 optimizer=None, fcn=None, coAttn=None):
     acc_epoch = []
     loss_epoch = []
+    feats_epoch = []
+    labels_epoch = []
 
     correct = 0
     total = 0
@@ -312,8 +314,16 @@ def do_epoch_classification(opt, loss_fn, discriminator, data_loader,
             optimizer.step()
 
         _, predicted = torch.max(torch.nn.Softmax(dim=1)(features), 1)
-        total += targets.size(0)
-        correct += (predicted == targets).sum().item()
-        acc_epoch.append((predicted == targets).sum().item() / targets.size(0))
+        #total += targets.size(0)
+        #correct += (predicted == targets).sum().item()
+        #acc_epoch.append((predicted == targets).sum().item() / targets.size(0))
+        
+        feats_epoch.append(features[:,1].squeeze().cpu().data.numpy())
+        labels_epoch.append(targets.long().data.cpu().numpy())
 
-    return acc_epoch, loss_epoch
+    #return acc_epoch, loss_epoch
+    features = [item for sublist in feats_epoch for item in sublist]
+    labels = [item for sublist in labels_epoch for item in sublist]
+    auc_epoch = ranking.roc_auc_score(labels, features, average=None, sample_weight=None)
+
+    return auc_epoch, loss_epoch
