@@ -75,8 +75,8 @@ def path_leaf(path):
 def data_generation(opt):
 
     # use cuda?
-    opt.cuda = torch.cuda.is_available()
-    cudnn.benchmark = True # set True to speedup
+    opt.cuda = False
+    #cudnn.benchmark = True # set True to speedup
 
     # Load mean/std if exists
     train_mean = None
@@ -106,27 +106,40 @@ def data_generation(opt):
         np.save(os.path.join(opt.save, 'mean.npy'), train_mean)
         np.save(os.path.join(opt.save, 'std.npy'), train_std)
     
-    epoch = 0
+    epoch = 1
     if opt.arc_resume == True or opt.arc_load is None:    
         try:
             while epoch < opt.train_num_batches:
 
-                # wait to check if it is neede more data
+                # wait to check if it is needs more data
+
                 lst_epochs = train_loader.dataset.getFolderEpochList()
-                if len(lst_epochs) > 5:
+                while len(lst_epochs) > 10:
                     time.sleep(1)
+                    lst_epochs = train_loader.dataset.getFolderEpochList()
                 
                 # In case there is more than one generator.
                 # get the last folder epoch executed and update the epoch accordingly
                 if len(lst_epochs)>0:
-                    epoch = np.array([path_leaf(str).split('_')[-1] for str in lst_epochs if 'train' in str]).astype(np.int).max()
+                    bContinueCheckingNextFolder = True
+                    while bContinueCheckingNextFolder:
+                        lst_epoch_selected = []
+                        for i in range(10):
+                            lst_epochs = train_loader.dataset.getFolderEpochList()
+                            epoch = np.array([path_leaf(str).split('_')[-1] for str in lst_epochs if 'train' in str]).astype(np.int).max()
+                            lst_epoch_selected.append(epoch)
+                            time.sleep(0.05)
+                        # if after 0.5s we only have one possible epoch folder then go on with that epoch.
+                        if len(set(lst_epoch_selected))==1:
+                            bContinueCheckingNextFolder = False
+                        # do the next epoch
+                        epoch += 1
                 
-                epoch += 1
-
                 ## set information of the epoch in the dataloader
                 repetitions = 1
                 start_time = datetime.now()
                 for repetition in range(repetitions):
+                    print('Initiating epoch: %d' % (epoch))
                     train_loader.dataset.set_path_tmp_epoch_iteration(epoch,repetition)
                     for batch_idx, (data, label) in enumerate(train_loader):
                         noop = 0
@@ -409,13 +422,11 @@ def server_processing(opt):
     ###################################
     ## TRAINING ARC/CONVARC
     ###################################
-    epoch = 0
+    epoch = 1
     if opt.arc_resume == True or opt.arc_load is None:
 
         try:
             while epoch < opt.train_num_batches:
-                epoch += 1
-
                 train_auc_epoch, train_auc_std_epoch, train_loss_epoch = arc_train.arc_train(epoch, do_epoch_fn, opt, train_loader,
                                                                         discriminator, logger, optimizer=optimizer,
                                                                         loss_fn=loss_fn, fcn=fcn, coAttn=coAttn)
@@ -437,8 +448,8 @@ def server_processing(opt):
                         test_auc_epoch, test_auc_std_epoch = arc_test.arc_test(epoch, do_epoch_fn, opt, test_loader2, discriminator, logger)
 
 
-
                 logger.step()
+                epoch += 1
 
             print ("[%s] ... training done" % multiprocessing.current_process().name)
             print ("[%s], best validation accuracy: %.2f, best validation loss: %.5f" % (

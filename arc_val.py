@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime
 import multiprocessing
 import torch
+from sklearn.metrics import ranking
 
 # Set global values so are being modified.
 best_validation_loss = sys.float_info.max
@@ -55,8 +56,14 @@ def arc_val(epoch, epoch_fn, opt, val_loader, discriminator, logger,
             val_auc, val_loss = epoch_fn(opt=opt, loss_fn=loss_fn,
                                             discriminator=discriminator,
                                             data_loader=val_loader, coAttn=coAttn)
-        val_auc_epoch.append(np.mean(val_auc))
-        val_loss_epoch.append(np.mean(val_loss))
+        
+        if isinstance(val_auc, tuple):
+             features = [item for sublist in val_auc[0] for item in sublist]
+             labels = [item for sublist in val_auc[1] for item in sublist]
+             val_auc = ranking.roc_auc_score(labels, features, average=None, sample_weight=None)
+        
+        val_auc_epoch.append(val_auc)
+        val_loss_epoch.append(val_loss)
 
         # remove data repetition
         val_loader.dataset.remove_path_tmp_epoch(epoch=epoch,iteration=val_epoch)

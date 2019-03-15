@@ -285,7 +285,7 @@ lst_parameters_change = [
         ('one_shot_n_shot', 1),
 
         ('save', pathResults + 'CoAttnNaiveMobilenetV2'),
-        ('batchSize', 20),
+        ('batchSize', 100),
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
@@ -461,7 +461,7 @@ lst_parameters_change = [
         ('one_shot_n_shot', 1),
 
         ('save', pathResults + 'CoAttnNaivePeleeNet'),
-        ('batchSize', 20),
+        ('batchSize', 100),
         ('naive_batchSize', 20),
         
         ('train_num_batches', 10000),
@@ -852,7 +852,7 @@ class Options():
         parser.add_argument('--batchSize', type=int, default=20, help='input batch size')
         parser.add_argument('--name', default=None, help='Custom name for this configuration. Needed for saving'
                                                          ' model checkpoints in a separate folder.')
-        parser.add_argument('--nthread', default=4, type=int)
+        parser.add_argument('--nthread', default=20, type=int)
         parser.add_argument('--dropout', default=0.1, type=float, help='Dropout for training. Done in the input'
                                                                        'in the case of ARC and in the residual block'
                                                                        'in the case of CARC.')

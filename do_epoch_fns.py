@@ -103,11 +103,19 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
                 label = label.cuda()
             targets = Variable(label)
 
+        #free memory
+        del data
+        del label
+
         # COAttention Module 
         if opt.use_coAttn:
             inputs = coAttn(inputs)
 
         features, updated_states = discriminator(inputs)
+        # free memory
+        del inputs 
+        del updated_states
+
         if loss_fn:
             loss = loss_fn(features.squeeze(), targets.float())
             # Add the budget computation cost
@@ -128,6 +136,10 @@ def do_epoch_ARC(opt, loss_fn, discriminator, data_loader,
         #auc_epoch.append(auc)
         feats_epoch.append(features.squeeze().cpu().data.numpy())
         labels_epoch.append(targets.long().data.cpu().numpy())
+        
+        # free memory
+        del features
+        del targets        
 
         # set a random seed for the next batch
         #data_loader.dataset.agumentation_seed = int(np.random.rand()*1000)

@@ -1,6 +1,8 @@
 import numpy as np
 from datetime import datetime
 import multiprocessing
+from sklearn.metrics import ranking
+
 
 def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
               optimizer=None, loss_fn=None, fcn=None, coAttn=None):
@@ -43,9 +45,14 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
                                                         discriminator=discriminator,
                                                         data_loader=train_loader,
                                                         optimizer=optimizer, coAttn=coAttn)
+
+    if isinstance(train_auc_epoch, tuple):
+        features = [item for sublist in train_auc_epoch[0] for item in sublist]
+        labels = [item for sublist in train_auc_epoch[1] for item in sublist]
+        train_auc_epoch = ranking.roc_auc_score(labels, features, average=None, sample_weight=None)
+
     time_elapsed = datetime.now() - start_time
-    train_auc_std_epoch = np.std(train_auc_epoch)
-    train_auc_epoch = np.mean(train_auc_epoch)
+    train_auc_std_epoch = 1.0
     train_loss_epoch = np.mean(train_loss_epoch)
     print ("[%s] epoch: %d, train loss: %f, train auc: %.2f, time: %02ds:%02dms" %
            (multiprocessing.current_process().name,
@@ -53,8 +60,7 @@ def arc_train(epoch, epoch_fn, opt, train_loader, discriminator, logger,
             time_elapsed.seconds, time_elapsed.microseconds / 1000))
     logger.log_value('arc_train_loss', train_loss_epoch)
     logger.log_value('arc_train_auc', train_auc_epoch)
-    logger.log_value('train_auc_std_epoch', train_auc_std_epoch)
-
+    
     assert np.isnan(train_loss_epoch) == False, 'ERROR. Found NAN in train_ARC.'
 
     # Remove data from the epoch
