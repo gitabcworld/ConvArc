@@ -529,22 +529,26 @@ class FullBanknotePairs(BanknoteBase):
             model1, target1, model2, target2 = labels
 
             # Save the data information
-            hf = h5py.File(path_data,'w')
-            hf.create_dataset('batch_' + str(index), data=ret_data.numpy())
-            hf.close()
-            # Save the label information
-            with open(path_labels, 'w') as outfile:
-                labels_dict = {}
-                labels_dict['model1'] = model1
-                labels_dict['target1'] = target1
-                labels_dict['model2'] = model2
-                labels_dict['target2'] = target2
-                yaml.dump(labels_dict, outfile, default_flow_style=False)
-            # save the control synchronization file
-            with open(path_sync, 'w') as outfile:
-                noop_dict = {}
-                noop_dict['info'] = 'ready'
-                yaml.dump(noop_dict, outfile, default_flow_style=False)
+            try:
+                hf = h5py.File(path_data,'w')
+                hf.create_dataset('batch_' + str(index), data=ret_data.numpy())
+                hf.close()
+                    
+                # Save the label information
+                with open(path_labels, 'w') as outfile:
+                    labels_dict = {}
+                    labels_dict['model1'] = model1
+                    labels_dict['target1'] = target1
+                    labels_dict['model2'] = model2
+                    labels_dict['target2'] = target2
+                    yaml.dump(labels_dict, outfile, default_flow_style=False)
+                # save the control synchronization file
+                with open(path_sync, 'w') as outfile:
+                    noop_dict = {}
+                    noop_dict['info'] = 'ready'
+                    yaml.dump(noop_dict, outfile, default_flow_style=False)
+            except Exception as e: 
+                print(e) # Do nothing and continue                
 
         if self.mode == 'processor':
 
