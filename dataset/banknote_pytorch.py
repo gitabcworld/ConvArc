@@ -285,7 +285,10 @@ class BanknoteBase(data.Dataset):
         self.path_temp_epoch = os.path.join(self.path_temp_epoch,'iteration_'+str(iteration))
         if self.mode == 'generator':
             if not os.path.exists(self.path_temp_epoch):
-                os.makedirs(self.path_temp_epoch)
+                try:
+                    os.makedirs(self.path_temp_epoch)
+                except Exception as e: 
+                    print(e) # Do nothing and continue 
 
     def remove_path_tmp_epoch(self, epoch, iteration=None):
         self.path_temp_epoch = os.path.join(self.path_temp,'epoch_'+str(epoch))
