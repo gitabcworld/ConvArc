@@ -295,7 +295,10 @@ class BanknoteBase(data.Dataset):
         if not(iteration is None):
             self.path_temp_epoch = os.path.join(self.path_temp_epoch,'iteration_'+str(iteration))
         if os.path.isdir(self.path_temp_epoch):
-	        shutil.rmtree(self.path_temp_epoch)
+            try:
+                shutil.rmtree(self.path_temp_epoch)
+            except Exception as e: 
+                print(e) # Do nothing and continue
 
 
     def __getitem__(self, index):
