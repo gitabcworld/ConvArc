@@ -548,8 +548,8 @@ lst_parameters_change = [
 
         ('train_num_batches', 10000),
         ('val_freq', 100),
-        ('val_num_batches', 10),
-        ('test_num_batches', 10),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'class_ResNet50/data/'),
 
         ('apply_wrn', True),
@@ -600,8 +600,8 @@ lst_parameters_change = [
 
         ('train_num_batches', 10000),
         ('val_freq', 100),
-        ('val_num_batches', 10),
-        ('test_num_batches', 10),
+        ('val_num_batches', 100),
+        ('test_num_batches', 100),
         ('path_tmp_data', pathResults + 'class_MobileNetv2/data/'),
 
         ('apply_wrn', True),
