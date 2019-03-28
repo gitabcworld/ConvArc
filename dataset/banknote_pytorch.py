@@ -561,26 +561,37 @@ class FullBanknotePairs(BanknoteBase):
             while not os.path.exists(path_sync):
                 time.sleep(0.5)
 
-            if os.path.isfile(path_data):
-                hf = h5py.File(path_data, 'r')
-                data = hf.get('batch_' + str(index))
-                ret_data = torch.from_numpy(np.array(data))
-                hf.close()
-            else:
-                raise ValueError("%s isn't a file!" % path_data)
-            
-            if os.path.isfile(path_labels):
-                y = yaml.load(open(path_labels))
-                labels = (y['model1'], y['target1'], y['model2'], y['target2'])
-                model1, target1, model2, target2 = labels
-            else:
-                raise ValueError("%s isn't a file!" % path_labels)
+            isReady = False
+            while not isReady:
+                try:
+                    if os.path.isfile(path_data):
+                        hf = h5py.File(path_data, 'r')
+                        data = hf.get('batch_' + str(index))
+                        ret_data = torch.from_numpy(np.array(data))
+                        hf.close()
+                    else:
+                        raise ValueError("%s isn't a file!" % path_data)
+                    
+                    if os.path.isfile(path_labels):
+                        y = yaml.load(open(path_labels))
+                        labels = (y['model1'], y['target1'], y['model2'], y['target2'])
+                        model1, target1, model2, target2 = labels
+                    else:
+                        raise ValueError("%s isn't a file!" % path_labels)
+                    
+                    isReady = True
 
-            # Remove the files
-            os.remove(path_sync)
-            os.remove(path_data)
-            os.remove(path_labels)
+                except Exception as e:
+                    print(e)
+                    time.sleep(0.5)
 
+            try:
+                # Remove the files
+                os.remove(path_sync)
+                os.remove(path_data)
+                os.remove(path_labels)
+            except Exception as e:
+                    print(e)
 
         isSimilar = False
         if model1 == model2 and target1 == target2:
